@@ -1,0 +1,37 @@
+[
+    {
+        "name": "Sky & Ocean",
+        "image": "/background/01.jpg",
+        "url": "https://bbs.flyour.cn/"
+    },
+    {
+        "name": "Mountain",
+        "image": "/background/02.jpg"
+    },
+    {
+        "name": "河川敷",
+        "image": "/background/03.jpg",
+        "url": "https://www.pixiv.net/artworks/38185102"
+    },
+    {
+        "name": "無題",
+        "image": "/background/04.jpg",
+        "url": "https://www.pixiv.net/artworks/119509178"
+    },
+    {
+        "name": "dusk dream",
+        "image": "/background/05.jpg",
+        "url": "https://www.pixiv.net/artworks/115928014"
+    },
+    {
+        "name": "moment of solitude",
+        "image": "/background/06.jpg",
+        "url": "https://www.pixiv.net/artworks/123508291"
+    },
+    {
+        "name": "summer has come !",
+        "image": "/background/07.jpg",
+        "highbg": true,
+        "url": "https://www.pixiv.net/artworks/69618131"
+    }
+]
