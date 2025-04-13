@@ -3,7 +3,7 @@
         <div class="matrix">
             <CardContainer v-for="(data, index) in widgetdata" :key="index" class="widget" :columns="data.columns"
                 :rows="data.row" :mcolumns="data.mcolumns" :mrows="data.mrow">
-                <a draggable="false">
+                <a draggable="false" :href="data.link" target="_blank" data-pointer>
                     <div class="title">{{ data.title }}</div>
                     <div class="desc">{{ data.description }}</div>
                 </a>
@@ -27,16 +27,16 @@ const widgetdata = [
         title: 'Widget 1',
         description: 'This is the large widget.',
         icon: '',
-        link: 'https://example.com/widget1',
+        link: '',
         columns: 4,
         row: 2,
-        image: 'https://example.com/image1.jpg'
+        image: ''
     },
     {
         title: 'Widget 2',
         description: 'This is the widget.',
         icon: '',
-        link: 'https://example.com/widget2',
+        link: '',
         columns: 2,
         row: 2
     },
@@ -44,7 +44,7 @@ const widgetdata = [
         title: 'Widget 3',
         description: 'This is the widget.',
         icon: '',
-        link: 'https://example.com/widget3',
+        link: '',
         columns: 2,
         row: 2
     },
@@ -52,7 +52,7 @@ const widgetdata = [
         title: 'Widget 4',
         description: 'This is the widget.',
         icon: '',
-        link: 'https://example.com/widget3',
+        link: '',
         columns: 2,
         row: 2
     },
@@ -60,7 +60,7 @@ const widgetdata = [
         title: 'Widget 5',
         description: 'This is the widget.',
         icon: '',
-        link: 'https://example.com/widget3',
+        link: '',
         columns: 2,
         row: 2
     },
@@ -68,26 +68,26 @@ const widgetdata = [
         title: 'Widget 6',
         description: 'This is the large widget.',
         icon: '',
-        link: 'https://example.com/widget1',
+        link: '',
         columns: 4,
         row: 2,
-        image: 'https://example.com/image1.jpg'
+        image: ''
     },
     {
         title: 'Widget 7',
         description: 'This is the large widget.',
         icon: '',
-        link: 'https://example.com/widget1',
+        link: '',
         columns: 5,
         row: 2,
         mrow: 2,
-        image: 'https://example.com/image1.jpg'
+        image: ''
     },
     {
         title: 'Widget 8',
         description: '',
         icon: '',
-        link: 'https://example.com/widget3',
+        link: '',
         columns: 3,
         row: 1,
         mcolumns: 2,
@@ -97,7 +97,7 @@ const widgetdata = [
         title: 'Widget 9',
         description: 'This is the widget.',
         icon: '',
-        link: 'https://example.com/widget3',
+        link: '',
         columns: 3,
         row: 3,
         mcolumns: 2,
@@ -107,7 +107,7 @@ const widgetdata = [
         title: 'Widget 10',
         description: 'This is the widget.',
         icon: '',
-        link: 'https://example.com/widget3',
+        link: '',
         columns: 2,
         row: 2
     },
@@ -115,7 +115,7 @@ const widgetdata = [
         title: 'Widget 11',
         description: 'This is the widget.',
         icon: '',
-        link: 'https://example.com/widget3',
+        link: '',
         columns: 3,
         row: 2,
         mcolumns: 2,
@@ -152,7 +152,7 @@ const widgetdata = [
 
 @supports (animation-timeline: scroll(root y)) {
     .content {
-        animation: content-shift auto linear;
+        animation: content-flip auto linear;
         animation-fill-mode: both;
         animation-timeline: scroll(root y);
         animation-range-start: 0;
@@ -160,7 +160,7 @@ const widgetdata = [
     }
 }
 
-@keyframes content-shift {
+@keyframes content-flip {
     0% {
         margin-top: 35vh;
         margin-bottom: 0vh;
@@ -204,11 +204,11 @@ const widgetdata = [
     touch-action: manipulation;
     color: #000000;
     opacity: .8;
-    background-color: color-mix(in srgb, var(--lyntrix-theme-color-high) 32%, white);
+    background-color: color-mix(in srgb, var(--lyntrix-theme-color-high, #fff) 32%, white);
     backdrop-filter: blur(.8rem);
     user-select: none;
     transform: perspective(500px) translateZ(var(--tz)) rotateY(var(--rx)) rotateX(var(--ry));
-    transition: transform .2s linear 0s, background-color .6s linear 0s, box-shadow .2s ease 0s;
+    transition: transform .2s linear 0s, background-color .6s linear 0s, box-shadow .3s ease-in-out 0s;
     --c: min(var(--columns, 2), var(--template-columns));
     --r: var(--rows, 2);
 
@@ -216,6 +216,22 @@ const widgetdata = [
     grid-row: span var(--r);
     height: calc(var(--square-size) * var(--r) + var(--gap) * (var(--r) - 1));
     width: calc(var(--square-size) * var(--c) + var(--gap) * (var(--c) - 1));
+}
+
+.content .matrix .widget:hover {
+    background-color: color-mix(in srgb, color-mix(in srgb, var(--lyntrix-theme-color-high, #fff) 32%, white) 90%, black);
+}
+
+html.dark-mode .content .matrix .widget, html.dark-mode .projlist .project {
+    background: #78c7ff2f;
+    color: #78c6ff;
+    border: 2px solid #78c7ffd5;
+    box-sizing: border-box;
+}
+
+html.dark-mode .content .matrix .widget:hover, html.dark-mode .content .projlist .project:hover {
+    background-color: #91d1ff3a;
+    box-shadow: 0 0 24px #78c1f664, 0 0 10px #73bef351;
 }
 
 @media (max-width: 880px) {
@@ -227,14 +243,14 @@ const widgetdata = [
 
 @supports (animation-timeline: scroll(root y)) {
     .content .widget, .content .project {
-        animation: widget-in auto linear;
+        animation: widget-flip auto linear;
         animation-fill-mode: both;
         animation-timeline: view();
         animation-range: entry 0 entry 100px;
     }
 }
 
-@keyframes widget-in {
+@keyframes widget-flip {
     0% {
         scale: .8;
         opacity: 0;
@@ -290,7 +306,7 @@ const widgetdata = [
 }
 
 .project {
-    background-color: color-mix(in srgb, var(--lyntrix-theme-color-high) 32%, white);
+    background-color: color-mix(in srgb, var(--lyntrix-theme-color-high, #fff) 32%, white);
     backdrop-filter: blur(.8rem);
     border-radius: 1.5rem;
     color: #000000;

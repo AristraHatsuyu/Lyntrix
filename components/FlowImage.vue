@@ -86,8 +86,17 @@ function extractThemeColor(img: HTMLImageElement): void {
         const highColor = `rgb(${rH}, ${gH}, ${bH})`
 
         setTimeout(() => {
-            document.documentElement.style.setProperty('--lyntrix-theme-color', baseColor)
-            document.documentElement.style.setProperty('--lyntrix-theme-color-high', highColor)
+            const styleSheet = document.styleSheets[0] // 获取第一个样式表
+            const ruleIndex = Array.from(styleSheet.cssRules).findIndex(rule =>
+                rule instanceof CSSStyleRule && rule.selectorText === '*'
+            )
+            if (ruleIndex !== -1) {
+                const rule = styleSheet.cssRules[ruleIndex] as CSSStyleRule
+                rule.style.setProperty('--lyntrix-theme-color', baseColor)
+                rule.style.setProperty('--lyntrix-theme-color-high', highColor)
+            } else {
+                styleSheet.insertRule(`* { --lyntrix-theme-color: ${baseColor}; --lyntrix-theme-color-high: ${highColor}; }`, styleSheet.cssRules.length)
+            }
         }, 500)
     } catch (e) {
         console.error('提取主题色失败:', e)
@@ -132,7 +141,7 @@ onMounted(() => {
     height: 100vh;
     transform: translate(var(--tx), var(--ty)) scale(1.1);
     z-index: 0;
-    transition: transform 0.1s ease-out, background-image 1s ease-in-out;
+    transition: transform 0.1s ease-out;
     will-change: transform;
     filter: blur(clamp(0px, calc(calc(var(--scroll-y-percent) - 0.05) * 40px), 10px)) brightness(clamp(0.7, calc(1.025 - calc(var(--scroll-y-percent) * 0.5)), 1));
 }

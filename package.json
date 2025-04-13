@@ -13,6 +13,7 @@
     "@studio-freight/lenis": "^1.0.42",
     "axios": "^1.7.7",
     "colorthief": "^2.6.0",
+    "motion-v": "^1.0.0-beta.2",
     "nuxt": "^3.13.0",
     "swiper": "^11.2.6",
     "vue": "latest",

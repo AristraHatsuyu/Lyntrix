@@ -1,5 +1,5 @@
 <template>
-    <div class="switch" @click="changeTheme">
+    <div class="switch" @click="changeTheme" data-pointer>
         <Transition name="fadeo">
             <svg v-if="thememode == 'light'" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
                 width="38" height="38">
@@ -63,8 +63,8 @@ const changeTheme = (event: MouseEvent) => {
     width: min(10vw, 38px);
     height: min(10vw, 38px);
     cursor: pointer;
-    fill: color-mix(in srgb, var(--lyntrix-theme-color), #fff 30%);
-    transition: opacity .3s ease, fill 1s;
+    fill: color-mix(in srgb, var(--lyntrix-theme-color, #fff), #fff 30%);
+    transition: opacity .3s ease, fill .5s;
     opacity: .5;
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
     transform-origin: right top;

@@ -81,9 +81,9 @@ html.dark-mode .name {
 }
 
 .name-svg {
-    background-color: color-mix(in srgb, var(--lyntrix-theme-color) clamp(25%, 350% * var(--scroll-y-percent, 0) + 25%, 95%), transparent);
+    background-color: color-mix(in srgb, var(--lyntrix-theme-color, #fff) clamp(25%, 350% * var(--scroll-y-percent, 0) + 25%, 95%), transparent);
     backdrop-filter: saturate(2) brightness(2.5) blur(12px);
-    transition: 1s;
+    transition: .5s;
 }
 
 html.dark-mode .name-svg {
@@ -107,7 +107,7 @@ html.dark-mode .name-svg {
 .bio {
     user-select: none;
     opacity: clamp(.7, .75 * var(--scroll-y-percent, 0) + .7, .85);
-    color: color-mix(in srgb, var(--lyntrix-theme-color), #fff clamp(10%, -275% * var(--scroll-y-percent, 0) + 65%, 65%));
+    color: color-mix(in srgb, var(--lyntrix-theme-color, #fff), #fff clamp(10%, -275% * var(--scroll-y-percent, 0) + 65%, 65%));
     font-size: clamp(18px, 3.5vmin, 1.6rem);
     mask-image: linear-gradient(to right, rgb(0, 0, 0) 45.4545%, rgba(0, 0, 0, 0) 54.5455%);
     mask-size: 220% 100%;

@@ -3,7 +3,7 @@
         <div class="next-icon" v-if="scrollYPercent < 0.02">
             <div class="next-icon-inner" @click="scrollToVh(0.225)">
                 <svg stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 512 512" height="1em"
-                    width="1em" xmlns="http://www.w3.org/2000/svg">
+                    width="1em" xmlns="http://www.w3.org/2000/svg" data-pointer>
                     <path fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-width="48"
                         d="M112 184l144 144 144-144"></path>
                 </svg>
@@ -59,8 +59,13 @@ function scrollToVh(vh: number, duration = 600) {
     padding-left: .25em;
     padding-right: .25em;
     cursor: pointer;
-    color: color-mix(in srgb, var(--lyntrix-theme-color), #fff 30%);
+    color: color-mix(in srgb, var(--lyntrix-theme-color, #fff), #fff 30%);
     opacity: .55;
+    transition: color .5s;
+}
+
+html.dark-mode .next-icon .next-icon-inner {
+    color: #64beffd5;
 }
 
 .fadeo-enter-active,

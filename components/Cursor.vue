@@ -1,5 +1,5 @@
 <template>
-    <div class="cursor" :class="{ 'show': showmouse, 'pointer': inpointer }" ref="circle"></div>
+    <div class="cursor" :class="{ 'show': showmouse, 'pointer': inpointer, 'press': mousedown }" ref="circle"></div>
 </template>
 
 <script setup lang="ts">
@@ -9,12 +9,25 @@ const circlePos = { x: 0, y: 0 }
 const delay = 0.15 // 越小越快，0.1~0.2 比较自然
 const showmouse = ref(false)
 const inpointer = ref(false)
+const mousedown = ref(false)
+
+// 判断是否是可点击元素
+function isPointerElement(element: HTMLElement | null): boolean {
+    while (element) {
+        if (element.hasAttribute('data-pointer')) {
+            return true
+        }
+        element = element.parentElement // 递归检查父元素
+    }
+    return false
+}
 
 onMounted(() => {
     window.addEventListener('mousemove', (e) => {
         mouse.x = e.clientX
         mouse.y = e.clientY
     })
+
     const animate = () => {
         circlePos.x += (mouse.x - circlePos.x) * delay
         circlePos.y += (mouse.y - circlePos.y) * delay
@@ -24,10 +37,24 @@ onMounted(() => {
         requestAnimationFrame(animate)
     }
     animate()
+
     document.addEventListener('mouseleave', () => (showmouse.value = false))
     document.addEventListener('mouseenter', () => (showmouse.value = true))
-    document.addEventListener('mousedown', () => (inpointer.value = true))
-    document.addEventListener('mouseup', () => (inpointer.value = false))
+
+    document.addEventListener('mousedown', () => (mousedown.value = true))
+    document.addEventListener('mouseup', () => (mousedown.value = false))
+
+    // 鼠标进入元素时检查是否是可点击元素
+    document.addEventListener('mouseover', (e) => {
+        const target = e.target as HTMLElement
+        inpointer.value = isPointerElement(target)
+    })
+
+    // 鼠标离开元素时检查是否离开可点击元素
+    document.addEventListener('mouseout', (e) => {
+        const target = e.target as HTMLElement
+        inpointer.value = isPointerElement(target)
+    })
 })
 </script>
 
@@ -57,5 +84,13 @@ onMounted(() => {
     width: 26px;
     height: 26px;
     background-color: #ffffff55;
+}
+
+.cursor.press {
+    top: -11px;
+    left: -11px;
+    width: 20px;
+    height: 20px;
+    background-color: #ffffff88;
 }
 </style>

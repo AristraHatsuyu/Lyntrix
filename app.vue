@@ -52,7 +52,7 @@ body {
   margin: 0;
   padding: 0;
   user-select: none;
-  background-color: #222323;
+  background-color: #1d1e1e;
   font-family: 'Zen Maru Gothic', sans-serif;
 }
 
