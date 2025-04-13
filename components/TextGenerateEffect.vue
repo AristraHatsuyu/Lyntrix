@@ -1,11 +1,7 @@
 <template>
   <div style="transition: width .5s" :style="{ width: textWidth }">
     <div ref="scope" style="display: flex;">
-      <span
-        v-for="(char, idx) in wordsArray"
-        :key="char + idx"
-        class="spanStyle"
-      >
+      <span v-for="(char, idx) in wordsArray" :key="char + idx" class="spanStyle">
         {{ char }}
       </span>
     </div>

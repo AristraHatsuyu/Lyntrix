@@ -11,7 +11,7 @@
         </div>
         <div class="projlist">
             <CardContainer v-for="i in 8" :key="i" class="project">
-                <a draggable="false">
+                <a draggable="false" data-pointer>
                     <div class="title" href="" target="_blank">Project {{ i }}</div>
                     <div class="description">This is the project {{ i }}</div>
                 </a>
@@ -176,8 +176,8 @@ const widgetdata = [
 
 @supports not (animation-timeline: scroll(root y)) {
     .content {
-        margin-top: max(0px,calc(-140vh * var(--scroll-y-percent) + 35vh));
-        margin-bottom: calc(35vh - max(0px,calc(-140vh * var(--scroll-y-percent) + 35vh)));
+        margin-top: max(0px, var(--scroll-shift));
+        margin-bottom: calc(35vh - max(0px, var(--scroll-shift)));
     }
 }
 
@@ -186,7 +186,7 @@ const widgetdata = [
     --template-columns: 8;
 
     display: grid;
-    grid-template-columns: repeat(var(--template-columns),1fr);
+    grid-template-columns: repeat(var(--template-columns), 1fr);
     grid-column-gap: 40px;
     grid-row-gap: 40px;
     grid-column: span 8;
@@ -202,9 +202,9 @@ const widgetdata = [
 }
 
 .content .matrix .widget {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 
     border-radius: 1.5rem;
     overflow: hidden;
@@ -229,14 +229,16 @@ const widgetdata = [
     background-color: color-mix(in srgb, color-mix(in srgb, var(--lyntrix-theme-color-high, #fff) 32%, white) 90%, black);
 }
 
-html.dark-mode .content .matrix .widget, html.dark-mode .projlist .project {
+html.dark-mode .content .matrix .widget,
+html.dark-mode .projlist .project {
     background: #78c7ff2f;
     color: #78c6ff;
     border: 2px solid #78c7ffd5;
     box-sizing: border-box;
 }
 
-html.dark-mode .content .matrix .widget:hover, html.dark-mode .content .projlist .project:hover {
+html.dark-mode .content .matrix .widget:hover,
+html.dark-mode .content .projlist .project:hover {
     background-color: #91d1ff3a;
     box-shadow: 0 0 24px #78c1f664, 0 0 10px #73bef351;
 }
@@ -249,7 +251,9 @@ html.dark-mode .content .matrix .widget:hover, html.dark-mode .content .projlist
 }
 
 @supports (animation-timeline: scroll(root y)) {
-    .content .widget, .content .project {
+
+    .content .widget,
+    .content .project {
         animation: widget-flip auto linear;
         animation-fill-mode: both;
         animation-timeline: view();
@@ -268,7 +272,7 @@ html.dark-mode .content .matrix .widget:hover, html.dark-mode .content .projlist
         opacity: .8;
     }
 }
-    
+
 /* 卡片内部 widget 样式 */
 .content .matrix .widget>a {
     width: 100%;
@@ -281,14 +285,14 @@ html.dark-mode .content .matrix .widget:hover, html.dark-mode .content .projlist
 }
 
 .content .matrix .widget>a .title {
-  font-size: 1.2rem;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
 }
 
 .content .matrix .widget>a .desc {
-  font-size: 0.95rem;
-  opacity: 0.8;
+    font-size: 0.95rem;
+    opacity: 0.8;
 }
 
 .content .projlist {
@@ -307,8 +311,7 @@ html.dark-mode .content .matrix .widget:hover, html.dark-mode .content .projlist
 
 @media (max-width: 880px) {
     .content .projlist {
-        display: flex
-;
+        display: flex;
     }
 }
 
@@ -337,12 +340,12 @@ html.dark-mode .content .matrix .widget:hover, html.dark-mode .content .projlist
     user-select: none;
 }
 
-.project > a .title {
+.project>a .title {
     font-weight: 700;
     font-size: 1.08em;
 }
 
-.project > a .description {
+.project>a .description {
     flex: 1 1 0%;
 }
 </style>

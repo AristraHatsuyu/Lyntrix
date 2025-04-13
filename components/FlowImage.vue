@@ -1,6 +1,6 @@
 <template>
-    <swiper ref="swiperr" :effect="'fade'" :loop="true" :speed="1000" :modules="[EffectFade]" @swiper="onSwiper" :allowTouchMove="false"
-        class="bg-container">
+    <swiper ref="swiperr" :effect="'fade'" :loop="true" :speed="1000" :modules="[EffectFade]" @swiper="onSwiper"
+        :allowTouchMove="false" class="bg-container">
         <swiper-slide class="bg-image" :style="bgStylet"></swiper-slide>
         <swiper-slide class="bg-image" :style="bgStyleb"></swiper-slide>
     </swiper>
@@ -45,7 +45,7 @@ function generateRandomOrder(): number[] {
     const order = Array.from({ length: backgrounds.length }, (_, i) => i)
     for (let i = order.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1))
-        ;[order[i], order[j]] = [order[j], order[i]]
+            ;[order[i], order[j]] = [order[j], order[i]]
     }
     return order
 }

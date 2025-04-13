@@ -47,7 +47,7 @@ provide("use3DCardMouseState", mouseState);
 
 function updatetransform(e: MouseEvent) {
     const maxRotation = 10
-    
+
     if (!containerRef.value) return;
     const { left, top, width, height } = containerRef.value.getBoundingClientRect()
     const normX = (e.clientX - left - width / 2) / (width / 2)
