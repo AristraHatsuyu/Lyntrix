@@ -174,6 +174,13 @@ const widgetdata = [
     }
 }
 
+@supports not (animation-timeline: scroll(root y)) {
+    .content {
+        margin-top: max(0px,calc(-140vh * var(--scroll-y-percent) + 35vh));
+        margin-bottom: calc(35vh - max(0px,calc(-140vh * var(--scroll-y-percent) + 35vh)));
+    }
+}
+
 .content .matrix {
     --gap: 40px;
     --template-columns: 8;

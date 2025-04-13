@@ -38,8 +38,8 @@ onMounted(() => {
     }
     animate()
 
-    document.addEventListener('mouseleave', () => (showmouse.value = false))
-    document.addEventListener('mouseenter', () => (showmouse.value = true))
+    window.addEventListener('mouseout', () => (showmouse.value = false))
+    window.addEventListener('mouseover', () => (showmouse.value = true))
 
     document.addEventListener('mousedown', () => (mousedown.value = true))
     document.addEventListener('mouseup', () => (mousedown.value = false))
