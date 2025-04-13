@@ -33,5 +33,15 @@
         "image": "/background/07.jpg",
         "highbg": true,
         "url": "https://www.pixiv.net/artworks/69618131"
+    },
+    {
+        "name": "summer has come !",
+        "image": "/background/08.jpg",
+        "url": "https://www.pixiv.net/artworks/69618131"
+    },
+    {
+        "name": "On the way Home",
+        "image": "/background/09.jpg",
+        "url": "https://www.pixiv.net/artworks/96552364"
     }
 ]

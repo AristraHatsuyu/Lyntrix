@@ -1,5 +1,6 @@
 <template>
-    <div class="wrapper" :class="{ 'lightbg': currentbg.highbg }" :style="wrapperStyle" @mousemove="handleMouseMove" @mouseleave="resetOffset">
+    <div class="wrapper" :class="{ 'lightbg': currentbg.highbg }" :style="wrapperStyle" @mousemove="handleMouseMove"
+        @mouseleave="resetOffset">
         <FlowImage v-model="currentbg" />
         <Banner />
         <Content />

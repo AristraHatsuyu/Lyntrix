@@ -65,25 +65,6 @@ a {
   -webkit-tap-highlight-color: transparent;
 }
 
-.cursor {
-  position: fixed;
-  top: -19px;
-  left: -19px;
-  width: 36px;
-  height: 36px;
-  z-index: 9999;
-  opacity: 0;
-  pointer-events: none;
-  transform: translate(0, 0);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  border-radius: 50%;
-  transition: opacity 0.3s;
-}
-
-.cursor.show {
-  opacity: 1;
-}
-
 .page-enter-active,
 .page-leave-active {
   transition: all 0.4s;
