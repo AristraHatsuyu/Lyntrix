@@ -199,7 +199,6 @@ html.dark-mode .footer .footer-inner {
 .fadeb-leave-to {
     background-color: #00000000;
     backdrop-filter: none;
-    filter: blur(20px);
 }
 
 .fadeb-enter-to,

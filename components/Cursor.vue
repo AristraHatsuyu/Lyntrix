@@ -38,8 +38,11 @@ onMounted(() => {
     }
     animate()
 
-    window.addEventListener('mouseout', () => (showmouse.value = false))
-    window.addEventListener('mouseover', () => (showmouse.value = true))
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (!isTouchDevice) {
+        window.addEventListener('mouseout', () => (showmouse.value = false));
+        window.addEventListener('mouseover', () => (showmouse.value = true));
+    }
 
     document.addEventListener('mousedown', () => (mousedown.value = true))
     document.addEventListener('mouseup', () => (mousedown.value = false))
