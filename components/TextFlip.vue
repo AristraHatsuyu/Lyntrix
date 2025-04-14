@@ -77,8 +77,10 @@ function generateExitAnimation() {
         if (++completed === spans.length) {
           setTimeout(async () => {
             wordsArray.value = props.words.split("");
-            await nextTick(); // 等待 DOM 更新
-            generateEnterAnimation();
+            await nextTick();
+            setTimeout(async () => {
+              generateEnterAnimation();
+            }, 100); // 等待 DOM 更新
           }, 100);
         }
       }, index * 50); // 每个字符的动画延迟
