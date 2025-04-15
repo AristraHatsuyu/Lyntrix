@@ -137,6 +137,7 @@ html.dark-mode .footer .footer-inner {
 
 .footer .footer-inner .bg-name {
     color: var(--lyntrix-theme-color-high, #fff);
+    transition: color .5s linear;
     margin-left: 12px;
 }
 
