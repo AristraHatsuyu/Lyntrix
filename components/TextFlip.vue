@@ -80,8 +80,8 @@ function generateExitAnimation() {
             await nextTick();
             setTimeout(async () => {
               generateEnterAnimation();
-            }, 100); // 等待 DOM 更新
-          });
+            }, 50); // 等待 DOM 更新
+          }, 50);
         }
       }, 450 / spans.length * index); // 每个字符的动画延迟
     });
