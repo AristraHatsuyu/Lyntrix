@@ -112,7 +112,7 @@ onUnmounted(() => {
 .footer .footer-inner {
     text-align: center;
     opacity: .65;
-    color: color-mix(in srgb, var(--lyntrix-theme-color, #fff), #fff 50%);
+    color: color-mix(in srgb, var(--lyntrix-color, #fff), #fff 50%);
     transition: .5s ease;
     line-height: 2;
 }
@@ -136,7 +136,7 @@ html.dark-mode .footer .footer-inner {
 }
 
 .footer .footer-inner .bg-name {
-    color: var(--lyntrix-theme-color-high, #fff);
+    color: var(--lyntrix-color-high, #fff);
     transition: color .5s linear;
     margin-left: 12px;
 }

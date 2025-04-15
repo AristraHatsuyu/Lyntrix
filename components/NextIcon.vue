@@ -59,7 +59,7 @@ function scrollToVh(vh: number, duration = 600) {
     padding-left: .25em;
     padding-right: .25em;
     cursor: pointer;
-    color: color-mix(in srgb, var(--lyntrix-theme-color, #fff), #fff 30%);
+    color: color-mix(in srgb, var(--lyntrix-color, #fff), #fff 30%);
     opacity: .55;
     transition: color .5s;
 }

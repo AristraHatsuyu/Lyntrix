@@ -63,7 +63,7 @@ const changeTheme = (event: MouseEvent) => {
     width: min(10vw, 38px);
     height: min(10vw, 38px);
     cursor: pointer;
-    fill: color-mix(in srgb, var(--lyntrix-theme-color, #fff), #fff 30%);
+    fill: color-mix(in srgb, var(--lyntrix-color, #fff), #fff 30%);
     transition: opacity .3s ease, fill .5s;
     opacity: .5;
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);

@@ -92,10 +92,10 @@ function extractThemeColor(img: HTMLImageElement): void {
             )
             if (ruleIndex !== -1) {
                 const rule = styleSheet.cssRules[ruleIndex] as CSSStyleRule
-                rule.style.setProperty('--lyntrix-theme-color', baseColor)
-                rule.style.setProperty('--lyntrix-theme-color-high', highColor)
+                rule.style.setProperty('--lyntrix-color', baseColor)
+                rule.style.setProperty('--lyntrix-color-high', highColor)
             } else {
-                styleSheet.insertRule(`* { --lyntrix-theme-color: ${baseColor}; --lyntrix-theme-color-high: ${highColor}; }`, styleSheet.cssRules.length)
+                styleSheet.insertRule(`* { --lyntrix-color: ${baseColor}; --lyntrix-color-high: ${highColor}; }`, styleSheet.cssRules.length)
             }
         }, 500)
     } catch (e) {

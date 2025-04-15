@@ -183,10 +183,10 @@ const widgetdata = [
 
 .content .matrix {
     --gap: 40px;
-    --template-columns: 8;
+    --display-columns: 8;
 
     display: grid;
-    grid-template-columns: repeat(var(--template-columns), 1fr);
+    grid-template-columns: repeat(var(--display-columns), 1fr);
     grid-column-gap: 40px;
     grid-row-gap: 40px;
     grid-column: span 8;
@@ -195,7 +195,7 @@ const widgetdata = [
 @media (max-width: 880px) {
     .content .matrix {
         --gap: 25px;
-        --template-columns: 4;
+        --display-columns: 4;
         grid-column-gap: 25px;
         grid-row-gap: 25px;
     }
@@ -211,22 +211,21 @@ const widgetdata = [
     touch-action: manipulation;
     color: #000000;
     opacity: .8;
-    background-color: color-mix(in srgb, var(--lyntrix-theme-color-high, #fff) 32%, white);
+    background-color: color-mix(in srgb, var(--lyntrix-color-high, #fff) 32%, white);
     backdrop-filter: blur(.8rem);
-    user-select: none;
     transform: perspective(500px) translateZ(var(--tz)) rotateY(var(--rx)) rotateX(var(--ry));
     transition: transform .2s linear 0s, background-color .6s linear 0s, box-shadow .3s ease-in-out 0s;
-    --c: min(var(--columns, 2), var(--template-columns));
-    --r: var(--rows, 2);
+    --col: min(var(--columns, 2), var(--display-columns));
+    --row: var(--rows, 2);
 
-    grid-column: span var(--c);
-    grid-row: span var(--r);
-    height: calc(var(--square-size) * var(--r) + var(--gap) * (var(--r) - 1));
-    width: calc(var(--square-size) * var(--c) + var(--gap) * (var(--c) - 1));
+    grid-column: span var(--col);
+    grid-row: span var(--row);
+    height: calc(var(--square-size) * var(--row) + var(--gap) * (var(--row) - 1));
+    width: calc(var(--square-size) * var(--col) + var(--gap) * (var(--col) - 1));
 }
 
 .content .matrix .widget:hover {
-    background-color: color-mix(in srgb, color-mix(in srgb, var(--lyntrix-theme-color-high, #fff) 32%, white) 90%, black);
+    background-color: color-mix(in srgb, color-mix(in srgb, var(--lyntrix-color-high, #fff) 32%, white) 90%, black);
 }
 
 html.dark-mode .content .matrix .widget,
@@ -245,8 +244,8 @@ html.dark-mode .content .projlist .project:hover {
 
 @media (max-width: 880px) {
     .content .matrix .widget {
-        --c: min(var(--m-columns, --columns, 2), var(--template-columns));
-        --r: var(--m-rows, --rows, 2);
+        --col: min(var(--m-columns, --columns, 2), var(--display-columns));
+        --row: var(--m-rows, --rows, 2);
     }
 }
 
@@ -316,7 +315,7 @@ html.dark-mode .content .projlist .project:hover {
 }
 
 .project {
-    background-color: color-mix(in srgb, var(--lyntrix-theme-color-high, #fff) 32%, white);
+    background-color: color-mix(in srgb, var(--lyntrix-color-high, #fff) 32%, white);
     backdrop-filter: blur(.8rem);
     border-radius: 1.5rem;
     color: #000000;
