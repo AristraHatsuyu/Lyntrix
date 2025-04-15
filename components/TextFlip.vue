@@ -56,7 +56,7 @@ function generateEnterAnimation() {
         setTimeout(() => {
           span.style.opacity = "1";
           span.style.filter = props.filter ? "blur(0px)" : "none";
-        }, 450 / spans.length * index); // 每个字符的动画延迟
+        }, 650 / spans.length * index); // 每个字符的动画延迟
       });
     }, props.delay);
   }
@@ -80,10 +80,10 @@ function generateExitAnimation() {
             await nextTick();
             setTimeout(async () => {
               generateEnterAnimation();
-            }, 50); // 等待 DOM 更新
-          }, 50);
+            }, 350); // 等待 DOM 更新
+          }, 350);
         }
-      }, 450 / spans.length * index); // 每个字符的动画延迟
+      }, 650 / spans.length * index); // 每个字符的动画延迟
     });
   }
 }
@@ -106,7 +106,7 @@ watch(
 );
 </script>
 
-<style scoped>
+<style>
 .spanStyle {
   opacity: 0;
   filter: blur(10px);
