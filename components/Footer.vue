@@ -11,7 +11,7 @@
                     Background
                     <a :href="props.url" target="_blank" rel="noreferrer" class="bg-name"
                         :class="{ 'bg-link': props.url }" data-pointer>
-                        <TextFlip :words="props.name.replace(/ /g, '&nbsp;')" />
+                        <TextFlip :words="props.title.replace(/ /g, '&nbsp;')" />
                     </a>
                 </div>
             </div>
@@ -38,12 +38,12 @@
 
 <script setup lang="ts">
 interface Props {
-    name?: string;
+    title?: string;
     url?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
-    name: "Lyntrix",
+    title: "Lyntrix",
     url: "",
 });
 

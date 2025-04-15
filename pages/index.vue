@@ -5,7 +5,7 @@
         <Banner />
         <Content />
         <NextIcon />
-        <Footer :name="currentbg.name" :url="currentbg.url" />
+        <Footer :title="currentbg.title" :url="currentbg.url" />
     </div>
 </template>
 

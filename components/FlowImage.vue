@@ -14,9 +14,10 @@ import { EffectFade } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/effect-fade';
 
-import backgrounds from '~/assets/backgrounds.json'
+import config from '~/assets/config.json'
 
 const model = defineModel()
+const backgrounds = config.background
 
 // 当前索引 & 当前背景图 URL
 const currentIndex = ref<number>(0)

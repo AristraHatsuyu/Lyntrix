@@ -1,0 +1,149 @@
+{
+    "widget": [
+        {
+            "title": "Widget 1",
+            "description": "This is the large widget.",
+            "icon": "",
+            "link": "",
+            "columns": 4,
+            "row": 2,
+            "image": ""
+        },
+        {
+            "title": "Widget 2",
+            "description": "This is the widget.",
+            "icon": "",
+            "link": "",
+            "columns": 2,
+            "row": 2
+        },
+        {
+            "title": "Widget 3",
+            "description": "This is the widget.",
+            "icon": "",
+            "link": "",
+            "columns": 2,
+            "row": 2
+        },
+        {
+            "title": "Widget 4",
+            "description": "This is the widget.",
+            "icon": "",
+            "link": "",
+            "columns": 2,
+            "row": 2
+        },
+        {
+            "title": "Widget 5",
+            "description": "This is the widget.",
+            "icon": "",
+            "link": "",
+            "columns": 2,
+            "row": 2
+        },
+        {
+            "title": "Widget 6",
+            "description": "This is the large widget.",
+            "icon": "",
+            "link": "",
+            "columns": 4,
+            "row": 2,
+            "image": ""
+        },
+        {
+            "title": "Widget 7",
+            "description": "This is the large widget.",
+            "icon": "",
+            "link": "",
+            "columns": 5,
+            "row": 2,
+            "mrow": 2,
+            "image": ""
+        },
+        {
+            "title": "Widget 8",
+            "description": "",
+            "icon": "",
+            "link": "",
+            "columns": 3,
+            "row": 1,
+            "mcolumns": 2,
+            "mrow": 2
+        },
+        {
+            "title": "Widget 9",
+            "description": "This is the widget.",
+            "icon": "",
+            "link": "",
+            "columns": 3,
+            "row": 3,
+            "mcolumns": 2,
+            "mrow": 2
+        },
+        {
+            "title": "Widget 10",
+            "description": "This is the widget.",
+            "icon": "",
+            "link": "",
+            "columns": 2,
+            "row": 2
+        },
+        {
+            "title": "Widget 11",
+            "description": "This is the widget.",
+            "icon": "",
+            "link": "",
+            "columns": 3,
+            "row": 2,
+            "mcolumns": 2,
+            "mrow": 2
+        }
+    ],
+    "background": [
+        {
+            "title": "Sky & Ocean",
+            "image": "/background/01.jpg",
+            "url": "https://bbs.flyour.cn/"
+        },
+        {
+            "title": "Mountain",
+            "image": "/background/02.jpg"
+        },
+        {
+            "title": "河川敷",
+            "image": "/background/03.jpg",
+            "url": "https://www.pixiv.net/artworks/38185102"
+        },
+        {
+            "title": "無題",
+            "image": "/background/04.jpg",
+            "url": "https://www.pixiv.net/artworks/119509178"
+        },
+        {
+            "title": "dusk dream",
+            "image": "/background/05.jpg",
+            "url": "https://www.pixiv.net/artworks/115928014"
+        },
+        {
+            "title": "moment of solitude",
+            "image": "/background/06.jpg",
+            "url": "https://www.pixiv.net/artworks/123508291"
+        },
+        {
+            "title": "summer has come !",
+            "image": "/background/07.jpg",
+            "highbg": true,
+            "url": "https://www.pixiv.net/artworks/69618131"
+        },
+        {
+            "title": "藍調時刻",
+            "image": "/background/08.jpg",
+            "url": "https://www.pixiv.net/artworks/120392078"
+        },
+        {
+            "title": "On the way Home",
+            "image": "/background/09.jpg",
+            "url": "https://www.pixiv.net/artworks/96552364"
+        }
+    ]
+}
