@@ -188,9 +188,18 @@ html.dark-mode .footer .footer-inner {
     outline: 2px solid transparent;
     outline-offset: 2px;
     padding: 1rem;
-    transition-duration: .15s;
+    transition-duration: .3s;
     transition-property: all;
     transition-timing-function: cubic-bezier(.4, 0, .2, 1);
+}
+
+.about .link-button:hover {
+    background-color: #ffffff40;
+}
+
+.about .link-button:active {
+    transform: scaleX(.95) scaleY(.95);
+    background-color: #ffffff40;
 }
 
 .about .link-button svg {
