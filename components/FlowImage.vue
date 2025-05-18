@@ -129,7 +129,7 @@ onMounted(() => {
 
     setInterval(() => {
         playNextImage()
-    }, 5000) // 每 5 秒切换一次
+    }, 10000) // 每 5 秒切换一次
 })
 </script>
 

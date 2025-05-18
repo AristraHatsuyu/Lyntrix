@@ -26,7 +26,7 @@ useHead({
         { name: 'author', content: 'Aristra' },
         { name: 'og:title', content: "Aristra's Matrix" },
         { name: 'og:description', content: "aristra's matrix" },
-        { name: 'og:url', content: 'https://blog.aristra.top' },
+        { name: 'og:url', content: 'https://aristra.top' },
         { name: 'twitter:title', content: "Aristra Matrix" },
         { name: 'twitter:description', content: "aristra's matrix" },
     ]

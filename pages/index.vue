@@ -13,7 +13,7 @@
 import { ref, computed } from 'vue'
 
 const currentbg = ref({
-    name: 'Aristra',
+    title: 'Loading',
     url: '',
     highbg: false
 });

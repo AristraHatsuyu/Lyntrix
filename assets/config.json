@@ -1,102 +1,147 @@
 {
     "widget": [
         {
-            "title": "Widget 1",
-            "description": "This is the large widget.",
-            "icon": "",
-            "link": "",
+            "type": 1,
+            "title": "Blog",
+            "description": "Aristra Hatsuyu",
+            "color": "#aca3f2",
+            "icon": "feather",
+            "image": "images/blog.jpg",
+            "link": "https://blog.aristra.top",
             "columns": 4,
-            "row": 2,
-            "image": ""
+            "row": 2
         },
         {
-            "title": "Widget 2",
-            "description": "This is the widget.",
-            "icon": "",
-            "link": "",
+            "type": 1,
+            "title": "GitHub",
+            "description": "AristraHatsuyu",
+            "color": "#202328",
+            "icon": "fa-brands fa-github",
+            "link": "https://github.com/AristraHatsuyu",
             "columns": 2,
             "row": 2
         },
         {
-            "title": "Widget 3",
-            "description": "This is the widget.",
-            "icon": "",
-            "link": "",
+            "type": 1,
+            "title": "Enterprise",
+            "description": "FLYour",
+            "color": "#59b7f4",
+            "icon": "building",
+            "link": "https://www.flyour.cn",
             "columns": 2,
             "row": 2
         },
         {
-            "title": "Widget 4",
-            "description": "This is the widget.",
-            "icon": "",
-            "link": "",
+            "type": 1,
+            "title": "Discord",
+            "description": "@Aristrafly",
+            "color": "#5b64ea",
+            "icon": "fa-brands fa-discord",
+            "link": "https://discord.com/users/1357313495296774224",
             "columns": 2,
             "row": 2
         },
         {
-            "title": "Widget 5",
-            "description": "This is the widget.",
-            "icon": "",
-            "link": "",
+            "type": 1,
+            "title": "Instagram",
+            "description": "@Aristrafly",
+            "color": "#2dbccc",
+            "icon": "fa-brands fa-instagram",
+            "link": "https://www.instagram.com/aristrafly",
             "columns": 2,
             "row": 2
         },
         {
-            "title": "Widget 6",
-            "description": "This is the large widget.",
-            "icon": "",
-            "link": "",
+            "type": 3,
             "columns": 4,
-            "row": 2,
-            "image": ""
+            "row": 2
         },
         {
+            "type": 1,
             "title": "Widget 7",
-            "description": "This is the large widget.",
-            "icon": "",
+            "description": "Large widget.",
+            "color": "#4DA4DD",
+            "icon": "clone",
             "link": "",
             "columns": 5,
             "row": 2,
-            "mrow": 2,
-            "image": ""
+            "mrow": 2
         },
         {
-            "title": "Widget 8",
-            "description": "",
-            "icon": "",
-            "link": "",
+            "type": 1,
+            "title": "Email",
+            "description": "admin@flyour.cn",
+            "color": "#3576d2",
+            "icon": "envelope",
+            "link": "mailto:admin@flyour.cn",
             "columns": 3,
             "row": 1,
             "mcolumns": 2,
             "mrow": 2
         },
         {
-            "title": "Widget 9",
-            "description": "This is the widget.",
-            "icon": "",
-            "link": "",
+            "type": 2,
+            "image": "images/widget.jpeg",
             "columns": 3,
             "row": 3,
             "mcolumns": 2,
             "mrow": 2
         },
         {
-            "title": "Widget 10",
-            "description": "This is the widget.",
-            "icon": "",
-            "link": "",
+            "type": 1,
+            "title": "Feedback",
+            "description": "Project Issue",
+            "color": "#09ad79",
+            "icon": "pen-to-square",
+            "link": "https://blog.aristra.top/comments",
             "columns": 2,
             "row": 2
         },
         {
+            "type": 1,
             "title": "Widget 11",
-            "description": "This is the widget.",
-            "icon": "",
+            "description": "The widget.",
+            "color": "#4DA4DD",
+            "icon": "clone",
             "link": "",
             "columns": 3,
             "row": 2,
             "mcolumns": 2,
             "mrow": 2
+        }
+    ],
+    "project": [
+        {
+            "title": "FLYour",
+            "description": "Build A World of Dream"
+        },
+        {
+            "title": "FLYour BBS",
+            "description": "FLYour Official Community"
+        },
+        {
+            "title": "FLYour Pass",
+            "description": "FLYour User System"
+        },
+        {
+            "title": "FLYour IOT",
+            "description": "FLYour Hardware Platform"
+        },
+        {
+            "title": "Lyntrix",
+            "description": "Redefining Digital Presence"
+        },
+        {
+            "title": "Starmisty",
+            "description": "Star Domain Mystery"
+        },
+        {
+            "title": "FLY-MiX",
+            "description": "Sculpting Sonic Dreams"
+        },
+        {
+            "title": "GenSync",
+            "description": "Connect To The World"
         }
     ],
     "background": [

@@ -61,39 +61,39 @@ onMounted(() => {
 })
 </script>
 
-<style>
+<style lang="scss">
 .cursor {
-    position: fixed;
-    top: -19px;
-    left: -19px;
-    width: 36px;
-    height: 36px;
-    z-index: 9999;
-    opacity: 0;
-    pointer-events: none;
-    transform: translate(0, 0);
-    border: 1px solid rgba(255, 255, 255, 0.6);
-    border-radius: 50%;
-    transition: top 0.3s, left 0.3s, width 0.3s, height 0.3s, opacity 0.3s, background-color 0.3s;
-}
+  position: fixed;
+  top: -19px;
+  left: -19px;
+  width: 36px;
+  height: 36px;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(0, 0);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 50%;
+  transition: top 0.3s, left 0.3s, width 0.3s, height 0.3s, opacity 0.3s, background-color 0.3s;
 
-.cursor.show {
+  &.show {
     opacity: 1;
-}
+  }
 
-.cursor.pointer {
+  &.pointer {
     top: -14px;
     left: -14px;
     width: 26px;
     height: 26px;
     background-color: #ffffff55;
-}
+  }
 
-.cursor.press {
+  &.press {
     top: -11px;
     left: -11px;
     width: 20px;
     height: 20px;
     background-color: #ffffff88;
+  }
 }
 </style>
