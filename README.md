@@ -4,6 +4,8 @@
 
 Lyntrix is a futuristic, animated, and highly customizable personal resume interface designed to showcase your identity with elegance, motion, and impact. Built for developers, designers, and dreamers who believe that personal branding deserves premium aesthetics.
 
+🔗 Visit here: https://aristra.top
+
 ---
 
 ## ✨ Features
@@ -31,7 +33,7 @@ Visit http://localhost:3000 to see your resume come alive.
 
 🛠️ Configuration
 
-You can customize in /pages/index.vue and /assets/backgrounds.json
+You can customize in /pages/index.vue and /assets/config.json
 
 ⸻
 
@@ -39,19 +41,3 @@ You can customize in /pages/index.vue and /assets/backgrounds.json
 	•	Nuxt 3
 	•	Inspira UI
 	•	And a bit of obsession for detail ✨
-
-⸻
-
-📄 License
-
-MIT License © 2025 Aristra
-
-Public-facing use of this software must retain visible credit to the project name Lyntrix in the user interface (e.g., footer or about section).
-
-⸻
-
-🌌 Credits
-
-Created with care by Aristra
-Logo design by Lyntrix Design
-Animation inspired by the digital minimalism movement.
