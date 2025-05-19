@@ -14,7 +14,7 @@ export default defineNuxtConfig({
   modules: ['@vesp/nuxt-fontawesome'],
   fontawesome: {
     icons: {
-      solid: ['envelope', 'feather', 'building', 'pen-to-square', 'clone'],
+      solid: ['envelope', 'feather', 'building', 'pen-to-square', 'chart-simple'],
       brands: ['github', 'discord', 'instagram'],
     }
   }

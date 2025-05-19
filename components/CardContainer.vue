@@ -1,6 +1,6 @@
 <template>
     <div ref="containerRef" :class="props.class" style="transform-style: preserve-3d" :style="WidgetStyle"
-        @mousedown="handleMouseDown" @mousemove="handleMouseMove" @mouseup="handleMouseUp" @mouseleave="handleMouseUp">
+        @mousedown="handleMouseDown" @mousemove="handleMouseMove" @mouseup="handleMouseUp" @mouseleave="handleMouseUp" @touchstart="handleTouchDown" @touchend="handleTouchUp">
         <slot />
     </div>
 </template>
@@ -57,6 +57,16 @@ function updatetransform(e: MouseEvent) {
     ry.value = clampedY * maxRotation * -1  // Y轴上下移动 → 旋转X轴
     rx.value = clampedX * maxRotation   // X轴左右移动 → 旋转Y轴
     tz.value = -1.5;
+}
+
+function handleTouchDown() {
+    if (!containerRef.value) return;
+    tz.value = -1.5;
+}
+
+function handleTouchUp() {
+    if (!containerRef.value) return;
+    tz.value = 0
 }
 
 function handleMouseMove(e: MouseEvent) {

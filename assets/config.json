@@ -53,7 +53,7 @@
         },
         {
             "type": 2,
-            "image": "https://aristra-githubcard.vercel.app/api/stats?username=AristraHatsuyu",
+            "image": "https://githubcard.aristra.top/api/stats?username=AristraHatsuyu",
             "columns": 4,
             "row": 2
         },
@@ -94,12 +94,8 @@
             "row": 2
         },
         {
-            "type": 1,
-            "title": "Widget",
-            "description": "The widget",
-            "color": "#4DA4DD",
-            "icon": "clone",
-            "link": "",
+            "type": 4,
+            "url": "https://aristra.top/count/",
             "columns": 3,
             "row": 2,
             "mcolumns": 2,
