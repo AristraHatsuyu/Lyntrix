@@ -52,17 +52,13 @@
             "row": 2
         },
         {
-            "type": 3,
+            "type": 2,
+            "image": "https://aristra-githubcard.vercel.app/api/stats?username=AristraHatsuyu",
             "columns": 4,
             "row": 2
         },
         {
-            "type": 1,
-            "title": "Widget 7",
-            "description": "Large widget.",
-            "color": "#4DA4DD",
-            "icon": "clone",
-            "link": "",
+            "type": 3,
             "columns": 5,
             "row": 2,
             "mrow": 2
@@ -99,8 +95,8 @@
         },
         {
             "type": 1,
-            "title": "Widget 11",
-            "description": "The widget.",
+            "title": "Widget",
+            "description": "The widget",
             "color": "#4DA4DD",
             "icon": "clone",
             "link": "",

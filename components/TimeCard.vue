@@ -9,6 +9,7 @@
         <div class="hand minute" :style="{ transform: `rotate(${minuteDeg}deg)` }" />
         <div class="hand second" :style="{ transform: `rotate(${secondDeg}deg)` }" />
     </div>
+    <div class="clock-linear"></div>
     <div class="clock-text">
         <div class="date">
             <span class="date-text">{{ currentDate }}</span>
@@ -24,7 +25,7 @@
         <div class="timezone">
             <span class="diff">{{ timezoneDiff }}</span>
             <span class="offset">{{ utcOffset }}<span class="abbr">{{ timezoneAbbr }}</span></span>
-            
+
         </div>
     </div>
 </template>
@@ -120,7 +121,6 @@ onUnmounted(() => {
         flex-direction: row;
         align-items: center;
         justify-content: space-around;
-        gap: 10px;
 
         .clock-face {
             aspect-ratio: 1/1;
@@ -187,6 +187,17 @@ onUnmounted(() => {
                     top: 6.5%;
                     left: 45.25%;
                 }
+            }
+        }
+
+        .clock-linear {
+            width: 8px;
+            height: 85%;
+            border-radius: 4px;
+            background-color: #000;
+            opacity: 0.2;
+            @media (max-width: 880px) {
+                display: none;
             }
         }
 
@@ -259,6 +270,11 @@ html.dark-mode {
                 .hand.second {
                     --color: #73c7f6;
                 }
+            }
+
+            .clock-linear {
+                background-color: #68c9ff;
+                opacity: 0.4;
             }
         }
     }

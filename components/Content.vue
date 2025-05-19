@@ -17,8 +17,8 @@
                     <div v-if="data.image" class="imgcontent" :style="{ 'background-image': `url('${data.image}')` }"
                         style="border-radius: .6rem; width: 110%;" />
                 </a>
-                <a v-else-if="data.type === 2" class="imgcontent"
-                    :style="{ 'background-image': `url('${data.image}')` }"></a>
+                <div v-else-if="data.type === 2" class="imgcontent" style="width: 100%; height: 100%;"
+                    :style="{ 'background-image': `url('${data.image}')` }" />
                 <div v-else-if="data.type === 3" class="clock-widget">
                     <TimeCard />
                 </div>
