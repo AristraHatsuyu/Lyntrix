@@ -69,6 +69,9 @@ const getTimePeriod = (hour: number): string => {
 };
 
 const updateTime = () => {
+    if (document.visibilityState !== 'visible') {
+        return;
+    }
     const tzAbbrMap = {
         "Europe/London": { standard: "GMT", daylight: "BST" },
         "America/New_York": { standard: "EST", daylight: "EDT" },
@@ -110,7 +113,7 @@ const updateTime = () => {
 
 onMounted(() => {
     updateTime()
-    timer = window.setInterval(updateTime, 100)
+    timer = window.setInterval(updateTime, 1000)
 })
 
 onUnmounted(() => {
