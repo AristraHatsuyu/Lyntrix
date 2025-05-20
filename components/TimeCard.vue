@@ -18,15 +18,15 @@
             </div>
             <div class="time">
                 <transition-group name="digit" tag="span" class="hour-text">
-                    <span :key="currentTime.split(':')[0]">{{ currentTime.split(':')[0] }}</span>
+                    <span v-for="item in [currentTime.split(':')[0]]" :key="'hour-' + item">{{ item }}</span>
                 </transition-group>
-                <span class="literal">:</span>
+                    <span class="literal">:</span>
                 <transition-group name="digit" tag="span" class="minute-text">
-                    <span :key="currentTime.split(':')[1]">{{ currentTime.split(':')[1] }}</span>
+                    <span v-for="item in [currentTime.split(':')[1]]" :key="'minute-' + item">{{ item }}</span>
                 </transition-group>
-                <span class="literal">:</span>
+                    <span class="literal">:</span>
                 <transition-group name="digit" tag="span" class="second-text">
-                    <span :key="currentTime.split(':')[2]">{{ currentTime.split(':')[2] }}</span>
+                    <span v-for="item in [currentTime.split(':')[2]]" :key="'second-' + item">{{ item }}</span>
                 </transition-group>
             </div>
             <div class="timezone">
