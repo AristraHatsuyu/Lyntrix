@@ -17,11 +17,17 @@
                 <span class="abbr">{{ currentDay }}</span>
             </div>
             <div class="time">
-                <span class="hour-text">{{ currentTime.split(':')[0] }}</span>
+                <transition-group name="digit" tag="span" class="hour-text">
+                    <span :key="currentTime.split(':')[0]">{{ currentTime.split(':')[0] }}</span>
+                </transition-group>
                 <span class="literal">:</span>
-                <span class="minute-text">{{ currentTime.split(':')[1] }}</span>
+                <transition-group name="digit" tag="span" class="minute-text">
+                    <span :key="currentTime.split(':')[1]">{{ currentTime.split(':')[1] }}</span>
+                </transition-group>
                 <span class="literal">:</span>
-                <span class="second-text">{{ currentTime.split(':')[2] }}</span>
+                <transition-group name="digit" tag="span" class="second-text">
+                    <span :key="currentTime.split(':')[2]">{{ currentTime.split(':')[2] }}</span>
+                </transition-group>
             </div>
             <div class="timezone">
                 <span class="diff">{{ timezoneDiff }}</span>
@@ -230,8 +236,46 @@ onUnmounted(() => {
                 top: -2.5px;
             }
 
+            .minute-text~* ,.minute-text~* ,.hour-text~* {
+                display: inline-flex;
+                flex-direction: column;
+                max-height: 1em;
+            }
+
             .minute-text~* {
                 opacity: 0.6;
+            }
+
+            .digit-enter-active {
+                transition: transform 0.6s ease, opacity 0.6s ease, filter 0.6s ease;
+            }
+
+            .digit-leave-active {
+                transition: transform 0.6s cubic-bezier(0.4, 0, 1, 1), opacity 0.6s cubic-bezier(0.4, 0, 1, 1), filter 0.6s cubic-bezier(0.4, 0, 1, 1);
+            }
+
+            .digit-enter-from {
+                transform: translateY(-150%);
+                opacity: 0;
+                filter: blur(15px);
+            }
+
+            .digit-enter-to {
+                transform: translateY(-100%);
+                opacity: 1;
+                filter: blur(0px)
+            }
+
+            .digit-leave-from {
+                transform: translateY(0);
+                opacity: 1;
+                filter: blur(0px)
+            }
+
+            .digit-leave-to {
+                transform: translateY(50%);
+                opacity: 0;
+                filter: blur(15px);
             }
         }
 
