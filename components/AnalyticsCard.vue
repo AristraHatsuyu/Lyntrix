@@ -135,4 +135,24 @@ if (props.url) {
         }
     }
 }
+
+.dark-mode {
+    .count-widget {
+        .numcontent {
+            .numbox {
+                background: none;
+                border: 2px solid #78c6ff52;
+            }
+            @media (max-width: 880px) {
+                background: none;
+                border: 2px solid #78c6ff52;
+
+                .numbox {
+                    background: none;
+                    border: none;
+                }
+            }
+        }
+    }
+}
 </style>

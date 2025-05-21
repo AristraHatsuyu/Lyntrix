@@ -1,6 +1,7 @@
 <template>
     <div class="wrapper" :class="{ 'lightbg': currentbg.highbg }" :style="wrapperStyle" @mousemove="handleMouseMove"
         @mouseleave="resetOffset">
+        <Particles />
         <FlowImage v-model="currentbg" />
         <Banner />
         <Content />
