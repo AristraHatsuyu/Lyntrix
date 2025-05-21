@@ -18,15 +18,24 @@
             </div>
             <div class="time">
                 <transition-group name="digit" tag="span" class="hour-text">
-                    <span v-for="item in [currentTime.split(':')[0]]" :key="'hour-' + item">{{ item }}</span>
+                    <span v-for="item in [currentTime.split(':')[0]?.padStart(2, '0')[0]]" :key="'hour-' + item">{{ item }}</span>
                 </transition-group>
-                    <span class="literal">:</span>
+                <transition-group name="digit" tag="span" class="hour-text">
+                    <span v-for="item in [currentTime.split(':')[0]?.padStart(2, '0')[1]]" :key="'hour-' + item">{{ item }}</span>
+                </transition-group>
+                <span class="literal">:</span>
                 <transition-group name="digit" tag="span" class="minute-text">
-                    <span v-for="item in [currentTime.split(':')[1]]" :key="'minute-' + item">{{ item }}</span>
+                    <span v-for="item in [currentTime.split(':')[1]?.padStart(2, '0')[0]]" :key="'minute-' + item">{{ item }}</span>
                 </transition-group>
-                    <span class="literal">:</span>
+                <transition-group name="digit" tag="span" class="minute-text">
+                    <span v-for="item in [currentTime.split(':')[1]?.padStart(2, '0')[1]]" :key="'minute-' + item">{{ item }}</span>
+                </transition-group>
+                <span class="literal">:</span>
                 <transition-group name="digit" tag="span" class="second-text">
-                    <span v-for="item in [currentTime.split(':')[2]]" :key="'second-' + item">{{ item }}</span>
+                    <span v-for="item in [currentTime.split(':')[2]?.padStart(2, '0')[0]]" :key="'second-' + item">{{ item }}</span>
+                </transition-group>
+                <transition-group name="digit" tag="span" class="second-text">
+                    <span v-for="item in [currentTime.split(':')[2]?.padStart(2, '0')[1]]" :key="'second-' + item">{{ item }}</span>
                 </transition-group>
             </div>
             <div class="timezone">
@@ -227,8 +236,10 @@ onUnmounted(() => {
         }
 
         .time {
+            display: flex;
             font-size: 2.5em;
-            min-width: 7ch;
+            min-width: 8ch;
+            max-height: 1em;
             font-weight: 700;
             margin: 0.1em 0;
             font-family: 'Arial Rounded MT Bold';
@@ -240,12 +251,11 @@ onUnmounted(() => {
             }
 
             .minute-text~* ,.minute-text~* ,.hour-text~* {
-                display: inline-flex;
+                display: flex;
                 flex-direction: column;
-                max-height: 1em;
             }
 
-            .minute-text~* {
+            >.minute-text:nth-child(5) ~ * {
                 opacity: 0.6;
             }
 
