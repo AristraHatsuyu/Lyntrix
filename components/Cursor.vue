@@ -6,7 +6,9 @@
 const circle = ref<HTMLDivElement | null>(null)
 const mouse = { x: 0, y: 0 }
 const circlePos = { x: 0, y: 0 }
-const delay = 0.15 // 越小越快，0.1~0.2 比较自然
+const delay = computed(() =>
+  document.documentElement.classList.contains('forcetouch') ? 1 : 0.15
+)
 const showmouse = ref(false)
 const inpointer = ref(false)
 const mousedown = ref(false)
@@ -29,8 +31,8 @@ onMounted(() => {
     })
 
     const animate = () => {
-        circlePos.x += (mouse.x - circlePos.x) * delay
-        circlePos.y += (mouse.y - circlePos.y) * delay
+        circlePos.x += (mouse.x - circlePos.x) * delay.value
+        circlePos.y += (mouse.y - circlePos.y) * delay.value
         if (circle.value) {
             circle.value.style.transform = `translate(${circlePos.x}px, ${circlePos.y}px)`
         }
@@ -95,5 +97,9 @@ onMounted(() => {
     height: 20px;
     background-color: #ffffff88;
   }
+}
+
+.forcetouch .cursor {
+    background-color: #ffffff;
 }
 </style>

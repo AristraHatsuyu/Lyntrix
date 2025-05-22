@@ -252,5 +252,10 @@ function animate() {
     left: 0;
     bottom: 0;
     right: 0;
+    display: none;
+}
+
+html.dark-mode .particles-bg {
+    display: block;
 }
 </style>

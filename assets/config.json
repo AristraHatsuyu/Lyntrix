@@ -78,6 +78,9 @@
         {
             "type": 2,
             "image": "images/widget.jpeg",
+            "left": 100,
+            "top": 65,
+            "scale": "220%",
             "columns": 3,
             "row": 3,
             "mcolumns": 2,

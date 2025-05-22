@@ -1,8 +1,8 @@
 <template>
     <client-only>
-        <Cursor />
         <NuxtPage />
         <ModeSwitch />
+        <Cursor />
     </client-only>
 </template>
 

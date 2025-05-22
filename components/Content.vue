@@ -1,8 +1,8 @@
 <template>
-    <div class="content">
+    <div class="content" :class="{ 'infocus': infocus, 'inanim': floatingEl }" ref="htmlEl">
         <div class="matrix">
             <CardContainer v-for="(data, index) in widgetdata" :key="index" class="widget" :columns="data.columns"
-                :rows="data.row" :mcolumns="data.mcolumns" :mrows="data.mrow">
+                :rows="data.row" :mcolumns="data.mcolumns" :mrows="data.mrow" @dblclick="handleDoubleClick">
                 <a v-if="data.type === 1" :class="{ 'single': data.row < 2 && windowWidth > 880 }" draggable="false"
                     :href="data.link ? data.link : 'javascript:;'" :target="data.link ? '_blank' : '_self'"
                     data-pointer>
@@ -19,7 +19,7 @@
                         style="border-radius: .6rem; width: 110%;" />
                 </a>
                 <div v-else-if="data.type === 2" class="imgcontent" style="width: 100%; height: 100%;"
-                    :style="{ 'background-image': `url('${data.image}')` }" />
+                    :style="{ 'background-image': `url('${data.image}')`, 'background-position': `${data.left}% ${data.top}%`, 'background-size': data.scale }" />
                 <TimeCard v-else-if="data.type === 3" />
                 <AnalyticsCard v-else-if="data.type === 4" :url="data.url" />
             </CardContainer>
@@ -32,29 +32,250 @@
                 </a>
             </CardContainer>
         </div>
+        <div class="covers" @click="handledbgclose"
+            :style="{ 'background': infocus ? '#00000055' : '#00000000', 'pointer-events': floatingEl ? 'unset' : 'none' }">
+        </div>
     </div>
 </template>
 
-
 <script setup lang="ts">
-import config from "@/assets/config.json";
+import config from "@/assets/config.json"
 import { ref, onMounted, onUnmounted } from 'vue'
+
+declare global {
+  interface Window {
+    _preventScroll?: (e: Event) => void;
+    _preventKeys?: (e: KeyboardEvent) => void;
+  }
+}
 
 const widgetdata = config.widget
 const projectdata = config.project
 const windowWidth = ref(window.innerWidth)
+const forceTriggered = ref(false)
+const htmlforceclass = ref(false)
 
-const updateWidth = () => {
-    windowWidth.value = window.innerWidth
-}
+const updateWidth = () => windowWidth.value = window.innerWidth
+
+let touchHoldTimer: ReturnType<typeof setTimeout> | null = null
+let holdTarget: HTMLElement | null = null
+let startX = 0, startY = 0
+let allowtouchout = true
+const moveThreshold = 15
 
 onMounted(() => {
     window.addEventListener('resize', updateWidth)
+
+    document.body.addEventListener('webkitmouseforcechanged', (e: any) => {
+        const force = e.webkitForce
+        const path = e.composedPath?.() || []
+        const target = path.find((el: any) =>
+            el?.classList?.contains?.('widget')
+        ) as HTMLElement | undefined
+
+        if (force >= 2 && target && !forceTriggered.value) {
+            forceTriggered.value = true
+            htmlforceclass.value = true
+            document.documentElement.classList.add('forcetouch')
+            handleDoubleClick({ currentTarget: target } as unknown as MouseEvent)
+        } else if (force >= 2 && !forceTriggered.value && !htmlforceclass.value) {
+            htmlforceclass.value = true
+            document.documentElement.classList.add('forcetouch')
+        } else if (force < 2 && htmlforceclass.value) {
+            forceTriggered.value = false
+            htmlforceclass.value = false
+            document.documentElement.classList.remove('forcetouch')
+        }
+    })
+
+    document.body.addEventListener('mouseup', () => {
+        forceTriggered.value = false
+        htmlforceclass.value = false
+        document.documentElement.classList.remove('forcetouch')
+    })
+
+    document.body.addEventListener('touchstart', (e: TouchEvent) => {
+        const path = e.composedPath?.() || []
+        const target = path.find((el: any) =>
+            el?.classList?.contains?.('widget')
+        ) as HTMLElement | undefined
+
+        if (!target) return
+
+        holdTarget = target
+
+        const touch = e.touches[0]
+        startX = touch.clientX
+        startY = touch.clientY
+
+        touchHoldTimer = setTimeout(() => {
+            if (!forceTriggered.value) {
+                forceTriggered.value = true
+                htmlforceclass.value = true
+                allowtouchout = false
+                document.documentElement.classList.add('forcetouch')
+                handleDoubleClick({ currentTarget: holdTarget } as unknown as MouseEvent)
+            }
+        }, 800)
+    })
+
+    document.body.addEventListener('touchmove', (e: TouchEvent) => {
+        if (!touchHoldTimer) return
+
+        const touch = e.touches[0]
+        const deltaX = touch.clientX - startX
+        const deltaY = touch.clientY - startY
+        const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
+
+        if (distance > moveThreshold) {
+            clearTimeout(touchHoldTimer)
+            touchHoldTimer = setTimeout(() => {
+                allowtouchout = true
+            }, 500)
+        }
+    })
+
+    const cancelTouchHold = () => {
+        if (touchHoldTimer) {
+            clearTimeout(touchHoldTimer)
+            touchHoldTimer = setTimeout(() => {
+                allowtouchout = true
+            }, 500)
+        }
+        forceTriggered.value = false
+        htmlforceclass.value = false
+        document.documentElement.classList.remove('forcetouch')
+        holdTarget = null
+    }
+
+    document.body.addEventListener('touchend', cancelTouchHold)
+    document.body.addEventListener('touchcancel', cancelTouchHold)
 })
 
-onUnmounted(() => {
-    window.removeEventListener('resize', updateWidth)
-})
+onUnmounted(() => window.removeEventListener('resize', updateWidth))
+
+const htmlEl = ref<HTMLElement | null>(null)
+
+const disableScroll = () => {
+    const preventDefault = (e: Event) => e.preventDefault()
+    const preventKeys = (e: KeyboardEvent) => {
+        const keys = ['ArrowUp', 'ArrowDown', 'PageUp', 'PageDown', 'Space', 'Home', 'End']
+        if (keys.includes(e.code)) e.preventDefault()
+    }
+
+    window.addEventListener('wheel', preventDefault, { passive: false })
+    window.addEventListener('touchmove', preventDefault, { passive: false })
+    window.addEventListener('keydown', preventKeys, { passive: false })
+
+    const { $lenis } = useNuxtApp?.() || {}
+    $lenis?.stop?.()
+
+    window._preventScroll = preventDefault
+    window._preventKeys = preventKeys
+}
+
+const enableScroll = () => {
+    window.removeEventListener('wheel', window._preventScroll!)
+    window.removeEventListener('touchmove', window._preventScroll!)
+    window.removeEventListener('keydown', window._preventKeys!)
+
+    const { $lenis } = useNuxtApp?.() || {}
+    $lenis?.start?.()
+}
+
+const floatingEl = ref<HTMLElement | null>(null)
+const placeholderEl = ref<HTMLElement | null>(null)
+const infocus = ref(false)
+
+const handleDoubleClick = (event: MouseEvent) => {
+    const target = event.currentTarget as HTMLElement
+
+    if (floatingEl.value === target) {
+        infocus.value = false
+        restoreElement()
+    } else {
+        if (floatingEl.value) restoreElement()
+        infocus.value = true
+        floatElement(target)
+    }
+}
+
+const handledbgclose = () => {
+    if(!allowtouchout) return;
+    infocus.value = false;
+    restoreElement()
+}
+
+const floatElement = (element: HTMLElement) => {
+    const rect = element.getBoundingClientRect()
+
+    disableScroll()
+
+    const placeholder = document.createElement('div')
+    placeholder.className = 'widget widget-placeholder'
+    placeholder.style.background = 'none'
+
+    const vars = ['--columns', '--rows', '--m-columns', '--m-rows']
+    vars.forEach(name => {
+        const val = element.style.getPropertyValue(name)
+        if (val) placeholder.style.setProperty(name, val)
+    })
+
+    element.parentNode?.insertBefore(placeholder, element)
+    placeholderEl.value = placeholder
+
+    element.dataset.floatItem = "true"
+
+    const oleft = touchHoldTimer && forceTriggered.value ? rect.left - 11 : rect.left
+
+    Object.assign(element.style, {
+        position: 'fixed',
+        top: `${rect.top}px`,
+        left: `${oleft}px`,
+        zIndex: '9999',
+        transition: 'top .5s ease, left .5s ease, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s'
+    })
+
+    void element.offsetWidth
+
+    const pleft = touchHoldTimer && forceTriggered.value ? ((window.innerWidth - rect.width - 22) / 2) : ((window.innerWidth - rect.width) / 2)
+
+    element.style.top = `${(window.innerHeight - rect.height) / 2}px`
+    element.style.left = `${pleft}px`
+
+    floatingEl.value = element
+}
+
+const restoreElement = () => {
+    const element = floatingEl.value
+    const placeholder = placeholderEl.value
+    if (!element || !placeholder) return
+
+    const { top, left } = placeholder.getBoundingClientRect()
+
+    element.style.transition = 'top .5s ease, left .5s ease, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s'
+    element.style.top = `${top}px`
+    element.style.left = `${left}px`
+
+    setTimeout(() => {
+        placeholder.remove()
+
+        Object.assign(element.style, {
+            position: '',
+            transition: '',
+            zIndex: '',
+            top: '',
+            left: ''
+        })
+
+        delete element.dataset.floatItem
+
+        floatingEl.value = null
+        placeholderEl.value = null
+
+        enableScroll()
+    }, 500)
+}
 </script>
 
 <style lang="scss">
@@ -121,7 +342,7 @@ onUnmounted(() => {
             background-color: color-mix(in srgb, var(--lyntrix-color-high, #fff) 32%, white);
             backdrop-filter: blur(0.8rem);
             transform: perspective(500px) translateZ(var(--tz)) rotateY(var(--rx)) rotateX(var(--ry));
-            transition: transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s;
+            transition: transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s, filter 0.5s;
             --col: min(var(--columns, 2), var(--display-columns));
             --row: var(--rows, 2);
 
@@ -243,6 +464,7 @@ onUnmounted(() => {
         grid-column: span 4;
         flex-direction: column;
         gap: 20px;
+        transition: filter 0.5s;
 
         @media (max-width: 1300px) {
             display: grid;
@@ -252,39 +474,69 @@ onUnmounted(() => {
         @media (max-width: 880px) {
             display: flex;
         }
+
+        .project {
+            background-color: color-mix(in srgb, var(--lyntrix-color-high, #fff) 32%, white);
+            backdrop-filter: blur(0.8rem);
+            border-radius: 1.5rem;
+            color: #000000;
+            overflow: hidden;
+            opacity: 0.8;
+            --x: 0deg;
+            --y: 0deg;
+            transform: perspective(500px) translateZ(var(--tz)) rotateY(var(--rx)) rotateX(var(--ry));
+            transition: transform 0.15s linear 0s, background-color 0.2s linear 0s, box-shadow 0.2s ease 0s;
+
+            a {
+                width: 100%;
+                height: 100%;
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 15px 20px;
+                gap: 5px;
+                user-select: none;
+
+                .title {
+                    font-weight: 700;
+                    font-size: 1.08em;
+                }
+
+                .description {
+                    flex: 1 1 0%;
+                }
+            }
+        }
+    }
+
+    .covers {
+        position: fixed;
+        inset: 0;
+        transition: .5s;
     }
 }
 
-.project {
-    background-color: color-mix(in srgb, var(--lyntrix-color-high, #fff) 32%, white);
-    backdrop-filter: blur(0.8rem);
-    border-radius: 1.5rem;
-    color: #000000;
-    overflow: hidden;
-    opacity: 0.8;
-    --x: 0deg;
-    --y: 0deg;
-    transform: perspective(500px) translateZ(var(--tz)) rotateY(var(--rx)) rotateX(var(--ry));
-    transition: transform 0.15s linear 0s, background-color 0.2s linear 0s, box-shadow 0.2s ease 0s;
+.content.infocus {
+    .matrix {
+        .widget {
+            filter: blur(10px);
+        }
+    }
 
-    a {
-        width: 100%;
-        height: 100%;
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        padding: 15px 20px;
-        gap: 5px;
-        user-select: none;
+    .projlist {
+        filter: blur(10px);
+    }
+}
 
-        .title {
-            font-weight: 700;
-            font-size: 1.08em;
+.content.inanim {
+    .matrix {
+        .widget[data-float-item] {
+            filter: none;
         }
 
-        .description {
-            flex: 1 1 0%;
+        .widget-placeholder {
+            opacity: 0;
         }
     }
 }
@@ -340,28 +592,28 @@ html.dark-mode {
 }
 
 @keyframes content-flip {
-  0% {
-    margin-top: 35vh;
-    margin-bottom: 0vh;
-    opacity: 0;
-  }
+    0% {
+        margin-top: 35vh;
+        margin-bottom: 0vh;
+        opacity: 0;
+    }
 
-  100% {
-    margin-top: 0vh;
-    margin-bottom: 35vh;
-    opacity: 1;
-  }
+    100% {
+        margin-top: 0vh;
+        margin-bottom: 35vh;
+        opacity: 1;
+    }
 }
 
 @keyframes widget-flip {
-  0% {
-    scale: 0.8;
-    opacity: 0;
-  }
+    0% {
+        scale: 0.8;
+        opacity: 0;
+    }
 
-  100% {
-    scale: 1;
-    opacity: 0.8;
-  }
+    100% {
+        scale: 1;
+        opacity: 0.8;
+    }
 }
 </style>
