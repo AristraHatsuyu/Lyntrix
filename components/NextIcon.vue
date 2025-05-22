@@ -15,29 +15,12 @@
 <script setup lang="ts">
 import { useScrollYPercent } from '@/composables/scroll'
 const { scrollYPercent } = useScrollYPercent()
-function scrollToVh(vh: number, duration = 600) {
-    const target = window.innerHeight * vh
-    const start = window.scrollY
-    const distance = target - start
-    const startTime = performance.now()
+const { $lenis } = useNuxtApp()
 
-    function easeOutQuart(t: number): number {
-        return 1 - Math.pow(1 - t, 6)
-    }
-
-    function step(currentTime: number) {
-        const elapsed = currentTime - startTime
-        const progress = Math.min(elapsed / duration, 1)
-        const eased = easeOutQuart(progress)
-        const scrollTo = start + distance * eased
-        window.scrollTo(0, scrollTo)
-
-        if (progress < 1) {
-            requestAnimationFrame(step)
-        }
-    }
-
-    requestAnimationFrame(step)
+const scrollToVh = (vh: number, duration = 800) => {
+  $lenis.scrollTo(window.innerHeight * vh, {
+    duration: duration / 1000
+  })
 }
 </script>
 

@@ -8,8 +8,7 @@ export default defineNuxtConfig({
     baseURL: '/',
     pageTransition: { name: 'page', mode: 'out-in' }
   },
-
-  compatibilityDate: '2025-04-10',
+  compatibilityDate: '2025-05-22',
   devtools: { enabled: true },
   modules: ['@vesp/nuxt-fontawesome'],
   fontawesome: {

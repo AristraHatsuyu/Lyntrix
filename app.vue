@@ -7,17 +7,6 @@
 </template>
 
 <script setup lang="ts">
-import Lenis from '@studio-freight/lenis'
-
-onMounted(() => {
-    const lenis = new Lenis()
-    function raf(time: DOMHighResTimeStamp): void {
-        lenis.raf(time)
-        requestAnimationFrame(raf)
-    }
-    requestAnimationFrame(raf)
-})
-
 useHead({
     title: 'Aristra | Matrix',
     meta: [
