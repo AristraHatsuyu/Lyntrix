@@ -81,6 +81,7 @@
             "left": 100,
             "top": 65,
             "scale": "220%",
+            "zoom": true,
             "columns": 3,
             "row": 3,
             "mcolumns": 2,

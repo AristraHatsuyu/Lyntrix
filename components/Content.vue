@@ -18,7 +18,7 @@
                     <div v-if="data.image" class="imgcontent" :style="{ 'background-image': `url('${data.image}')` }"
                         style="border-radius: .6rem; width: 110%;" />
                 </a>
-                <div v-else-if="data.type === 2" class="imgcontent" style="width: 100%; height: 100%;"
+                <div v-else-if="data.type === 2" class="imgcontent" style="width: 100%; height: 100%; transition: background-size .5s;"
                     :style="{ 'background-image': `url('${data.image}')`, 'background-position': `${data.left}% ${data.top}%`, 'background-size': data.scale }" />
                 <TimeCard v-else-if="data.type === 3" />
                 <AnalyticsCard v-else-if="data.type === 4" :url="data.url" />
@@ -192,18 +192,44 @@ const handleDoubleClick = (event: MouseEvent) => {
 
     if (floatingEl.value === target) {
         infocus.value = false
-        restoreElement()
+        if (target.children[0].classList.contains('imgcontent') && widgetdata[Array.from(target.parentElement!.children).indexOf(target)-1].zoom) {
+            restoreElementWithRatio()
+        } else {
+            restoreElement()
+        }
     } else {
         if (floatingEl.value) restoreElement()
-        infocus.value = true
-        floatElement(target)
+        if (target.children[0].classList.contains('imgcontent') && widgetdata[Array.from(target.parentElement!.children).indexOf(target)].zoom) {
+            const bgImage = getComputedStyle(target.children[0]).backgroundImage;
+            const urlMatch = bgImage.match(/url\(["']?(.*?)["']?\)/);
+            if (urlMatch && urlMatch[1]) {
+                const imageUrl = urlMatch[1];
+                const img = new Image();
+                img.src = imageUrl;
+                img.onload = () => {
+                    const width = img.naturalWidth;
+                    const height = img.naturalHeight;
+                    const ratio = width / height;
+                    infocus.value = true
+                    floatElementWithRatio(target, ratio)
+                };
+            }
+        } else {
+            infocus.value = true
+            floatElement(target)
+        }
     }
 }
 
 const handledbgclose = () => {
     if(!allowtouchout) return;
+
     infocus.value = false;
-    restoreElement()
+    if (floatingEl.value?.children[0].classList.contains('imgcontent') && widgetdata[Array.from(floatingEl.value.parentElement!.children).indexOf(floatingEl.value)-1].zoom) {
+        restoreElementWithRatio()
+    } else {
+        restoreElement()
+    }
 }
 
 const floatElement = (element: HTMLElement) => {
@@ -246,6 +272,66 @@ const floatElement = (element: HTMLElement) => {
     floatingEl.value = element
 }
 
+const floatElementWithRatio = (element: HTMLElement, aspectRatio: number) => {
+    const rect = element.getBoundingClientRect();
+
+    disableScroll();
+
+    const placeholder = document.createElement('div');
+    placeholder.className = 'widget widget-placeholder';
+    placeholder.style.background = 'none';
+
+    const vars = ['--columns', '--rows', '--m-columns', '--m-rows'];
+    vars.forEach(name => {
+        const val = element.style.getPropertyValue(name);
+        if (val) placeholder.style.setProperty(name, val);
+    });
+
+    element.parentNode?.insertBefore(placeholder, element);
+    placeholderEl.value = placeholder;
+
+    element.dataset.floatItem = "true";
+
+    const oleft = touchHoldTimer && forceTriggered.value ? rect.left - 11 : rect.left;
+
+    element.classList.add('imgcover')
+
+    Object.assign(element.style, {
+        position: 'fixed',
+        top: `${rect.top}px`,
+        left: `${oleft}px`,
+        zIndex: '9999',
+        transition: 'top .5s ease, left .5s ease, width .5s ease, height .5s ease, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s'
+    });
+
+    // 强制回流，确保 transition 生效
+    void element.offsetWidth;
+
+    // 🟡 以下部分是唯一修改：根据比例调整宽高并居中
+    const maxWidth = window.innerWidth * 0.8;
+    const maxHeight = window.innerHeight * 0.8;
+
+    let newWidth = maxWidth;
+    let newHeight = newWidth / aspectRatio;
+
+    if (newHeight > maxHeight) {
+        newHeight = maxHeight;
+        newWidth = newHeight * aspectRatio;
+    }
+
+    element.style.width = `${newWidth}px`;
+    element.style.height = `${newHeight}px`;
+
+    const pleft = touchHoldTimer && forceTriggered.value
+        ? ((window.innerWidth - newWidth - 22) / 2)
+        : ((window.innerWidth - newWidth) / 2);
+
+    element.style.top = `${(window.innerHeight - newHeight) / 2}px`;
+    element.style.left = `${pleft}px`;
+
+    floatingEl.value = element;
+};
+
 const restoreElement = () => {
     const element = floatingEl.value
     const placeholder = placeholderEl.value
@@ -276,6 +362,42 @@ const restoreElement = () => {
         enableScroll()
     }, 500)
 }
+
+const restoreElementWithRatio = () => {
+    const element = floatingEl.value;
+    const placeholder = placeholderEl.value;
+    if (!element || !placeholder) return;
+
+    const { top, left, width, height } = placeholder.getBoundingClientRect();
+
+    element.style.transition = 'top .5s ease, left .5s ease, width .5s ease, height .5s ease, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s';
+    element.style.top = `${top}px`;
+    element.style.left = `${left}px`;
+    element.style.width = `${width}px`;
+    element.style.height = `${height}px`;
+    element.classList.remove('imgcover')
+
+    setTimeout(() => {
+        placeholder.remove();
+
+        Object.assign(element.style, {
+            position: '',
+            transition: '',
+            zIndex: '',
+            top: '',
+            left: '',
+            width: '',
+            height: ''
+        });
+
+        delete element.dataset.floatItem;
+
+        floatingEl.value = null;
+        placeholderEl.value = null;
+
+        enableScroll();
+    }, 500);
+};
 </script>
 
 <style lang="scss">
@@ -457,6 +579,10 @@ const restoreElement = () => {
                 justify-content: space-between;
             }
         }
+
+        .widget.imgcover > .imgcontent {
+            background-size: 100% !important;
+        }
     }
 
     .projlist {
@@ -517,30 +643,6 @@ const restoreElement = () => {
     }
 }
 
-.content.infocus {
-    .matrix {
-        .widget {
-            filter: blur(10px);
-        }
-    }
-
-    .projlist {
-        filter: blur(10px);
-    }
-}
-
-.content.inanim {
-    .matrix {
-        .widget[data-float-item] {
-            filter: none;
-        }
-
-        .widget-placeholder {
-            opacity: 0;
-        }
-    }
-}
-
 html.dark-mode {
     .content {
         .matrix {
@@ -569,6 +671,30 @@ html.dark-mode {
                     box-shadow: 0 0 24px #78c1f664, 0 0 10px #73bef351;
                 }
             }
+        }
+    }
+}
+
+.content.infocus {
+    .matrix {
+        .widget {
+            filter: blur(10px);
+        }
+    }
+
+    .projlist {
+        filter: blur(10px);
+    }
+}
+
+.content.inanim {
+    .matrix {
+        .widget[data-float-item] {
+            filter: none;
+        }
+
+        .widget-placeholder {
+            opacity: 0 !important;
         }
     }
 }
