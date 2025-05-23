@@ -54,6 +54,7 @@ const projectdata = config.project
 const windowWidth = ref(window.innerWidth)
 const forceTriggered = ref(false)
 const htmlforceclass = ref(false)
+const tempopacity = ref('')
 
 const updateWidth = () => windowWidth.value = window.innerWidth
 
@@ -187,6 +188,194 @@ const floatingEl = ref<HTMLElement | null>(null)
 const placeholderEl = ref<HTMLElement | null>(null)
 const infocus = ref(false)
 
+const floatElement = (element: HTMLElement) => {
+    const rect = element.getBoundingClientRect()
+
+    disableScroll()
+
+    const placeholder = document.createElement('div')
+    placeholder.className = 'widget widget-placeholder'
+    placeholder.style.background = 'none'
+
+    const vars = ['--columns', '--rows', '--m-columns', '--m-rows']
+    vars.forEach(name => {
+        const val = element.style.getPropertyValue(name)
+        if (val) placeholder.style.setProperty(name, val)
+    })
+
+    element.parentNode?.insertBefore(placeholder, element)
+    placeholderEl.value = placeholder
+
+    element.dataset.floatItem = "content"
+
+    const oleft = touchHoldTimer && forceTriggered.value ? rect.left - 11 : rect.left
+
+    Object.assign(element.style, {
+        position: 'fixed',
+        top: `${rect.top}px`,
+        left: `${oleft}px`,
+        zIndex: '9999',
+        transition: 'top .5s ease, left .5s ease, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s'
+    })
+
+    document.documentElement.classList.add('forcewidget')
+
+    void element.offsetWidth
+
+    const pleft = touchHoldTimer && forceTriggered.value ? ((window.innerWidth - rect.width - 22) / 2) : ((window.innerWidth - rect.width) / 2)
+
+    element.style.top = `${(window.innerHeight - rect.height) / 2}px`
+    element.style.left = `${pleft}px`
+
+    floatingEl.value = element
+}
+
+const floatElementWithRatio = (element: HTMLElement, aspectRatio: number) => {
+    const rect = element.getBoundingClientRect();
+
+    disableScroll();
+
+    const placeholder = document.createElement('div');
+    placeholder.className = 'widget widget-placeholder';
+    placeholder.style.background = 'none';
+
+    const vars = ['--columns', '--rows', '--m-columns', '--m-rows'];
+    vars.forEach(name => {
+        const val = element.style.getPropertyValue(name);
+        if (val) placeholder.style.setProperty(name, val);
+    });
+
+    element.parentNode?.insertBefore(placeholder, element);
+    placeholderEl.value = placeholder;
+
+    element.dataset.floatItem = "image";
+
+    const oleft = touchHoldTimer && forceTriggered.value ? rect.left - 11 : rect.left;
+
+    element.classList.add('imgcover')
+
+    tempopacity.value = window.getComputedStyle(element).opacity
+
+    Object.assign(element.style, {
+        position: 'fixed',
+        top: `${rect.top}px`,
+        left: `${oleft}px`,
+        zIndex: '9999',
+        opacity: tempopacity.value,
+        transition: 'top .5s ease, left .5s ease, width .5s ease, height .5s ease, opacity .5s linear, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s'
+    });
+
+    document.documentElement.classList.add('forcewidget')
+
+    floatingEl.value = element;
+
+    // 强制回流，确保 transition 生效
+    void element.offsetWidth;
+
+    // 🟡 以下部分是唯一修改：根据比例调整宽高并居中
+    const maxWidth = window.innerWidth * 0.8;
+    const maxHeight = window.innerHeight * 0.8;
+
+    let newWidth = maxWidth;
+    let newHeight = newWidth / aspectRatio;
+
+    if (newHeight > maxHeight) {
+        newHeight = maxHeight;
+        newWidth = newHeight * aspectRatio;
+    }
+
+    element.style.width = `${newWidth}px`;
+    element.style.height = `${newHeight}px`;
+    requestAnimationFrame(() => {
+        element.style.opacity = '1';
+    });
+
+    const pleft = touchHoldTimer && forceTriggered.value
+        ? ((window.innerWidth - newWidth - 22) / 2)
+        : ((window.innerWidth - newWidth) / 2);
+
+    element.style.top = `${(window.innerHeight - newHeight) / 2}px`;
+    element.style.left = `${pleft}px`;
+
+    floatingEl.value = element;
+};
+
+const restoreElement = () => {
+    const element = floatingEl.value
+    const placeholder = placeholderEl.value
+    if (!element || !placeholder) return
+
+    const { top, left } = placeholder.getBoundingClientRect()
+    console.log(placeholder.getBoundingClientRect())
+
+    element.style.transition = 'top .5s ease, left .5s ease, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s'
+    element.style.top = `${top}px`
+    element.style.left = `${left}px`
+
+    document.documentElement.classList.remove('forcewidget')
+
+    setTimeout(() => {
+        placeholder.remove()
+
+        Object.assign(element.style, {
+            position: '',
+            transition: '',
+            zIndex: '',
+            top: '',
+            left: ''
+        })
+        
+
+        delete element.dataset.floatItem
+
+        floatingEl.value = null
+        placeholderEl.value = null
+
+        enableScroll()
+    }, 500)
+}
+
+const restoreElementWithRatio = () => {
+    const element = floatingEl.value;
+    const placeholder = placeholderEl.value;
+    if (!element || !placeholder) return;
+
+
+    const { top, left, width, height } = placeholder.getBoundingClientRect();
+
+    element.style.transition = 'top .5s ease, left .5s ease, width .5s ease, height .5s ease, opacity .5s linear, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s';
+    element.style.top = `${top}px`;
+    element.style.left = `${left}px`;
+    element.style.width = `${width}px`;
+    element.style.height = `${height}px`;
+    element.style.opacity = tempopacity.value;
+    element.classList.remove('imgcover')
+
+    document.documentElement.classList.remove('forcewidget')
+
+    setTimeout(() => {
+        placeholder.remove();
+
+        Object.assign(element.style, {
+            position: '',
+            transition: '',
+            zIndex: '',
+            top: '',
+            left: '',
+            width: '',
+            height: '',
+            opacity: ''
+        });
+
+        delete element.dataset.floatItem;
+
+        floatingEl.value = null;
+        placeholderEl.value = null;
+
+        enableScroll();
+    }, 500);
+};
+
 const handleDoubleClick = (event: MouseEvent) => {
     const target = event.currentTarget as HTMLElement
 
@@ -231,182 +420,6 @@ const handledbgclose = () => {
         restoreElement()
     }
 }
-
-const floatElement = (element: HTMLElement) => {
-    const rect = element.getBoundingClientRect()
-
-    disableScroll()
-
-    const placeholder = document.createElement('div')
-    placeholder.className = 'widget widget-placeholder'
-    placeholder.style.background = 'none'
-
-    const vars = ['--columns', '--rows', '--m-columns', '--m-rows']
-    vars.forEach(name => {
-        const val = element.style.getPropertyValue(name)
-        if (val) placeholder.style.setProperty(name, val)
-    })
-
-    element.parentNode?.insertBefore(placeholder, element)
-    placeholderEl.value = placeholder
-
-    element.dataset.floatItem = "true"
-
-    const oleft = touchHoldTimer && forceTriggered.value ? rect.left - 11 : rect.left
-
-    Object.assign(element.style, {
-        position: 'fixed',
-        top: `${rect.top}px`,
-        left: `${oleft}px`,
-        zIndex: '9999',
-        transition: 'top .5s ease, left .5s ease, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s'
-    })
-
-    document.documentElement.classList.add('forcewidget')
-
-    void element.offsetWidth
-
-    const pleft = touchHoldTimer && forceTriggered.value ? ((window.innerWidth - rect.width - 22) / 2) : ((window.innerWidth - rect.width) / 2)
-
-    element.style.top = `${(window.innerHeight - rect.height) / 2}px`
-    element.style.left = `${pleft}px`
-
-    floatingEl.value = element
-}
-
-const floatElementWithRatio = (element: HTMLElement, aspectRatio: number) => {
-    const rect = element.getBoundingClientRect();
-
-    disableScroll();
-
-    const placeholder = document.createElement('div');
-    placeholder.className = 'widget widget-placeholder';
-    placeholder.style.background = 'none';
-
-    const vars = ['--columns', '--rows', '--m-columns', '--m-rows'];
-    vars.forEach(name => {
-        const val = element.style.getPropertyValue(name);
-        if (val) placeholder.style.setProperty(name, val);
-    });
-
-    element.parentNode?.insertBefore(placeholder, element);
-    placeholderEl.value = placeholder;
-
-    element.dataset.floatItem = "true";
-
-    const oleft = touchHoldTimer && forceTriggered.value ? rect.left - 11 : rect.left;
-
-    element.classList.add('imgcover')
-
-    Object.assign(element.style, {
-        position: 'fixed',
-        top: `${rect.top}px`,
-        left: `${oleft}px`,
-        zIndex: '9999',
-        transition: 'top .5s ease, left .5s ease, width .5s ease, height .5s ease, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s'
-    });
-
-    document.documentElement.classList.add('forcewidget')
-
-    // 强制回流，确保 transition 生效
-    void element.offsetWidth;
-
-    // 🟡 以下部分是唯一修改：根据比例调整宽高并居中
-    const maxWidth = window.innerWidth * 0.8;
-    const maxHeight = window.innerHeight * 0.8;
-
-    let newWidth = maxWidth;
-    let newHeight = newWidth / aspectRatio;
-
-    if (newHeight > maxHeight) {
-        newHeight = maxHeight;
-        newWidth = newHeight * aspectRatio;
-    }
-
-    element.style.width = `${newWidth}px`;
-    element.style.height = `${newHeight}px`;
-
-    const pleft = touchHoldTimer && forceTriggered.value
-        ? ((window.innerWidth - newWidth - 22) / 2)
-        : ((window.innerWidth - newWidth) / 2);
-
-    element.style.top = `${(window.innerHeight - newHeight) / 2}px`;
-    element.style.left = `${pleft}px`;
-
-    floatingEl.value = element;
-};
-
-const restoreElement = () => {
-    const element = floatingEl.value
-    const placeholder = placeholderEl.value
-    if (!element || !placeholder) return
-
-    const { top, left } = placeholder.getBoundingClientRect()
-
-    element.style.transition = 'top .5s ease, left .5s ease, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s'
-    element.style.top = `${top}px`
-    element.style.left = `${left}px`
-
-    document.documentElement.classList.remove('forcewidget')
-
-    setTimeout(() => {
-        placeholder.remove()
-
-        Object.assign(element.style, {
-            position: '',
-            transition: '',
-            zIndex: '',
-            top: '',
-            left: ''
-        })
-        
-
-        delete element.dataset.floatItem
-
-        floatingEl.value = null
-        placeholderEl.value = null
-
-        enableScroll()
-    }, 500)
-}
-
-const restoreElementWithRatio = () => {
-    const element = floatingEl.value;
-    const placeholder = placeholderEl.value;
-    if (!element || !placeholder) return;
-
-    const { top, left, width, height } = placeholder.getBoundingClientRect();
-
-    element.style.transition = 'top .5s ease, left .5s ease, width .5s ease, height .5s ease, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s';
-    element.style.top = `${top}px`;
-    element.style.left = `${left}px`;
-    element.style.width = `${width}px`;
-    element.style.height = `${height}px`;
-    element.classList.remove('imgcover')
-
-    document.documentElement.classList.remove('forcewidget')
-
-    setTimeout(() => {
-        placeholder.remove();
-
-        Object.assign(element.style, {
-            position: '',
-            transition: '',
-            zIndex: '',
-            top: '',
-            left: '',
-            width: '',
-            height: ''
-        });
-
-        delete element.dataset.floatItem;
-
-        floatingEl.value = null;
-        placeholderEl.value = null;
-
-        enableScroll();
-    }, 500);
-};
 </script>
 
 <style lang="scss">
@@ -589,8 +602,10 @@ const restoreElementWithRatio = () => {
             }
         }
 
-        .widget.imgcover > .imgcontent {
-            background-size: 100% !important;
+        .widget.imgcover {
+            > .imgcontent {
+                background-size: 100% !important;
+            }
         }
     }
 
@@ -620,7 +635,7 @@ const restoreElementWithRatio = () => {
             --x: 0deg;
             --y: 0deg;
             transform: perspective(500px) translateZ(var(--tz)) rotateY(var(--rx)) rotateX(var(--ry));
-            transition: transform 0.15s linear 0s, background-color 0.2s linear 0s, box-shadow 0.2s ease 0s;
+            transition: transform 0.15s linear 0s, background-color 0.2s linear 0s, box-shadow 0.2s ease 0s, width 0.5s, height 0.5s;
 
             a {
                 width: 100%;
@@ -700,6 +715,10 @@ html.dark-mode {
     .matrix {
         .widget[data-float-item] {
             filter: none;
+        }
+
+        .widget[data-float-item="image"] {
+            animation: none;
         }
 
         .widget-placeholder {
