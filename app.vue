@@ -9,8 +9,8 @@
 <script setup lang="ts">
 console.log(
   "%c Lyntrix %c v1.0 ",
-  "background: #4A90E2; color: white; font-size: 16px; font-weight: bold; padding: 4px 10px 4px 10px; border-radius: 4px 0 0 4px;",
-  "background: #50E3C2; color: black; font-size: 14px; font-weight: bold; padding: 4px 10px 4px 10px; border-radius: 0 4px 4px 0;"
+  "background: #B0D9FF; color: #003366; font-size: 16px; font-weight: bold; padding: 6px 12px; border-radius: 6px 0 0 6px;",
+  "background: #E6F2FF; color: #003366; font-size: 16px; font-weight: bold; padding: 6px 12px; border-radius: 0 6px 6px 0;"
 );
 useHead({
     title: 'Aristra | Matrix',
