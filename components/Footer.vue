@@ -109,6 +109,7 @@ onUnmounted(() => {
     justify-content: center;
     margin-top: -35vh;
     user-select: none;
+    transition: filter .5s ease;
 
     .footer-inner {
         text-align: center;
@@ -162,6 +163,10 @@ html.dark-mode {
             }
         }
     }
+}
+
+html.forcewidget .footer {
+    filter: blur(10px);
 }
 
 .about {

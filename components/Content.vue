@@ -262,6 +262,8 @@ const floatElement = (element: HTMLElement) => {
         transition: 'top .5s ease, left .5s ease, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s'
     })
 
+    document.documentElement.classList.add('forcewidget')
+
     void element.offsetWidth
 
     const pleft = touchHoldTimer && forceTriggered.value ? ((window.innerWidth - rect.width - 22) / 2) : ((window.innerWidth - rect.width) / 2)
@@ -304,6 +306,8 @@ const floatElementWithRatio = (element: HTMLElement, aspectRatio: number) => {
         transition: 'top .5s ease, left .5s ease, width .5s ease, height .5s ease, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s'
     });
 
+    document.documentElement.classList.add('forcewidget')
+
     // 强制回流，确保 transition 生效
     void element.offsetWidth;
 
@@ -343,6 +347,8 @@ const restoreElement = () => {
     element.style.top = `${top}px`
     element.style.left = `${left}px`
 
+    document.documentElement.classList.remove('forcewidget')
+
     setTimeout(() => {
         placeholder.remove()
 
@@ -353,6 +359,7 @@ const restoreElement = () => {
             top: '',
             left: ''
         })
+        
 
         delete element.dataset.floatItem
 
@@ -376,6 +383,8 @@ const restoreElementWithRatio = () => {
     element.style.width = `${width}px`;
     element.style.height = `${height}px`;
     element.classList.remove('imgcover')
+
+    document.documentElement.classList.remove('forcewidget')
 
     setTimeout(() => {
         placeholder.remove();
