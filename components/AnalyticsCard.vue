@@ -141,11 +141,11 @@ if (props.url) {
         .numcontent {
             .numbox {
                 background: none;
-                border: 2px solid #78c6ff52;
+                border: .15rem solid #78c6ff52;
             }
             @media (max-width: 880px) {
                 background: none;
-                border: 2px solid #78c6ff52;
+                border: .15rem solid #78c6ff52;
 
                 .numbox {
                     background: none;

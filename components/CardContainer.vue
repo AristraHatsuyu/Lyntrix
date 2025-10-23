@@ -15,6 +15,7 @@ interface Props {
     rows?: number;
     mcolumns?: number;
     mrows?: number;
+    infocus?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -22,7 +23,8 @@ const props = withDefaults(defineProps<Props>(), {
     columns: 2,
     rows: 2,
     mcolumns: 0,
-    mrows: 0
+    mrows: 0,
+    infocus: false
 });
 
 const tz = ref(0);
@@ -54,14 +56,24 @@ function updatetransform(e: MouseEvent) {
     const normY = (e.clientY - top - height / 2) / (height / 2)
     const clampedX = Math.max(-1, Math.min(1, normX))
     const clampedY = Math.max(-1, Math.min(1, normY))
-    ry.value = clampedY * maxRotation * -1  // Y轴上下移动 → 旋转X轴
-    rx.value = clampedX * maxRotation   // X轴左右移动 → 旋转Y轴
-    tz.value = -1.5;
+    if (props.infocus) {
+        ry.value = 0
+        rx.value = 0
+        tz.value = -0.5
+    } else {
+        ry.value = clampedY * maxRotation * -1  // Y轴上下移动 → 旋转X轴
+        rx.value = clampedX * maxRotation   // X轴左右移动 → 旋转Y轴
+        tz.value = -1.5
+    }
 }
 
 function handleTouchDown() {
     if (!containerRef.value) return;
-    tz.value = -1.5;
+    if (props.infocus) {
+        tz.value = -0.5
+    } else {
+        tz.value = -1.5
+    }
 }
 
 function handleTouchUp() {

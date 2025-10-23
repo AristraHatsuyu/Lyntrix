@@ -39,5 +39,4 @@ You can customize in /pages/index.vue and /assets/config.json
 
 📦 Built With
 	•	Nuxt 3
-	•	Inspira UI
 	•	And a bit of obsession for detail ✨

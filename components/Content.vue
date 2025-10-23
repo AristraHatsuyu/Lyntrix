@@ -2,7 +2,7 @@
     <div class="content" :class="{ 'infocus': infocus, 'inanim': floatingEl }" ref="htmlEl">
         <div class="matrix">
             <CardContainer v-for="(data, index) in widgetdata" :key="index" class="widget" :columns="data.columns"
-                :rows="data.row" :mcolumns="data.mcolumns" :mrows="data.mrow" @dblclick="handleDoubleClick">
+                :rows="data.row" :mcolumns="data.mcolumns" :mrows="data.mrow" :infocus="infocus" @dblclick="handleDoubleClick">
                 <a v-if="data.type === 1" :class="{ 'single': data.row < 2 && windowWidth > 880 }" draggable="false"
                     :href="data.link ? data.link : 'javascript:;'" :target="data.link ? '_blank' : '_self'"
                     data-pointer>
@@ -25,7 +25,7 @@
             </CardContainer>
         </div>
         <div class="projlist">
-            <CardContainer v-for="(data, index) in projectdata" :key="index" class="project">
+            <CardContainer v-for="(data, index) in projectdata" :key="index" :infocus="infocus" class="project" @click="handleProjectClick">
                 <a draggable="false" data-pointer>
                     <div class="title" href="" target="_blank">{{ data.title }}</div>
                     <div class="description">{{ data.description }}</div>
@@ -55,6 +55,7 @@ const windowWidth = ref(window.innerWidth)
 const forceTriggered = ref(false)
 const htmlforceclass = ref(false)
 const tempopacity = ref('')
+const currentdisplay = ref('')
 
 const updateWidth = () => windowWidth.value = window.innerWidth
 
@@ -215,7 +216,7 @@ const floatElement = (element: HTMLElement) => {
         top: `${rect.top}px`,
         left: `${oleft}px`,
         zIndex: '9999',
-        transition: 'top .5s ease, left .5s ease, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s'
+        transition: 'top .5s ease, left .5s ease, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s, border .3s linear'
     })
 
     document.documentElement.classList.add('forcewidget')
@@ -262,7 +263,7 @@ const floatElementWithRatio = (element: HTMLElement, aspectRatio: number) => {
         left: `${oleft}px`,
         zIndex: '9999',
         opacity: tempopacity.value,
-        transition: 'top .5s ease, left .5s ease, width .5s ease, height .5s ease, opacity .5s linear, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s'
+        transition: 'top .5s ease, left .5s ease, width .5s ease, height .5s ease, opacity .5s linear, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s, border .3s linear'
     });
 
     document.documentElement.classList.add('forcewidget')
@@ -308,7 +309,7 @@ const restoreElement = () => {
     const { top, left } = placeholder.getBoundingClientRect()
     console.log(placeholder.getBoundingClientRect())
 
-    element.style.transition = 'top .5s ease, left .5s ease, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s'
+    element.style.transition = 'top .5s ease, left .5s ease, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s, border .3s linear'
     element.style.top = `${top}px`
     element.style.left = `${left}px`
 
@@ -343,7 +344,7 @@ const restoreElementWithRatio = () => {
 
     const { top, left, width, height } = placeholder.getBoundingClientRect();
 
-    element.style.transition = 'top .5s ease, left .5s ease, width .5s ease, height .5s ease, opacity .5s linear, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s';
+    element.style.transition = 'top .5s ease, left .5s ease, width .5s ease, height .5s ease, opacity .5s linear, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s, border .3s linear';
     element.style.top = `${top}px`;
     element.style.left = `${left}px`;
     element.style.width = `${width}px`;
@@ -381,6 +382,7 @@ const handleDoubleClick = (event: MouseEvent) => {
 
     if (floatingEl.value === target) {
         infocus.value = false
+        currentdisplay.value = ''
         if (target.children[0].classList.contains('imgcontent') && widgetdata[Array.from(target.parentElement!.children).indexOf(target)-1].zoom) {
             restoreElementWithRatio()
         } else {
@@ -407,17 +409,115 @@ const handleDoubleClick = (event: MouseEvent) => {
             infocus.value = true
             floatElement(target)
         }
+        currentdisplay.value = 'widget'
     }
 }
 
 const handledbgclose = () => {
     if(!allowtouchout) return;
 
-    infocus.value = false;
-    if (floatingEl.value?.children[0].classList.contains('imgcontent') && widgetdata[Array.from(floatingEl.value.parentElement!.children).indexOf(floatingEl.value)-1].zoom) {
+    if (currentdisplay.value === 'widget') {
+        infocus.value = false;
+        if (floatingEl.value?.children[0].classList.contains('imgcontent') && widgetdata[Array.from(floatingEl.value.parentElement!.children).indexOf(floatingEl.value)-1].zoom) {
+            restoreElementWithRatio()
+        } else {
+            restoreElement()
+        }
+    } else if (currentdisplay.value === 'project') {
+        infocus.value = false
+        currentdisplay.value = ''
         restoreElementWithRatio()
-    } else {
-        restoreElement()
+    }
+}
+
+const floatProjectRatio = (element: HTMLElement) => {
+    const rect = element.getBoundingClientRect();
+
+    disableScroll();
+
+    infocus.value = true
+    currentdisplay.value = 'project'
+    const placeholder = document.createElement('div');
+    placeholder.className = 'project project-placeholder';
+    placeholder.style.background = 'none';
+
+    const vars = ['--columns', '--rows', '--m-columns', '--m-rows'];
+    vars.forEach(name => {
+        const val = element.style.getPropertyValue(name);
+        if (val) placeholder.style.setProperty(name, val);
+    });
+
+    const link = document.createElement('a');
+    const title = document.createElement('div');
+    title.className = 'title';
+    title.textContent = 'Lyntrix';
+    const desc = document.createElement('div');
+    desc.className = 'description';
+    desc.textContent = 'Lyntrix';
+    link.appendChild(title);
+    link.appendChild(desc);
+    placeholder.appendChild(link);
+    element.parentNode?.insertBefore(placeholder, element);
+
+    placeholderEl.value = placeholder;
+    element.dataset.floatItem = "webpage";
+
+    const oleft = touchHoldTimer && forceTriggered.value ? rect.left - 11 : rect.left;
+
+    tempopacity.value = window.getComputedStyle(element).opacity
+
+    Object.assign(element.style, {
+        position: 'fixed',
+        top: `${rect.top}px`,
+        left: `${oleft}px`,
+        width: `${window.getComputedStyle(element).width}`,
+        height: `${window.getComputedStyle(element).height}`,
+        zIndex: '9999',
+        opacity: tempopacity.value,
+        transition: 'top .5s ease, left .5s ease, width .5s ease, height .5s ease, opacity .5s linear, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s, border .3s linear'
+    });
+
+    document.documentElement.classList.add('forcewidget')
+
+    floatingEl.value = element;
+
+    // 强制回流，确保 transition 生效
+    void element.offsetWidth;
+
+    // 🟡 以下部分是唯一修改：根据比例调整宽高并居中
+    const maxWidth = window.innerWidth * 0.8;
+    const maxHeight = window.innerHeight * 0.8;
+
+    let newWidth = maxWidth;
+    let newHeight = newWidth / 1.6;
+
+    if (newHeight > maxHeight) {
+        newHeight = maxHeight;
+        newWidth = newHeight * 1.6;
+    }
+
+    element.style.width = `${newWidth}px`;
+    element.style.height = `${newHeight}px`;
+
+    const pleft = touchHoldTimer && forceTriggered.value
+        ? ((window.innerWidth - newWidth - 22) / 2)
+        : ((window.innerWidth - newWidth) / 2);
+
+    element.style.top = `${(window.innerHeight - newHeight) / 2}px`;
+    element.style.left = `${pleft}px`;
+
+    floatingEl.value = element;
+};
+
+const handleProjectClick = (event: MouseEvent) => {
+    const target = event.currentTarget as HTMLElement
+
+    if (floatingEl.value === target && infocus.value) {
+        infocus.value = false
+        currentdisplay.value = ''
+        restoreElementWithRatio()
+    } else if (!floatingEl.value) {
+        floatProjectRatio(target)
     }
 }
 </script>
@@ -486,7 +586,7 @@ const handledbgclose = () => {
             background-color: color-mix(in srgb, var(--lyntrix-color-high, #fff) 32%, white);
             backdrop-filter: blur(0.8rem);
             transform: perspective(500px) translateZ(var(--tz)) rotateY(var(--rx)) rotateX(var(--ry));
-            transition: transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s, filter 0.5s;
+            transition: transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s, filter 0.5s, border 0.3s linear;
             --col: min(var(--columns, 2), var(--display-columns));
             --row: var(--rows, 2);
 
@@ -614,7 +714,6 @@ const handledbgclose = () => {
         grid-column: span 4;
         flex-direction: column;
         gap: 20px;
-        transition: filter 0.5s;
 
         @media (max-width: 1300px) {
             display: grid;
@@ -635,7 +734,7 @@ const handledbgclose = () => {
             --x: 0deg;
             --y: 0deg;
             transform: perspective(500px) translateZ(var(--tz)) rotateY(var(--rx)) rotateX(var(--ry));
-            transition: transform 0.15s linear 0s, background-color 0.2s linear 0s, box-shadow 0.2s ease 0s, width 0.5s, height 0.5s;
+            transition: transform 0.15s linear 0s, background-color 0.2s linear 0s, box-shadow 0.2s ease 0s, width 0.5s, height 0.5s, filter 0.5s;
 
             a {
                 width: 100%;
@@ -657,6 +756,10 @@ const handledbgclose = () => {
                     flex: 1 1 0%;
                 }
             }
+
+            &.project-placeholder {
+                opacity: 0 !important;
+            }
         }
     }
 
@@ -673,7 +776,7 @@ html.dark-mode {
             .widget {
                 background: #78c7ff2f;
                 color: #78c6ff;
-                border: 2px solid #78c7ffd5;
+                border: .2rem solid #78c7ffd5;
                 box-sizing: border-box;
 
                 &:hover {
@@ -687,7 +790,7 @@ html.dark-mode {
             .project {
                 background: #78c7ff2f;
                 color: #78c6ff;
-                border: 2px solid #78c7ffd5;
+                border: .2rem solid #78c7ffd5;
                 box-sizing: border-box;
 
                 &:hover {
@@ -699,6 +802,10 @@ html.dark-mode {
     }
 }
 
+.content .widget.imgcover {
+    border-width: 0 !important;
+}
+
 .content.infocus {
     .matrix {
         .widget {
@@ -706,7 +813,7 @@ html.dark-mode {
         }
     }
 
-    .projlist {
+    .projlist .project {
         filter: blur(10px);
     }
 }
@@ -723,6 +830,12 @@ html.dark-mode {
 
         .widget-placeholder {
             opacity: 0 !important;
+        }
+    }
+
+    .projlist {
+        .project[data-float-item] {
+            filter: none;
         }
     }
 }

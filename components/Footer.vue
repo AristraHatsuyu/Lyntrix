@@ -39,6 +39,8 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
+
 interface Props {
     title?: string;
     url?: string;
@@ -167,6 +169,7 @@ html.dark-mode {
 
 html.forcewidget .footer {
     filter: blur(10px);
+    pointer-events: none;
 }
 
 .about {
