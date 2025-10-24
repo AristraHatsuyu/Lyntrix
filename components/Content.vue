@@ -29,6 +29,7 @@
                 <a draggable="false" data-pointer>
                     <div class="title" href="" target="_blank">{{ data.title }}</div>
                     <div class="description">{{ data.description }}</div>
+                    <div class="detail"></div>
                 </a>
             </CardContainer>
         </div>
@@ -528,6 +529,8 @@ const handleProjectClick = (event: MouseEvent) => {
     grid-template-columns: repeat(12, 1fr);
     column-gap: 60px;
     align-items: start;
+    margin-top: max(0px, var(--scroll-shift));
+    margin-bottom: calc(35vh - max(0px, var(--scroll-shift)));
 
     @media (max-width: 1300px) {
         display: flex;
@@ -541,19 +544,6 @@ const handleProjectClick = (event: MouseEvent) => {
 
     @media (max-width: 880px) {
         max-width: 480px;
-    }
-
-    @supports (animation-timeline: scroll(root y)) {
-        animation: content-flip auto linear;
-        animation-fill-mode: both;
-        animation-timeline: scroll(root y);
-        animation-range-start: 0;
-        animation-range-end: 25vh;
-    }
-
-    @supports not (animation-timeline: scroll(root y)) {
-        margin-top: max(0px, var(--scroll-shift));
-        margin-bottom: calc(35vh - max(0px, var(--scroll-shift)));
     }
 
     .matrix {
@@ -743,17 +733,29 @@ const handleProjectClick = (event: MouseEvent) => {
                 display: flex;
                 flex-direction: column;
                 align-items: flex-start;
-                padding: 15px 20px;
-                gap: 5px;
+                padding: .8rem 1.5rem;
                 user-select: none;
 
                 .title {
                     font-weight: 700;
-                    font-size: 1.08em;
+                    font-size: 1.25em;
+                    line-height: 1.25em;
+                    margin-bottom: 0.2rem;
                 }
 
                 .description {
                     flex: 1 1 0%;
+                }
+
+                .detail {
+                    opacity: 0;
+                    height: 100%;
+                    width: 100%;
+                    background: rgba(0, 0, 0, 0.2);
+                    border-radius: .8rem;
+                    overflow: hidden;
+                    filter: blur(1rem);
+                    transition: margin 0.3s, opacity 0.6s, filter 0.6s;
                 }
             }
 
@@ -815,6 +817,14 @@ html.dark-mode {
 
     .projlist .project {
         filter: blur(10px);
+
+        &[data-float-item] {
+            a .detail {
+                margin: .5rem 0;
+                filter: none;
+                opacity: 1;
+            }
+        }
     }
 }
 
@@ -839,21 +849,22 @@ html.dark-mode {
         }
     }
 }
-
-@supports (animation-timeline: scroll(root y)) {
-    .content {
-        animation: content-flip auto linear;
-        animation-fill-mode: both;
-        animation-timeline: scroll(root y);
-        animation-range-start: 0;
-        animation-range-end: 25vh;
-
-        .widget,
-        .project {
-            animation: widget-flip auto linear;
+@supports not (font: -apple-system-body) {
+    @supports (animation-timeline: scroll(root y)) {
+        .content {
+            animation: content-flip auto linear;
             animation-fill-mode: both;
-            animation-timeline: view();
-            animation-range: entry 0 entry 100px;
+            animation-timeline: scroll(root y);
+            animation-range-start: 0;
+            animation-range-end: 25vh;
+
+            .widget,
+            .project {
+                animation: widget-flip auto linear;
+                animation-fill-mode: both;
+                animation-timeline: view();
+                animation-range: entry 0 entry 100px;
+            }
         }
     }
 }
