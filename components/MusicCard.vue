@@ -1,11 +1,11 @@
 <template>
     <div class="music-widget">
         <div class="picture">
-            
+            <AlbumCover :image-url="currentTrack?.image" :direction="albumCoverDirection" />
         </div>
         <div class="info" :class="{ 'involume': entervolume }">
-            <div class="title">{{ currentTrack?.title || 'Not Playing' }}</div>
-            <div class="subtitle">{{ currentTrack?.author || '--' }}</div>
+            <div class="title"><TextFlip :duration="500" :words="currentTrack?.title.replace(/ /g, '&nbsp;') || 'Not Playing'.replace(/ /g, '&nbsp;')" /></div>
+            <div class="subtitle"><TextFlip :duration="500" :words="currentTrack?.author.replace(/ /g, '&nbsp;') || '--'" /></div>
             <div class="volume">
                 <div class="progresscon" @mousedown.stop @dblclick.stop data-pointer @mouseenter="entervolume = true" @mouseleave="entervolume = false">
                     <div class="progress" :style="{ width: volume + '%' }"></div>
@@ -100,7 +100,8 @@ interface Props {
     data: {
         title: string,
         author: string,
-        file: string
+        file: string,
+        image?: string
     }[];
 }
 
@@ -134,6 +135,8 @@ const currentTrackIndex = ref(0);
 const isSeeking = ref(false);
 const isAudioLoaded = ref(false);
 const entervolume = ref(false)
+
+const albumCoverDirection = ref<'next' | 'prev'>('next');
 
 // ============================================
 // 缓存管理系统
@@ -630,6 +633,8 @@ const togglePlay = async () => {
 
 const playNext = async (autoPlay = false) => {
     if (props.data.length === 0) return;
+
+    albumCoverDirection.value = 'next'; // ✅ 设置为下一首方向
     
     const shouldAutoPlay = autoPlay || !isPlaying.value;
     
@@ -643,6 +648,8 @@ const playNext = async (autoPlay = false) => {
 
 const playPrevious = async () => {
     if (props.data.length === 0) return;
+
+    albumCoverDirection.value = 'prev'; // ✅ 设置为上一首方向
     
     const shouldAutoPlay = !isPlaying.value;
     
@@ -900,31 +907,39 @@ onUnmounted(() => {
     .picture {
         height: calc(var(--square-size) * 0.75);
         width: calc(var(--square-size) * 0.75);
-        border-radius: calc(var(--square-size) * 0.18);
-        background-color: rgba(0, 0, 0, 0.2);
-        transition: .6s;
+        transition: width .6s, height .6s;
     }
 
     .info {
         width: 100%;
-        transition: transform 0.6s, width 0.6s;
+        position: relative;
+        height: calc(var(--square-size) * .5);
+        transition: transform 0.6s, width 0.6s, height 0.6s;
 
         .title {
             white-space: nowrap;
-            overflow: hidden;
             text-overflow: ellipsis;
-            transition: font-size .6s, line-height .6s;
+            transition: font-size .6s, line-height .6s, padding .6s, margin .6s;
             font-size: calc(var(--square-size) * 0.24);
             line-height: calc(var(--square-size) * 0.26);
+            padding: calc(var(--square-size) * 0.24);
+            margin-left: calc(var(--square-size) * -0.24);
+            margin-top: calc(var(--square-size) * -0.24);
+            padding-right: 0;
+            mask-image: linear-gradient(90deg, #000 80%, transparent 100%);
         }
 
         .subtitle {
             white-space: nowrap;
-            overflow: hidden;
             text-overflow: ellipsis;
-            transition: font-size .6s, line-height .6s;
+            transition: font-size .6s, line-height .6s, padding .6s, margin .6s;
             font-size: calc(var(--square-size) * 0.2);
             line-height: calc(var(--square-size) * 0.22);
+            padding: calc(var(--square-size) * 0.24);
+            margin-top: calc(var(--square-size) * -0.48);
+            margin-left: calc(var(--square-size) * -0.24);
+            padding-right: 0;
+            mask-image: linear-gradient(90deg, #000 80%, transparent 100%);
             opacity: 0.6;
         }
 
@@ -937,7 +952,7 @@ onUnmounted(() => {
             width: calc(var(--size)* 12);
             flex-direction: row-reverse;
             transition: opacity .6s, filter .6s;
-            transform: translate(calc(var(--size) * 19), calc(var(--size) * -5)) ;
+            transform: translate(calc(var(--size) * 19), calc(var(--size) * -8));
             fill: color-mix(in srgb, var(--lyntrix-color-high, #000), #000 60%);
 
             .progresscon {
@@ -1105,6 +1120,7 @@ onUnmounted(() => {
             display: flex;
             align-items: center;
             position: absolute;
+            pointer-events: none;
             transition: filter .6s, opacity .6s;
 
             .ctrlprogress {
@@ -1197,12 +1213,12 @@ onUnmounted(() => {
         .picture {
             height: calc(var(--size)* 12.5);
             width: calc(var(--size)* 12.5);
-            border-radius: calc(var(--size) * 1.5);
         }
 
         .info {
-            width: calc(var(--size) * 31);
-            transform: translate(calc(var(--size) * 14.5), calc(var(--size) * -18.5));
+            width: calc(var(--size) * 28.5);
+            height: calc(var(--size) * 6.5);
+            transform: translate(calc(var(--size) * 14.5), calc(var(--size) * -18.25));
 
             &.involume {
                 width: calc(var(--size) * 18);
@@ -1210,13 +1226,21 @@ onUnmounted(() => {
             }
 
             .title {
-                font-size: calc(var(--size)* 2.4);
-                line-height: calc(var(--size)* 3);
+                font-size: calc(var(--size) * 2.4);
+                line-height: calc(var(--size) * 3);
+                padding: calc(var(--size) * 3);
+                padding-right: 0;
+                margin-left: calc(var(--size) * -3);
+                margin-top: calc(var(--size) * -3);
             }
 
             .subtitle {
-                font-size: calc(var(--size)* 2);
-                line-height: calc(var(--size)* 2.4);
+                font-size: calc(var(--size) * 2);
+                line-height: calc(var(--size) * 2.4);
+                margin-top: calc(var(--size) * -5.5);
+                margin-left: calc(var(--size) * -3);
+                padding: calc(var(--size) * 3);
+                padding-right: 0;
             }
 
             .volume {
@@ -1242,6 +1266,7 @@ onUnmounted(() => {
             }
 
             .rangeinput {
+                pointer-events: auto;
                 filter: none;
                 opacity: 1;
             }
@@ -1257,10 +1282,6 @@ onUnmounted(() => {
 
 html.dark-mode {
     .music-widget {
-        .picture {
-            background-color: #78c6ff80;
-        }
-
         .controls .ctrlbtns {
             color: #78c6ff;
         }

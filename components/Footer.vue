@@ -11,7 +11,7 @@
                     Background
                     <a :href="props.url" target="_blank" rel="noreferrer" class="bg-name"
                         :class="{ 'bg-link': props.url }" data-pointer>
-                        <TextFlip :words="props.title.replace(/ /g, '&nbsp;')" />
+                        <TextFlip :words="props.title.replace(/ /g, '&nbsp;')" :widthcrtl="true" />
                     </a>
                 </div>
             </div>

@@ -1,5 +1,5 @@
 <template>
-    <div style="transition: width 1s" :style="{ width: textWidth }">
+    <div style="transition: width 1s" :style="{ width: widthcrtl ? textWidth : 'auto' }">
         <div ref="scope" style="display: flex;">
             <span v-for="(char, idx) in wordsArray" :key="char + idx" class="spanStyle">
                 {{ char }}
@@ -18,8 +18,9 @@ const props = withDefaults(
         duration?: number;
         delay?: number;
         class?: HTMLAttributes["class"];
+        widthcrtl?: boolean
     }>(),
-    { duration: 0.7, delay: 0, filter: true },
+    { duration: 650, delay: 0, filter: true, widthcrtl: false },
 );
 
 const scope = ref<HTMLElement | null>(null);
@@ -56,7 +57,7 @@ function generateEnterAnimation() {
                 setTimeout(() => {
                     span.style.opacity = "1";
                     span.style.filter = props.filter ? "blur(0px)" : "none";
-                }, 650 / spans.length * index); // 每个字符的动画延迟
+                }, props.duration / spans.length * index); // 每个字符的动画延迟
             });
         }, props.delay);
     }
@@ -80,10 +81,10 @@ function generateExitAnimation() {
                         await nextTick();
                         setTimeout(async () => {
                             generateEnterAnimation();
-                        }, 350); // 等待 DOM 更新
-                    }, 350);
+                        }, props.duration-300); // 等待 DOM 更新
+                    }, props.duration-300);
                 }
-            }, 650 / spans.length * index); // 每个字符的动画延迟
+            }, props.duration / spans.length * index); // 每个字符的动画延迟
         });
     }
 }
