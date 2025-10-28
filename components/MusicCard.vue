@@ -175,7 +175,6 @@ let audioElement: HTMLAudioElement | null = null;
 let fadeInterval: ReturnType<typeof setInterval> | null = null;
 let pauseDelayTimer: ReturnType<typeof setTimeout> | null = null; // ⚠️ 新增
 
-// 计算当前音轨
 const currentTrack = computed(() => {
     if (props.data.length === 0) return null;
     return props.data[currentTrackIndex.value];
@@ -183,7 +182,6 @@ const currentTrack = computed(() => {
 
 // 格式化时间
 const formatTime = (seconds: number, shouldShowPlaceholder: boolean = false): string => {
-    // 如果需要显示占位符（未加载状态）
     if (shouldShowPlaceholder) {
         return '--:--';
     }
@@ -200,36 +198,30 @@ const formatTime = (seconds: number, shouldShowPlaceholder: boolean = false): st
 // ============================================
 
 /**
- * 智能匹配音频URL与歌曲数据（改进版）
+ * 匹配音频URL与歌曲数据
  */
 const findTrackByAudioSrc = (audioSrc: string) => {
     if (!audioSrc) return null;
-    
-    // 解码URL（处理中文等特殊字符）
+
     let decodedSrc = '';
     try {
         decodedSrc = decodeURIComponent(audioSrc);
     } catch {
         decodedSrc = audioSrc;
     }
-    
-    // 提取文件名（最后一个 / 后面的部分）
+
     const srcFileName = decodedSrc.split('/').pop() || '';
     
-    // 尝试多种匹配策略
     return props.data.find(track => {
-        // 策略1: 完整URL匹配
         if (audioSrc.includes(track.file) || decodedSrc.includes(track.file)) {
             return true;
         }
-        
-        // 策略2: 文件名匹配
+
         const trackFileName = track.file.split('/').pop() || '';
         if (srcFileName === trackFileName) {
             return true;
         }
-        
-        // 策略3: 去掉扩展名后匹配
+
         const srcFileBase = srcFileName.split('.')[0];
         const trackFileBase = trackFileName.split('.')[0];
         if (srcFileBase && trackFileBase && srcFileBase === trackFileBase) {
@@ -258,60 +250,45 @@ const getCurrentBufferState = (): { progress: number; bufferedEnd: number; isCom
             return { progress, bufferedEnd, isComplete };
         }
     } catch (e) {
-        // buffered 还未就绪
     }
     
     return { progress: 0, bufferedEnd: 0, isComplete: false };
 };
 
 /**
- * 保存指定歌曲的缓存状态（带"只增不减"保护）
+ * 保存指定歌曲的缓存状态
  */
 const saveCacheState = () => {
     if (!audioElement || !audioElement.src) return;
     
     const audioSrc = audioElement.src;
-    
-    // 使用智能匹配找到对应的歌曲数据
     const trackData = findTrackByAudioSrc(audioSrc);
     
     if (!trackData) {
-        console.warn('[Cache] Cannot find track data for', audioSrc);
         return;
     }
     
     const fileUrl = trackData.file;
-    
-    // 从 audio.buffered 实时读取当前状态
     const bufferState = getCurrentBufferState();
-    
-    // ⚠️ 关键修复：检查现有缓存，实施"只增不减"策略
     const existingCache = cacheStates.get(fileUrl);
     
-    // 如果已有缓存，且标记为完成，永远不要降级
     if (existingCache?.isComplete) {
-        console.log(`[Cache] Skip saving ${fileUrl.split('/').pop()} - already complete at ${existingCache.bufferProgress.toFixed(1)}%`);
         return;
     }
     
-    // 如果已有缓存，且新的进度更小，不要覆盖
     if (existingCache && bufferState.progress < existingCache.bufferProgress) {
-        console.log(`[Cache] Skip saving ${fileUrl.split('/').pop()} - new progress ${bufferState.progress.toFixed(1)}% < cached ${existingCache.bufferProgress.toFixed(1)}%`);
         return;
     }
     
-    // 只有在进度增加时才保存
     const state: CacheState = {
         isLoaded: isAudioLoaded.value,
         duration: audioElement.duration || duration.value,
         bufferProgress: bufferState.progress,
-        isComplete: bufferState.isComplete || (existingCache?.isComplete ?? false),  // 保持完成状态
+        isComplete: bufferState.isComplete || (existingCache?.isComplete ?? false),
         lastBufferedEnd: bufferState.bufferedEnd
     };
     
     cacheStates.set(fileUrl, state);
-    
-    console.log(`[Cache] Saved ${fileUrl.split('/').pop()}: ${bufferState.progress.toFixed(1)}% (buffered: ${bufferState.bufferedEnd.toFixed(1)}s)`);
 };
 
 /**
@@ -323,13 +300,10 @@ const restoreCacheState = (fileUrl: string): boolean => {
     if (cached) {
         isRestoringCache = true;
         
-        // 同步所有状态到响应式变量
         isAudioLoaded.value = cached.isLoaded;
         duration.value = cached.duration;
         bufferProgress.value = cached.bufferProgress;
         isBufferComplete.value = cached.isComplete;
-        
-        console.log(`[Cache] Restored ${fileUrl.split('/').pop()}: ${cached.bufferProgress.toFixed(1)}% (Complete: ${cached.isComplete})`);
         
         setTimeout(() => {
             isRestoringCache = false;
@@ -337,14 +311,12 @@ const restoreCacheState = (fileUrl: string): boolean => {
         
         return true;
     } else {
-        // 没有缓存，重置所有UI状态
         isRestoringCache = false;
         isAudioLoaded.value = false;
         duration.value = 0;
         bufferProgress.value = 0;
         isBufferComplete.value = false;
         
-        console.log(`[Cache] No cache for ${fileUrl.split('/').pop()}`);
         return false;
     }
 };
@@ -353,7 +325,12 @@ const restoreCacheState = (fileUrl: string): boolean => {
 // 音量淡入淡出
 // ============================================
 
-const fadeTo = (targetFadeVolume: number): Promise<void> => {
+/**
+ * 音量淡入淡出（支持最大时长限制）
+ * @param targetFadeVolume 目标淡入淡出系数 (0-1)
+ * @param maxDuration 最大动画时长（毫秒），可选
+ */
+const fadeTo = (targetFadeVolume: number, maxDuration?: number): Promise<void> => {
     return new Promise((resolve) => {
         if (!audioElement) {
             resolve();
@@ -375,7 +352,12 @@ const fadeTo = (targetFadeVolume: number): Promise<void> => {
             return;
         }
         
-        const totalDuration = Math.abs(volumeChange) * 1000;
+        const normalDuration = Math.abs(volumeChange) * 1000;
+        
+        const totalDuration = maxDuration !== undefined 
+            ? Math.min(normalDuration, maxDuration) 
+            : normalDuration;
+        
         const steps = 50;
         const stepDuration = totalDuration / steps;
         const volumeStep = volumeChange / steps;
@@ -390,7 +372,7 @@ const fadeTo = (targetFadeVolume: number): Promise<void> => {
                 }
                 fadeVolume.value = targetFadeVolume;
                 updateActualVolume();
-                resolve();  // ✅ 动画完成时 resolve
+                resolve();
                 return;
             }
             
@@ -422,7 +404,6 @@ const updateBufferProgress = () => {
         
         if (bufferState.isComplete && !isBufferComplete.value) {
             isBufferComplete.value = true;
-            console.log(`[Buffer] Complete: ${currentTrack.value?.title}`);
             stopBufferCheck();
         }
     }
@@ -438,8 +419,6 @@ const startBufferCheck = () => {
         updateBufferProgress();
         saveCacheState();
     }, 500);
-    
-    console.log('[Buffer] Started periodic check');
 };
 
 /**
@@ -449,7 +428,6 @@ const stopBufferCheck = () => {
     if (bufferCheckInterval) {
         clearInterval(bufferCheckInterval);
         bufferCheckInterval = null;
-        console.log('[Buffer] Stopped periodic check');
     }
 };
 
@@ -460,7 +438,6 @@ const stopBufferCheck = () => {
 const setPreloadStrategy = (strategy: 'none' | 'metadata' | 'auto') => {
     if (!audioElement) return;
     audioElement.preload = strategy;
-    console.log(`[Preload] Strategy set to: ${strategy}`);
 };
 
 // ============================================
@@ -468,25 +445,19 @@ const setPreloadStrategy = (strategy: 'none' | 'metadata' | 'auto') => {
 // ============================================
 
 /**
- * 初始化音频对象（完全懒加载版本）
+ * 初始化音频对象
  */
 const initAudio = () => {
     if (!currentTrack.value) return;
     
     const fileUrl = currentTrack.value.file;
-    
-    // 先恢复缓存状态（在创建对象之前）
     const hasCachedState = restoreCacheState(fileUrl);
     
-    // 如果是同一首歌且音频对象存在，不重新创建
     if (audioElement && audioElement.src && audioElement.src.includes(fileUrl)) {
-        console.log('[Audio] Reusing existing audio element');
         return;
     }
     
-    // 清理旧的音频对象
     if (audioElement) {
-        // 在清理前保存状态
         if (audioElement.src) {
             saveCacheState();
         }
@@ -497,15 +468,10 @@ const initAudio = () => {
     }
     
     stopBufferCheck();
-    
-    // 创建新的音频对象
     audioElement = new Audio();
     fadeVolume.value = 0;
     updateActualVolume();
-    audioElement.volume = 0; // DEV
     audioElement.preload = 'none';
-    
-    console.log('[Audio] Created (lazy mode, no src)');
     
     // ========================================
     // 事件监听器
@@ -532,19 +498,15 @@ const initAudio = () => {
         }
         
         isAudioLoaded.value = true;
-        console.log('[Audio] Metadata loaded, duration:', duration.value.toFixed(1), 's');
-        
         setTimeout(updateBufferProgress, 100);
     });
     
     audioElement.addEventListener('play', () => {
-        console.log('[Audio] Play event');
         setPreloadStrategy('auto');
         startBufferCheck();
     });
     
     audioElement.addEventListener('pause', () => {
-        console.log('[Audio] Pause event');
         saveCacheState();
         setPreloadStrategy('metadata');
         stopBufferCheck();
@@ -560,7 +522,6 @@ const initAudio = () => {
     
     audioElement.addEventListener('error', (e) => {
         if (audioElement && audioElement.error) {
-            console.error('[Audio] Load error:', audioElement.error.code, audioElement.error.message);
             isPlaying.value = false;
             isAudioLoaded.value = false;
             stopBufferCheck();
@@ -578,13 +539,10 @@ const loadAudio = async () => {
     const fileUrl = currentTrack.value.file;
     
     if (isAudioLoaded.value && audioElement.src.includes(fileUrl) && audioElement.readyState >= 1) {
-        console.log('[Audio] Already loaded');
         return;
     }
     
     try {
-        console.log('[Audio] Loading:', fileUrl.split('/').pop());
-        
         if (!audioElement.src || !audioElement.src.includes(fileUrl)) {
             audioElement.preload = 'metadata';
             audioElement.src = fileUrl;
@@ -605,14 +563,12 @@ const loadAudio = async () => {
             const onLoaded = () => {
                 audioElement?.removeEventListener('loadedmetadata', onLoaded);
                 audioElement?.removeEventListener('error', onError);
-                console.log('[Audio] Load complete');
                 resolve();
             };
             
             const onError = () => {
                 audioElement?.removeEventListener('loadedmetadata', onLoaded);
                 audioElement?.removeEventListener('error', onError);
-                console.error('[Audio] Load failed');
                 reject(new Error('Load failed'));
             };
             
@@ -640,31 +596,30 @@ const togglePlay = async () => {
     if (!audioElement || !currentTrack.value) return;
     
     if (isPlaying.value) {
-        console.log('[Player] Pausing');
         isPlaying.value = false;
         
-        // ✅ 等待淡出动画完成
-        await fadeTo(0);
+        const remainingTime = duration.value - currentTime.value;
+        const normalFadeDuration = fadeVolume.value * 1000;
         
-        // ✅ 淡出完成后再 pause
+        // 500ms 冗余
+        const safeFadeDuration = remainingTime > 0.5 
+            ? Math.min(normalFadeDuration, (remainingTime - 0.5) * 1000)
+            : 0;
+        
+        await fadeTo(0, safeFadeDuration);
+        
         if (!isPlaying.value && audioElement) {
             audioElement.pause();
-            console.log('[Player] Audio paused after fade out');
         }
     } else {
-        console.log('[Player] Playing');
         try {
             if (!isAudioLoaded.value) {
                 await loadAudio();
             }
-            
             if (audioElement.paused) {
                 await audioElement.play();
             }
-            
             isPlaying.value = true;
-            
-            // ✅ 使用 await（可选，但更一致）
             await fadeTo(1);
         } catch (error) {
             console.error('[Player] Play failed:', error);
@@ -678,12 +633,10 @@ const playNext = async (autoPlay = false) => {
     
     const shouldAutoPlay = autoPlay || !isPlaying.value;
     
-    // 在改变索引之前保存当前状态
     if (audioElement && audioElement.src) {
         saveCacheState();
     }
-    
-    console.log('[Player] Next track (autoPlay:', shouldAutoPlay, ')');
+
     currentTrackIndex.value = (currentTrackIndex.value + 1) % props.data.length;
     await loadAndPlay(shouldAutoPlay);
 };
@@ -693,12 +646,10 @@ const playPrevious = async () => {
     
     const shouldAutoPlay = !isPlaying.value;
     
-    // 在改变索引之前保存当前状态
     if (audioElement && audioElement.src) {
         saveCacheState();
     }
     
-    console.log('[Player] Previous track (autoPlay:', shouldAutoPlay, ')');
     currentTrackIndex.value = currentTrackIndex.value === 0 
         ? props.data.length - 1 
         : currentTrackIndex.value - 1;
@@ -710,8 +661,6 @@ const playPrevious = async () => {
  */
 const loadAndPlay = async (shouldAutoPlay = false) => {
     if (!currentTrack.value) return;
-    
-    console.log(`[Player] Loading track ${currentTrackIndex.value}: ${currentTrack.value.title}`);
     
     const wasPlaying = isPlaying.value;
     
@@ -730,9 +679,7 @@ const loadAndPlay = async (shouldAutoPlay = false) => {
     
     progress.value = 0;
     currentTime.value = 0;
-    
     stopBufferCheck();
-    
     initAudio();
     
     if (shouldAutoPlay || wasPlaying) {
@@ -741,7 +688,6 @@ const loadAndPlay = async (shouldAutoPlay = false) => {
         pauseDelayTimer = setTimeout(() => {
             if (!isPlaying.value && !loadingFailed) {
                 isPlaying.value = false;
-                console.log('[Player] Loading timeout, showing paused state');
             }
             pauseDelayTimer = null;
         }, 300);
@@ -758,11 +704,7 @@ const loadAndPlay = async (shouldAutoPlay = false) => {
                 }
                 
                 isPlaying.value = true;
-                
-                // ✅ 可以选择 await，也可以不 await（淡入时不阻塞）
-                fadeTo(1);  // 不 await，让淡入在后台进行
-                
-                console.log('[Player] Track loaded and playing successfully');
+                fadeTo(1);
             }
         } catch (error) {
             loadingFailed = true;
@@ -781,7 +723,7 @@ const loadAndPlay = async (shouldAutoPlay = false) => {
 };
 
 // ============================================
-// 音量控制系统（新增）
+// 音量控制系统
 // ============================================
 
 /**
@@ -791,7 +733,7 @@ const loadAndPlay = async (shouldAutoPlay = false) => {
 const updateActualVolume = () => {
     if (!audioElement) return;
     
-    const globalVolume = volume.value / 100; // 转换为 0-1
+    const globalVolume = volume.value / 100;
     const actualVolume = globalVolume * fadeVolume.value;
     
     audioElement.volume = Math.max(0, Math.min(1, actualVolume));
@@ -821,11 +763,9 @@ const setVolume = (event: Event) => {
         volume.value = value;
         updateActualVolume();
         
-        // 可选：保存到 localStorage
         try {
             localStorage.setItem('musicPlayerVolume', value.toString());
         } catch (e) {
-            // 忽略存储错误
         }
     }
 };
@@ -835,12 +775,10 @@ const setVolume = (event: Event) => {
 // ============================================
 
 /**
- * 进度条拖动中（⚠️ 修复类型转换）
+ * 进度条拖动中
  */
 const onProgressInput = (event: Event) => {
-    // 如果进度条被禁用，直接返回
     if (!isProgressBarEnabled.value) {
-        console.log('[Player] Progress bar disabled - audio not loaded');
         return;
     }
     
@@ -859,12 +797,10 @@ const onProgressInput = (event: Event) => {
 };
 
 /**
- * 设置播放进度（⚠️ 修复类型转换）
+ * 设置播放进度
  */
 const setProgress = async (event: Event) => {
-    // 如果进度条被禁用，直接返回
     if (!isProgressBarEnabled.value) {
-        console.log('[Player] Progress bar disabled - audio not loaded');
         isSeeking.value = false;
         return;
     }
@@ -884,8 +820,6 @@ const setProgress = async (event: Event) => {
     }
     
     progress.value = value;
-    
-    console.log('[Player] Seeking to', value.toFixed(1), '%');
     
     if (!isAudioLoaded.value) {
         try {
@@ -918,20 +852,15 @@ watch(() => props.data, (newData) => {
 }, { immediate: true });
 
 onMounted(() => {
-    console.log('[Lifecycle] Component mounted');
-    
-    // ⚠️ 新增：从 localStorage 恢复音量设置
     try {
         const savedVolume = localStorage.getItem('musicPlayerVolume');
         if (savedVolume !== null) {
             const volumeValue = parseFloat(savedVolume);
             if (!isNaN(volumeValue) && volumeValue >= 0 && volumeValue <= 100) {
                 volume.value = volumeValue;
-                console.log('[Volume] Restored from storage:', volumeValue, '%');
             }
         }
     } catch (e) {
-        // 忽略读取错误
     }
     
     if (props.data.length > 0) {
@@ -940,8 +869,6 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-    console.log('[Lifecycle] Component unmounting');
-    
     if (audioElement && audioElement.src) {
         saveCacheState();
     }
@@ -951,7 +878,6 @@ onUnmounted(() => {
         fadeInterval = null;
     }
     
-    // ⚠️ 清理延迟定时器
     if (pauseDelayTimer) {
         clearTimeout(pauseDelayTimer);
         pauseDelayTimer = null;
@@ -1093,6 +1019,7 @@ onUnmounted(() => {
         height: calc(var(--square-size) * 0.4);
         width: 100%;
         position: relative;
+        white-space: nowrap;
         transition: width .6s, height .6s, transform .6s;
 
         .ctrlbtns {
