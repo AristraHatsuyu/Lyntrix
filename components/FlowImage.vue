@@ -14,7 +14,7 @@ import { EffectFade } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/effect-fade';
 
-import config from '~/assets/config.json'
+import config from '~/assets/profile.json'
 
 const model = defineModel()
 const backgrounds = config.background

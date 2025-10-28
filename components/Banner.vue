@@ -22,11 +22,68 @@
     flex-direction: row;
     align-items: center;
     justify-content: center;
-    gap: 3.2rem;
+    gap: calc(var(--square-size) * 0.65);
     text-align: left;
     margin-top: 45vh;
     transform: translateY(-50%);
     transition: filter .5s ease;
+
+    .avatar {
+        img {
+            width: clamp(120px, 26vmin, 200px);
+            height: clamp(120px, 26vmin, 200px);
+            border-radius: 50%;
+            opacity: 1;
+            object-fit: cover;
+            pointer-events: none;
+            user-select: none;
+            animation-name: InitAvatar;
+            animation-duration: 1s;
+            animation-timing-function: ease;
+            animation-delay: 0.3s;
+            animation-fill-mode: both;
+        }
+    }
+
+    .info {
+        width: 100%;
+        gap: calc(var(--square-size) * 0.24);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+
+        .name {
+            width: 360px;
+            max-width: 100%;
+            position: relative;
+
+            .name-svg {
+                background-color: color-mix(in srgb, var(--lyntrix-color, #fff) clamp(25%, 350% * var(--scroll-y-percent, 0) + 25%, 95%), transparent);
+                backdrop-filter: saturate(2) brightness(2.5) blur(12px);
+                transition: 0.5s;
+            }
+
+            .name-text-overlay {
+                position: absolute;
+                font-size: 25px;
+                top: 0;
+                pointer-events: none;
+                z-index: -1;
+                filter: opacity(0);
+            }
+        }
+
+        .bio {
+            user-select: none;
+            opacity: clamp(0.7, 0.75 * var(--scroll-y-percent, 0) + 0.7, 0.85);
+            color: color-mix(in srgb, var(--lyntrix-color, #fff), #fff clamp(10%, -275% * var(--scroll-y-percent, 0) + 65%, 65%));
+            font-size: clamp(18px, 5vmin, 26px);
+            mask-image: linear-gradient(to right, rgb(0, 0, 0) 45.4545%, rgba(0, 0, 0, 0) 54.5455%);
+            mask-size: 220% 100%;
+            mask-repeat: no-repeat;
+            transition: 1s;
+        }
+    }
 
     @media (max-width: 1300px) {
         max-width: 950px;
@@ -36,7 +93,7 @@
 
     @media (max-width: 880px) {
         flex-direction: column;
-        gap: 3.2rem;
+        gap: calc(var(--square-size) * 0.65);
         align-items: flex-start;
         max-width: 480px;
         margin-left: auto;
@@ -44,85 +101,28 @@
     }
 
     @media (max-width: 768px) {
-        gap: 2rem;
+        gap: calc(var(--square-size) * 0.4);
         flex-direction: column;
         align-items: flex-start;
 
-        .name {
-            width: clamp(240px, 60%, 360px);
+        .name .name-svg {
+            width: clamp(220px, var(--square-size) * 3.8, 360px);
         }
     }
 }
 
 html.forcewidget .banner {
-    filter: blur(10px);
-}
-
-.avatar {
-    img {
-        width: clamp(120px, 26vmin, 200px);
-        height: clamp(120px, 26vmin, 200px);
-        border-radius: 50%;
-        opacity: 1;
-        object-fit: cover;
-        pointer-events: none;
-        user-select: none;
-        animation-name: InitAvatar;
-        animation-duration: 1s;
-        animation-timing-function: ease;
-        animation-delay: 0.3s;
-        animation-fill-mode: both;
-    }
-}
-
-.info {
-    width: 100%;
-    gap: 1.2rem;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-}
-
-.name {
-    width: min(360px, 100%);
-    max-width: 100%;
-    position: relative;
-}
-
-.name-svg {
-    background-color: color-mix(in srgb, var(--lyntrix-color, #fff) clamp(25%, 350% * var(--scroll-y-percent, 0) + 25%, 95%), transparent);
-    backdrop-filter: saturate(2) brightness(2.5) blur(12px);
-    transition: 0.5s;
+    filter: blur(15px);
 }
 
 .wrapper.lightbg {
     .name-svg {
-        backdrop-filter: saturate(2.5) brightness(0.5) blur(12px);
+        backdrop-filter: saturate(2.5) brightness(0.5) blur(12px) !important;
     }
 
     .bio {
         filter: brightness(clamp(0.4, 3 * var(--scroll-y-percent, 0) + 0.4, 1));
     }
-}
-
-.name-text-overlay {
-    position: absolute;
-    font-size: 25px;
-    top: 0;
-    pointer-events: none;
-    z-index: -1;
-    filter: opacity(0);
-}
-
-.bio {
-    user-select: none;
-    opacity: clamp(0.7, 0.75 * var(--scroll-y-percent, 0) + 0.7, 0.85);
-    color: color-mix(in srgb, var(--lyntrix-color, #fff), #fff clamp(10%, -275% * var(--scroll-y-percent, 0) + 65%, 65%));
-    font-size: clamp(18px, 3.5vmin, 1.6rem);
-    mask-image: linear-gradient(to right, rgb(0, 0, 0) 45.4545%, rgba(0, 0, 0, 0) 54.5455%);
-    mask-size: 220% 100%;
-    mask-repeat: no-repeat;
-    transition: 1s;
 }
 
 html.dark-mode {
@@ -132,7 +132,7 @@ html.dark-mode {
 
     .name-svg {
         background-color: #64beff;
-        backdrop-filter: none;
+        backdrop-filter: none !important;
     }
 
     .bio {
@@ -145,7 +145,7 @@ html.dark-mode {
 @keyframes InitAvatar {
     0% {
         transform: scale(0.8);
-        filter: blur(10px);
+        filter: blur(15px);
         opacity: 0;
     }
 

@@ -55,7 +55,7 @@ if (props.url) {
     .count-banner {
         display: flex;
         align-items: center;
-        gap: 1rem;
+        gap: calc(var(--square-size) * 0.18);
 
         .icon {
             display: flex;
@@ -63,7 +63,7 @@ if (props.url) {
             justify-content: center;
             width: calc(var(--square-size) * 0.66);
             height: calc(var(--square-size) * 0.66);
-            border-radius: 0.8rem;
+            border-radius: calc(var(--square-size) * 0.18);
 
             svg {
                 color: #ffffff;
@@ -74,15 +74,15 @@ if (props.url) {
 
         .title,
         .mtitle {
-            font-size: 1.2rem;
+            font-size: calc(var(--square-size) * 0.26);
             font-weight: bold;
-            line-height: 1.2rem;
-            margin-bottom: 0.2rem;
+            line-height: calc(var(--square-size) * 0.26);
+            margin-bottom: calc(var(--square-size) / 83.75 * 4);
         }
 
         .desc,
         .mdesc {
-            font-size: 0.95rem;
+            font-size: calc(var(--square-size) * 0.2);
             opacity: 0.8;
         }
 
@@ -100,12 +100,12 @@ if (props.url) {
 
         .numbox {
             width: 14%;
-            height: 45px;
-            line-height: 40px;
+            height: calc(var(--square-size) * 0.6);
+            line-height: calc(var(--square-size) * 0.53);
             text-align: center;
-            font-size: 30px;
+            font-size: calc(var(--square-size) * 0.45);
             background: #00000024;
-            border-radius: 10px;
+            border-radius: calc(var(--square-size) * 0.15);
         }
     }
 
@@ -125,9 +125,9 @@ if (props.url) {
 
         .numcontent {
             background: #00000024;
-            border-radius: 10px;
+            border-radius: calc(var(--square-size) * 0.15);
             justify-content: space-around;
-            padding: 0 6px;
+            padding: 0 calc(var(--square-size) * 0.05);
 
             .numbox {
                 background: none;
@@ -141,11 +141,11 @@ if (props.url) {
         .numcontent {
             .numbox {
                 background: none;
-                border: .15rem solid #78c6ff52;
+                border: calc(var(--square-size) * 0.035) solid #78c6ff52;
             }
             @media (max-width: 880px) {
                 background: none;
-                border: .15rem solid #78c6ff52;
+                border: calc(var(--square-size) * 0.035) solid #78c6ff52;
 
                 .numbox {
                     background: none;

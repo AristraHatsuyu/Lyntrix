@@ -88,12 +88,14 @@
             "mrow": 2
         },
         {
-            "type": 1,
-            "title": "Feedback",
-            "description": "Project Issue",
-            "color": "#09ad79",
-            "icon": "pen-to-square",
-            "link": "https://blog.aristra.top/comments",
+            "type": 5,
+            "data": [
+                {
+                    "title": "桜樹街道",
+                    "author": "Kozato Snow",
+                    "file": "/media/桜樹街道.flac"
+                }
+            ],
             "columns": 2,
             "row": 2
         },
@@ -185,6 +187,11 @@
             "title": "On the way Home",
             "image": "/background/09.jpg",
             "url": "https://www.pixiv.net/artworks/96552364"
+        },
+        {
+            "title": "空鏡",
+            "image": "/background/10.jpg",
+            "url": "https://www.pixiv.net/artworks/77278947"
         }
     ]
 }

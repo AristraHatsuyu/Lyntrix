@@ -8,7 +8,7 @@
 
 <script setup lang="ts">
 console.log(
-  "%c Lyntrix %c v1.0 ",
+  "%c Lyntrix %c v1.1 ",
   "background: #B0D9FF; color: #003366; font-size: 16px; font-weight: bold; padding: 6px 12px; border-radius: 6px 0 0 6px;",
   "background: #E6F2FF; color: #003366; font-size: 16px; font-weight: bold; padding: 6px 12px; border-radius: 0 6px 6px 0;"
 );
@@ -46,6 +46,7 @@ body {
     margin: 0;
     padding: 0;
     user-select: none;
+    font-size: min(1vh, 1vw);
     background-color: #1d1e1e;
     font-family: 'Zen Maru Gothic', sans-serif;
 }
@@ -68,6 +69,6 @@ a {
 .page-enter-from,
 .page-leave-to {
     opacity: 0;
-    filter: blur(1rem);
+    filter: blur(15px);
 }
 </style>

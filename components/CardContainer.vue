@@ -27,6 +27,9 @@ const props = withDefaults(defineProps<Props>(), {
     infocus: false
 });
 
+const tzs = 5
+const tzb = 25
+
 const tz = ref(0);
 const rx = ref(0);
 const ry = ref(0);
@@ -36,7 +39,7 @@ const WidgetStyle = computed(() => ({
     '--rows': props.rows,
     '--m-columns': props.mcolumns == 0 ? props.columns : props.mcolumns,
     '--m-rows': props.mrows == 0 ? props.rows : props.mrows,
-    '--tz': tz.value ? tz.value + 'rem' : '0',
+    '--tz': tz.value ? tz.value + 'px' : '0',
     '--rx': rx.value ? rx.value + 'deg' : '0deg',
     '--ry': ry.value ? ry.value + 'deg' : '0deg'
 }))
@@ -46,6 +49,16 @@ const isMouseDown = ref(false); // 标记鼠标是否按下
 
 const mouseState = useMouseState(); // 使用自定义的鼠标状态管理
 provide("use3DCardMouseState", mouseState);
+
+watch(
+    () => props.infocus,
+    (newtype) => {
+        if (newtype === true) {
+            ry.value = 0
+            rx.value = 0
+        }
+    },
+);
 
 function updatetransform(e: MouseEvent) {
     const maxRotation = 10
@@ -59,20 +72,20 @@ function updatetransform(e: MouseEvent) {
     if (props.infocus) {
         ry.value = 0
         rx.value = 0
-        tz.value = -0.5
+        tz.value = -tzs
     } else {
-        ry.value = clampedY * maxRotation * -1  // Y轴上下移动 → 旋转X轴
-        rx.value = clampedX * maxRotation   // X轴左右移动 → 旋转Y轴
-        tz.value = -1.5
+        ry.value = clampedY * maxRotation * -1
+        rx.value = clampedX * maxRotation
+        tz.value = -tzb
     }
 }
 
 function handleTouchDown() {
     if (!containerRef.value) return;
     if (props.infocus) {
-        tz.value = -0.5
+        tz.value = -tzs
     } else {
-        tz.value = -1.5
+        tz.value = -tzb
     }
 }
 

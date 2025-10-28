@@ -13,7 +13,7 @@ export default defineNuxtConfig({
   modules: ['@vesp/nuxt-fontawesome'],
   fontawesome: {
     icons: {
-      solid: ['envelope', 'feather', 'building', 'pen-to-square', 'chart-simple'],
+      solid: ['envelope', 'feather', 'building', 'pen-to-square', 'chart-simple', 'play', 'backward', 'forward', 'pause', 'volume-xmark', 'volume-off', 'volume-low', 'volume-high'],
       brands: ['github', 'discord', 'instagram'],
     }
   }

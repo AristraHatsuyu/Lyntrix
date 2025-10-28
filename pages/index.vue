@@ -47,13 +47,13 @@ const resetOffset = () => {
 .wrapper {
     position: relative;
     width: 100vw;
-    max-width: min(100% - 6.5rem, 1280px);
+    max-width: min(100% - 104px, 1280px);
     margin: 0 auto;
 }
 
 @media (max-width: 768px) {
     .wrapper {
-        max-width: calc(100% - 3rem);
+        max-width: calc(100% - 48px);
     }
 }
 </style>

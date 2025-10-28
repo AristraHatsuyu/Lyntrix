@@ -43,7 +43,7 @@ function getVisualLength(str: string): number {
 const textWidth = computed(() => {
     const str = wordsArray.value.join("") // 如果是字符数组
     const visualLength = getVisualLength(str)
-    return (visualLength * 0.65) + "rem"
+    return (visualLength * 10.25) + "px"
 })
 
 // 触发文字生成进入动画
@@ -71,7 +71,7 @@ function generateExitAnimation() {
         spans.forEach((span: HTMLElement, index: number) => {
             setTimeout(() => {
                 span.style.opacity = "0";
-                span.style.filter = props.filter ? "blur(10px)" : "none";
+                span.style.filter = props.filter ? "blur(15px)" : "none";
 
                 // 检查是否所有动画都完成
                 if (++completed === spans.length) {
@@ -109,7 +109,7 @@ watch(
 <style>
 .spanStyle {
     opacity: 0;
-    filter: blur(10px);
+    filter: blur(15px);
     transition: opacity .7s, filter .7s;
 }
 </style>

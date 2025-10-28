@@ -103,7 +103,7 @@ const updateTime = () => {
     };
 
     const zone = CONFIG_TIMEZONE || Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const dt = DateTime.now().setZone(zone);
+    const dt = DateTime.now().setZone(zone).plus({ seconds: 0.75 }); // Fix 时间晚1s
     const isDST = dt.isInDST;
 
     currentTime.value = dt.toFormat("HH:mm:ss");
@@ -111,7 +111,7 @@ const updateTime = () => {
     currentDay.value = dt.toFormat("ccc").toUpperCase();
     utcOffset.value = `UTC ${dt.toFormat("ZZ")}`;
     timezoneAbbr.value = getTzAbbr(zone, isDST);
-    timezoneDiff.value = getTimePeriod(dt.hour) + ' / ';  // 👈 设置高级时间段词汇
+    timezoneDiff.value = getTimePeriod(dt.hour) + ' / ';
     // 精确到秒的角度计算（累计秒数，不归零，每秒更新）
     const totalSeconds = Math.trunc(dt.diff(dt.startOf("day"), "seconds").seconds);
 
@@ -227,7 +227,8 @@ onUnmounted(() => {
 
     .clock-text {
         .date {
-            font-size: 1.2em;
+            font-size: calc(var(--square-size) * 0.24);
+            line-height: calc(var(--square-size) * 0.24);
             opacity: 0.8;
 
             .date-text {
@@ -237,11 +238,11 @@ onUnmounted(() => {
 
         .time {
             display: flex;
-            font-size: 2.5em;
-            min-width: 8ch;
-            max-height: 1em;
+            font-size: calc(var(--square-size) * 0.5);
+            min-width: calc(var(--square-size) * 2.5);
+            max-height: calc(var(--square-size) * 0.5);
             font-weight: 700;
-            margin: 0.1em 0;
+            margin: calc(var(--square-size) * 0.1) 0;
             font-family: 'Arial Rounded MT Bold';
 
             .literal {
@@ -293,7 +294,7 @@ onUnmounted(() => {
         }
 
         .timezone {
-            font-size: 0.95em;
+            font-size: calc(var(--square-size) * 0.195);
 
             .diff {
                 opacity: 0.8;

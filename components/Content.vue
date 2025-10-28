@@ -16,12 +16,13 @@
                         </div>
                     </div>
                     <div v-if="data.image" class="imgcontent" :style="{ 'background-image': `url('${data.image}')` }"
-                        style="border-radius: .6rem; width: 110%;" />
+                        style="border-radius: calc(var(--square-size) * 0.18); width: 110%;" />
                 </a>
                 <div v-else-if="data.type === 2" class="imgcontent" style="width: 100%; height: 100%; transition: background-size .5s;"
                     :style="{ 'background-image': `url('${data.image}')`, 'background-position': `${data.left}% ${data.top}%`, 'background-size': data.scale }" />
                 <TimeCard v-else-if="data.type === 3" />
                 <AnalyticsCard v-else-if="data.type === 4" :url="data.url" />
+                <MusicCard :data="data.data" v-else-if="data.type === 5 && data.data" />
             </CardContainer>
         </div>
         <div class="projlist">
@@ -29,7 +30,8 @@
                 <a draggable="false" data-pointer>
                     <div class="title" href="" target="_blank">{{ data.title }}</div>
                     <div class="description">{{ data.description }}</div>
-                    <div class="detail"></div>
+                    <div class="detail">
+                    </div>
                 </a>
             </CardContainer>
         </div>
@@ -40,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import config from "@/assets/config.json"
+import config from "@/assets/profile.json"
 import { ref, onMounted, onUnmounted } from 'vue'
 
 declare global {
@@ -217,7 +219,7 @@ const floatElement = (element: HTMLElement) => {
         top: `${rect.top}px`,
         left: `${oleft}px`,
         zIndex: '9999',
-        transition: 'top .5s ease, left .5s ease, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s, border .3s linear'
+        transition: 'top .5s ease, left .5s ease, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s, border-radius .6s, border .3s linear'
     })
 
     document.documentElement.classList.add('forcewidget')
@@ -232,7 +234,7 @@ const floatElement = (element: HTMLElement) => {
     floatingEl.value = element
 }
 
-const floatElementWithRatio = (element: HTMLElement, aspectRatio: number) => {
+const floatElementWithRatio = (element: HTMLElement, aspectRatio: number, opacity = false, percent = 0.8, type = 'image') => {
     const rect = element.getBoundingClientRect();
 
     disableScroll();
@@ -250,11 +252,11 @@ const floatElementWithRatio = (element: HTMLElement, aspectRatio: number) => {
     element.parentNode?.insertBefore(placeholder, element);
     placeholderEl.value = placeholder;
 
-    element.dataset.floatItem = "image";
+    element.dataset.floatItem = type;
 
     const oleft = touchHoldTimer && forceTriggered.value ? rect.left - 11 : rect.left;
 
-    element.classList.add('imgcover')
+    element.classList.add(type+'cover')
 
     tempopacity.value = window.getComputedStyle(element).opacity
 
@@ -264,19 +266,17 @@ const floatElementWithRatio = (element: HTMLElement, aspectRatio: number) => {
         left: `${oleft}px`,
         zIndex: '9999',
         opacity: tempopacity.value,
-        transition: 'top .5s ease, left .5s ease, width .5s ease, height .5s ease, opacity .5s linear, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s, border .3s linear'
+        transition: 'top .5s ease, left .5s ease, width .5s ease, height .5s ease, opacity .5s linear, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s, border-radius .6s, border .3s linear'
     });
 
     document.documentElement.classList.add('forcewidget')
 
     floatingEl.value = element;
-
-    // 强制回流，确保 transition 生效
     void element.offsetWidth;
 
-    // 🟡 以下部分是唯一修改：根据比例调整宽高并居中
-    const maxWidth = window.innerWidth * 0.8;
-    const maxHeight = window.innerHeight * 0.8;
+    const maxWidth = window.innerWidth * percent;
+    const maxHeight = window.innerHeight * percent;
+
 
     let newWidth = maxWidth;
     let newHeight = newWidth / aspectRatio;
@@ -288,9 +288,14 @@ const floatElementWithRatio = (element: HTMLElement, aspectRatio: number) => {
 
     element.style.width = `${newWidth}px`;
     element.style.height = `${newHeight}px`;
-    requestAnimationFrame(() => {
-        element.style.opacity = '1';
-    });
+
+    element.style.setProperty('--size', `${newWidth/50}px`);
+
+    if (!opacity) {
+        requestAnimationFrame(() => {
+            element.style.opacity = '1';
+        });
+    }
 
     const pleft = touchHoldTimer && forceTriggered.value
         ? ((window.innerWidth - newWidth - 22) / 2)
@@ -308,9 +313,8 @@ const restoreElement = () => {
     if (!element || !placeholder) return
 
     const { top, left } = placeholder.getBoundingClientRect()
-    console.log(placeholder.getBoundingClientRect())
 
-    element.style.transition = 'top .5s ease, left .5s ease, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s, border .3s linear'
+    element.style.transition = 'top .5s ease, left .5s ease, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s, border-radius .6s, border .3s linear'
     element.style.top = `${top}px`
     element.style.left = `${left}px`
 
@@ -345,13 +349,14 @@ const restoreElementWithRatio = () => {
 
     const { top, left, width, height } = placeholder.getBoundingClientRect();
 
-    element.style.transition = 'top .5s ease, left .5s ease, width .5s ease, height .5s ease, opacity .5s linear, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s, border .3s linear';
+    element.style.transition = 'top .5s ease, left .5s ease, width .5s ease, height .5s ease, opacity .5s linear, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s, border-radius .6s, border .3s linear';
     element.style.top = `${top}px`;
     element.style.left = `${left}px`;
     element.style.width = `${width}px`;
     element.style.height = `${height}px`;
     element.style.opacity = tempopacity.value;
-    element.classList.remove('imgcover')
+    element.classList.remove('imagecover')
+    element.classList.remove('musiccover')
 
     document.documentElement.classList.remove('forcewidget')
 
@@ -369,6 +374,8 @@ const restoreElementWithRatio = () => {
             opacity: ''
         });
 
+        element.style.removeProperty('--size');
+
         delete element.dataset.floatItem;
 
         floatingEl.value = null;
@@ -385,6 +392,8 @@ const handleDoubleClick = (event: MouseEvent) => {
         infocus.value = false
         currentdisplay.value = ''
         if (target.children[0].classList.contains('imgcontent') && widgetdata[Array.from(target.parentElement!.children).indexOf(target)-1].zoom) {
+            restoreElementWithRatio()
+        } else if (target.children[0].classList.contains('music-widget')) {
             restoreElementWithRatio()
         } else {
             restoreElement()
@@ -406,6 +415,10 @@ const handleDoubleClick = (event: MouseEvent) => {
                     floatElementWithRatio(target, ratio)
                 };
             }
+        } else if (target.children[0].classList.contains('music-widget')) {
+            const ratio = 4 / 3;
+            infocus.value = true
+            floatElementWithRatio(target, ratio, true, 0.5, 'music')
         } else {
             infocus.value = true
             floatElement(target)
@@ -420,6 +433,8 @@ const handledbgclose = () => {
     if (currentdisplay.value === 'widget') {
         infocus.value = false;
         if (floatingEl.value?.children[0].classList.contains('imgcontent') && widgetdata[Array.from(floatingEl.value.parentElement!.children).indexOf(floatingEl.value)-1].zoom) {
+            restoreElementWithRatio()
+        } else if (floatingEl.value?.children[0].classList.contains('music-widget')) {
             restoreElementWithRatio()
         } else {
             restoreElement()
@@ -461,7 +476,7 @@ const floatProjectRatio = (element: HTMLElement) => {
     element.parentNode?.insertBefore(placeholder, element);
 
     placeholderEl.value = placeholder;
-    element.dataset.floatItem = "webpage";
+    element.dataset.floatItem = "project";
 
     const oleft = touchHoldTimer && forceTriggered.value ? rect.left - 11 : rect.left;
 
@@ -475,7 +490,7 @@ const floatProjectRatio = (element: HTMLElement) => {
         height: `${window.getComputedStyle(element).height}`,
         zIndex: '9999',
         opacity: tempopacity.value,
-        transition: 'top .5s ease, left .5s ease, width .5s ease, height .5s ease, opacity .5s linear, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s, border .3s linear'
+        transition: 'top .5s ease, left .5s ease, width .5s ease, height .5s ease, opacity .5s linear, transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s, border-radius .6s, border .3s linear'
     });
 
     document.documentElement.classList.add('forcewidget')
@@ -499,6 +514,10 @@ const floatProjectRatio = (element: HTMLElement) => {
 
     element.style.width = `${newWidth}px`;
     element.style.height = `${newHeight}px`;
+    element.style.setProperty('--size', `${newWidth/50}px`);
+    requestAnimationFrame(() => {
+        element.style.opacity = '1';
+    });
 
     const pleft = touchHoldTimer && forceTriggered.value
         ? ((window.innerWidth - newWidth - 22) / 2)
@@ -568,15 +587,14 @@ const handleProjectClick = (event: MouseEvent) => {
             align-items: center;
             justify-content: center;
 
-            border-radius: 1.5rem;
+            border-radius: calc(var(--square-size) * 0.36);
             overflow: hidden;
             touch-action: manipulation;
             color: #000000;
             opacity: 0.8;
             background-color: color-mix(in srgb, var(--lyntrix-color-high, #fff) 32%, white);
-            backdrop-filter: blur(0.8rem);
             transform: perspective(500px) translateZ(var(--tz)) rotateY(var(--rx)) rotateX(var(--ry));
-            transition: transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s, filter 0.5s, border 0.3s linear;
+            transition: transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s, filter 0.5s, border-radius .6s, border 0.3s linear;
             --col: min(var(--columns, 2), var(--display-columns));
             --row: var(--rows, 2);
 
@@ -601,7 +619,7 @@ const handleProjectClick = (event: MouseEvent) => {
                 height: 100%;
                 display: flex;
                 justify-content: space-between;
-                padding: 24px;
+                padding: calc(var(--square-size) * 0.3);
                 color: inherit;
                 box-sizing: border-box;
 
@@ -619,7 +637,7 @@ const handleProjectClick = (event: MouseEvent) => {
                     justify-content: center;
                     width: calc(var(--square-size) * 0.66);
                     height: calc(var(--square-size) * 0.66);
-                    border-radius: 0.8rem;
+                    border-radius: calc(var(--square-size) * 0.18);
 
                     svg {
                         color: #ffffff;
@@ -635,10 +653,10 @@ const handleProjectClick = (event: MouseEvent) => {
                         flex-direction: row;
                         align-items: center;
                         justify-content: flex-start;
-                        gap: 1.2rem;
+                        gap: calc(var(--square-size) * 0.18);
 
                         .icon {
-                            border-radius: 0.6rem;
+                            border-radius: calc(var(--square-size) * 0.18);
                             width: calc(var(--square-size) - calc(var(--square-size) / 83.75 * 40));
                             height: calc(var(--square-size) - calc(var(--square-size) / 83.75 * 40));
 
@@ -649,28 +667,28 @@ const handleProjectClick = (event: MouseEvent) => {
                         }
 
                         .title {
-                            line-height: 1rem;
-                            font-size: 1rem;
+                            line-height: calc(var(--square-size) * 0.24);
+                            font-size: calc(var(--square-size) * 0.24);
                             font-weight: bold;
                             margin-bottom: calc(var(--square-size) / 83.75 * 4);
                         }
 
                         .desc {
-                            line-height: 1rem;
-                            font-size: 0.9rem;
+                            line-height: calc(var(--square-size) * 0.2);
+                            font-size: calc(var(--square-size) * 0.2);
                             opacity: 0.8;
                         }
                     }
                 }
 
                 .title {
-                    font-size: 1.2rem;
+                    font-size: calc(var(--square-size) * 0.26);
                     font-weight: bold;
-                    margin-bottom: 0.2rem;
+                    margin-bottom: calc(var(--square-size) * 0.05);
                 }
 
                 .desc {
-                    font-size: 0.95rem;
+                    font-size: calc(var(--square-size) * 0.2);
                     opacity: 0.8;
                 }
             }
@@ -685,14 +703,25 @@ const handleProjectClick = (event: MouseEvent) => {
                 display: flex;
                 height: 100%;
                 width: 100%;
-                padding: 24px;
+                padding: calc(var(--square-size) * 0.26);
+                box-sizing: border-box;
+                flex-direction: column;
+                justify-content: space-between;
+            }
+
+            .music-widget {
+                display: flex;
+                height: 100%;
+                width: 100%;
+                padding: calc(var(--square-size) * 0.26);
+                padding-bottom: calc(var(--square-size) * 0.2);
                 box-sizing: border-box;
                 flex-direction: column;
                 justify-content: space-between;
             }
         }
 
-        .widget.imgcover {
+        .widget.imagecover {
             > .imgcontent {
                 background-size: 100% !important;
             }
@@ -712,12 +741,12 @@ const handleProjectClick = (event: MouseEvent) => {
 
         @media (max-width: 880px) {
             display: flex;
+            min-width: 275px;
         }
 
         .project {
             background-color: color-mix(in srgb, var(--lyntrix-color-high, #fff) 32%, white);
-            backdrop-filter: blur(0.8rem);
-            border-radius: 1.5rem;
+            border-radius: calc(var(--square-size) * 0.36);
             color: #000000;
             overflow: hidden;
             opacity: 0.8;
@@ -733,18 +762,21 @@ const handleProjectClick = (event: MouseEvent) => {
                 display: flex;
                 flex-direction: column;
                 align-items: flex-start;
-                padding: .8rem 1.5rem;
+                transition: padding .6s;
+                padding: calc(var(--square-size) * 0.28) calc(var(--square-size) * 0.32);
                 user-select: none;
 
                 .title {
                     font-weight: 700;
-                    font-size: 1.25em;
-                    line-height: 1.25em;
-                    margin-bottom: 0.2rem;
+                    font-size: calc(var(--square-size) * 0.26);
+                    line-height: calc(var(--square-size) * 0.26);
+                    margin-bottom: calc(var(--square-size) * 0.1);
                 }
 
                 .description {
                     flex: 1 1 0%;
+                    opacity: 0.8;
+                    font-size: calc(var(--square-size) * 0.2);
                 }
 
                 .detail {
@@ -752,9 +784,9 @@ const handleProjectClick = (event: MouseEvent) => {
                     height: 100%;
                     width: 100%;
                     background: rgba(0, 0, 0, 0.2);
-                    border-radius: .8rem;
+                    border-radius: calc(var(--size) * 0.8);
                     overflow: hidden;
-                    filter: blur(1rem);
+                    filter: blur(15px);
                     transition: margin 0.3s, opacity 0.6s, filter 0.6s;
                 }
             }
@@ -778,7 +810,7 @@ html.dark-mode {
             .widget {
                 background: #78c7ff2f;
                 color: #78c6ff;
-                border: .2rem solid #78c7ffd5;
+                border: calc(var(--square-size) * 0.035) solid #78c7ffd5;
                 box-sizing: border-box;
 
                 &:hover {
@@ -792,7 +824,7 @@ html.dark-mode {
             .project {
                 background: #78c7ff2f;
                 color: #78c6ff;
-                border: .2rem solid #78c7ffd5;
+                border: calc(var(--square-size) * 0.035) solid #78c7ffd5;
                 box-sizing: border-box;
 
                 &:hover {
@@ -804,25 +836,49 @@ html.dark-mode {
     }
 }
 
-.content .widget.imgcover {
+.content .widget.imagecover {
     border-width: 0 !important;
 }
 
 .content.infocus {
     .matrix {
         .widget {
-            filter: blur(10px);
+            filter: blur(15px);
+
+            .widget[data-float-item="image"] {
+                border-radius: calc(var(--size)* 3);
+            }
+
+            &[data-float-item="music"] {
+                border-radius: calc(var(--size)* 3);
+            }
         }
     }
 
     .projlist .project {
-        filter: blur(10px);
+        filter: blur(15px);
 
         &[data-float-item] {
-            a .detail {
-                margin: .5rem 0;
-                filter: none;
-                opacity: 1;
+            border-radius: calc(var(--size)* 2);
+
+            a {
+                padding: calc(var(--size) * 1.25) calc(var(--size) * 1.25);
+
+                .title {
+                    font-size: calc(var(--size) * 1.25);
+                    line-height: calc(var(--size) * 1.25);
+                    margin-bottom: calc(var(--size) * .5);
+                }
+
+                .description {
+                    font-size: var(--size);
+                }
+
+                .detail {
+                    opacity: 1;
+                    filter: none;
+                    margin-top: calc(var(--size) * .75);
+                }
             }
         }
     }
@@ -845,6 +901,7 @@ html.dark-mode {
 
     .projlist {
         .project[data-float-item] {
+            animation: none;
             filter: none;
         }
     }

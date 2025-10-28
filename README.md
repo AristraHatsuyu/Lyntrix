@@ -33,7 +33,8 @@ Visit http://localhost:3000 to see your resume come alive.
 
 🛠️ Configuration
 
-You can customize in /pages/index.vue and /assets/config.json
+You can customize in /pages/index.vue and /assets/profile.temp.json
+Rename profile.temp.json to profile.json
 
 ⸻
 

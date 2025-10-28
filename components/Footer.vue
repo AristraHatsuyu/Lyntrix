@@ -168,7 +168,7 @@ html.dark-mode {
 }
 
 html.forcewidget .footer {
-    filter: blur(10px);
+    filter: blur(15px);
     pointer-events: none;
 }
 
@@ -187,26 +187,26 @@ html.forcewidget .footer {
 
     .image {
         height: 60px;
-        margin-bottom: 2rem;
+        margin-bottom: 30px;
         opacity: 0.8;
     }
 
     .link-button {
         display: flex;
-        gap: 0.6rem;
+        gap: 15px;
         align-items: center;
         justify-content: center;
         fill: #fff;
         color: #fff;
         background-color: #ffffff1a;
-        border-radius: 1rem;
+        border-radius: 15px;
         box-shadow:
             inset 0.5px 0.5px 1px #ffffff1a,
             inset -0.5px -0.5px 1px #0000001a,
             0 3px 10px -5px #0003;
         outline: 2px solid transparent;
         outline-offset: 2px;
-        padding: 1rem;
+        padding: 15px;
         transition-duration: 0.3s;
         transition-property: all;
         transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
@@ -221,8 +221,8 @@ html.forcewidget .footer {
         }
 
         svg {
-            width: 1.8rem;
-            height: 1.8rem;
+            width: 25px;
+            height: 25px;
         }
     }
 }
