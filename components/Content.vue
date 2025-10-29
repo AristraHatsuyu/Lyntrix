@@ -592,6 +592,7 @@ const handleProjectClick = (event: MouseEvent) => {
             touch-action: manipulation;
             color: #000000;
             opacity: 0.8;
+            font-size: calc(var(--square-size) * 0.1365);
             background-color: color-mix(in srgb, var(--lyntrix-color-high, #fff) 32%, white);
             transform: perspective(500px) translateZ(var(--tz)) rotateY(var(--rx)) rotateX(var(--ry));
             transition: transform 0.2s linear 0s, background-color 0.6s linear 0s, box-shadow 0.3s ease-in-out 0s, filter 0.5s, border-radius .6s, border 0.3s linear;
@@ -747,6 +748,7 @@ const handleProjectClick = (event: MouseEvent) => {
         .project {
             background-color: color-mix(in srgb, var(--lyntrix-color-high, #fff) 32%, white);
             border-radius: calc(var(--square-size) * 0.36);
+            font-size: calc(var(--square-size) * 0.1365);
             color: #000000;
             overflow: hidden;
             opacity: 0.8;
@@ -784,7 +786,7 @@ const handleProjectClick = (event: MouseEvent) => {
                     height: 100%;
                     width: 100%;
                     background: rgba(0, 0, 0, 0.2);
-                    border-radius: calc(var(--size) * 0.8);
+                    border-radius: 0.8em;
                     overflow: hidden;
                     filter: blur(15px);
                     transition: margin 0.6s, opacity 0.6s, filter 0.6s;
@@ -819,7 +821,7 @@ html.dark-mode {
                 }
 
                 &[data-float-item=music], &[data-float-item=image] {
-                    border-width: calc(var(--size) * 0.3);
+                    border-width: .3em;
                 }
             }
         }
@@ -850,11 +852,11 @@ html.dark-mode {
             filter: blur(15px);
 
             .widget[data-float-item=image] {
-                border-radius: calc(var(--size)* 3);
+                border-radius: 3em;
             }
 
             &[data-float-item=music] {
-                border-radius: calc(var(--size)* 3);
+                border-radius: 3em;
             }
         }
     }
@@ -863,25 +865,25 @@ html.dark-mode {
         filter: blur(15px);
 
         &[data-float-item] {
-            border-radius: calc(var(--size)* 2);
+            border-radius: 2em;
 
             a {
-                padding: calc(var(--size) * 1.25) calc(var(--size) * 1.25);
+                padding: 1.25em 1.25em;
 
                 .title {
-                    font-size: calc(var(--size) * 1.25);
-                    line-height: calc(var(--size) * 1.25);
-                    margin-bottom: calc(var(--size) * .5);
+                    font-size: 1.25em;
+                    line-height: 1em;
+                    margin-bottom: .4em;
                 }
 
                 .description {
-                    font-size: var(--size);
+                    font-size: 1em;
                 }
 
                 .detail {
                     opacity: 1;
                     filter: none;
-                    margin-top: calc(var(--size) * .75);
+                    margin-top: .75em;
                 }
             }
         }
@@ -894,7 +896,8 @@ html.dark-mode {
             filter: none;
         }
 
-        .widget[data-float-item=image] {
+        .widget[data-float-item=image], .widget[data-float-item=music] {
+            font-size: var(--size);
             animation: none;
         }
 
@@ -905,6 +908,7 @@ html.dark-mode {
 
     .projlist {
         .project[data-float-item] {
+            font-size: var(--size);
             animation: none;
             filter: none;
         }

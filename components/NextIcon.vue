@@ -41,7 +41,6 @@ const scrollToVh = (vh: number, duration = 800) => {
     height: 1.5em;
     padding-left: .25em;
     padding-right: .25em;
-    cursor: pointer;
     color: color-mix(in srgb, var(--lyntrix-color, #fff), #fff 30%);
     opacity: .55;
     transition: color .5s;

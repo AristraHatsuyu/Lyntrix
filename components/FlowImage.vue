@@ -19,14 +19,12 @@ import config from '~/assets/profile.json'
 const model = defineModel()
 const backgrounds = config.background
 
-// 当前索引 & 当前背景图 URL
 const currentIndex = ref<number>(0)
 const imageUrlt = ref<string>('') // 当前显示的图片
 const imageUrlb = ref<string>('') // 下一张图片
 const randomOrder = ref<number[]>([]) // 随机顺序数组
 const currentOrderIndex = ref<number>(0) // 当前随机顺序的索引
 
-// 背景图样式
 const bgStylet = computed(() => ({
     backgroundImage: `url(${imageUrlt.value})`
 }))
@@ -41,7 +39,6 @@ const onSwiper = (swiper: any) => {
     swiperInstance.value = swiper
 }
 
-// 生成一个完整的不重复随机顺序
 function generateRandomOrder(): number[] {
     const order = Array.from({ length: backgrounds.length }, (_, i) => i)
     for (let i = order.length - 1; i > 0; i--) {
@@ -51,7 +48,6 @@ function generateRandomOrder(): number[] {
     return order
 }
 
-// 加载图片后才设置 URL（后续切换使用）
 function preloadAndSetImage(index: number): void {
     const img = new Image()
     img.src = backgrounds[index].image
@@ -68,7 +64,6 @@ function preloadAndSetImage(index: number): void {
     }
 }
 
-// 提取主题色并计算亮度
 function extractThemeColor(img: HTMLImageElement): void {
     const colorThief = new ColorThief()
     try {
@@ -79,7 +74,6 @@ function extractThemeColor(img: HTMLImageElement): void {
         const bL = brighten1(b)
         const baseColor = `rgb(${rL}, ${gL}, ${bL})`
 
-        // 增亮颜色
         const brighten2 = (val: number): number => Math.min(255, Math.round(val * 2.2))
         const rH = brighten2(r)
         const gH = brighten2(g)
@@ -87,7 +81,7 @@ function extractThemeColor(img: HTMLImageElement): void {
         const highColor = `rgb(${rH}, ${gH}, ${bH})`
 
         setTimeout(() => {
-            const styleSheet = document.styleSheets[0] // 获取第一个样式表
+            const styleSheet = document.styleSheets[0]
             const ruleIndex = Array.from(styleSheet.cssRules).findIndex(rule =>
                 rule instanceof CSSStyleRule && rule.selectorText === '*'
             )
@@ -104,10 +98,8 @@ function extractThemeColor(img: HTMLImageElement): void {
     }
 }
 
-// 播放下一张图片
 function playNextImage(): void {
     if (currentOrderIndex.value >= randomOrder.value.length) {
-        // 如果当前顺序播放完，生成新的随机顺序
         randomOrder.value = generateRandomOrder()
         currentOrderIndex.value = 0
     }
@@ -117,9 +109,8 @@ function playNextImage(): void {
     preloadAndSetImage(nextIndex)
 }
 
-// 初始化：随机显示第一张图，同时开始随机轮播
 onMounted(() => {
-    randomOrder.value = generateRandomOrder() // 初始化随机顺序
+    randomOrder.value = generateRandomOrder()
     currentOrderIndex.value = 0
 
     const firstIndex = randomOrder.value[currentOrderIndex.value]
@@ -129,7 +120,7 @@ onMounted(() => {
 
     setInterval(() => {
         playNextImage()
-    }, 10000) // 每 5 秒切换一次
+    }, 10000)
 })
 </script>
 

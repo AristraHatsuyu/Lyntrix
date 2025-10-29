@@ -91,10 +91,10 @@ const onAfterEnter = () => (isFlipping.value = false);
 }
 
 .content.infocus .widget[data-float-item] .music-widget .picture .album-cover-container {
-    perspective: calc(var(--size) * 32);
+    perspective: 32em;
 
     .album-cover {
-        border-radius: calc(var(--size) * 1.75);
+        border-radius: 1.75em;
     }
 }
 
@@ -113,7 +113,7 @@ $ease-outs: cubic-bezier(0.4, 0, 0.2, 1);
         transform $duration $delay $ease-outs,
         filter $duration $delay ease,
         opacity $duration $delay ease;
-        transform-origin: center center;
+    transform-origin: center center;
 }
 
 .flip-prev-leave-to {
@@ -147,7 +147,7 @@ $ease-outs: cubic-bezier(0.4, 0, 0.2, 1);
         transform $duration $delay $ease-outs,
         filter $duration $delay ease,
         opacity $duration $delay ease;
-        transform-origin: center center;
+    transform-origin: center center;
 }
 
 .flip-next-leave-to {

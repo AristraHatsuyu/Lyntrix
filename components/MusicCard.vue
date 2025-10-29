@@ -4,25 +4,36 @@
             <AlbumCover :image-url="currentTrack?.image" :direction="albumCoverDirection" />
         </div>
         <div class="info" :class="{ 'involume': entervolume }">
-            <div class="title"><TextFlip :duration="500" :words="currentTrack?.title.replace(/ /g, '&nbsp;') || 'Not Playing'.replace(/ /g, '&nbsp;')" /></div>
-            <div class="subtitle"><TextFlip :duration="500" :words="currentTrack?.author.replace(/ /g, '&nbsp;') || '--'" /></div>
+            <div class="title">
+                <TextFlip :duration="500"
+                    :words="currentTrack?.title.replace(/ /g, '&nbsp;') || 'Not&nbsp;Playing'" />
+            </div>
+            <div class="subtitle">
+                <TextFlip :duration="500" :words="currentTrack?.author.replace(/ /g, '&nbsp;') || '--'" />
+            </div>
             <div class="volume">
-                <div class="progresscon" @mousedown.stop @dblclick.stop data-pointer @mouseenter="entervolume = true" @mouseleave="entervolume = false">
+                <div class="progresscon" @mousedown.stop @dblclick.stop data-pointer @mouseenter="entervolume = true"
+                    @mouseleave="entervolume = false">
                     <div class="progress" :style="{ width: volume + '%' }"></div>
-                    <input
-                        type="range" 
-                        min="0" 
-                        max="100" 
-                        v-model="volume" 
-                        @input="onVolumeInput"
-                        @change="setVolume"
-                    />
+                    <input type="range" min="0" max="100" v-model="volume" @input="onVolumeInput" @change="setVolume" />
                     <div class="icon">
                         <Transition name="fadee">
-                            <svg v-if="volume === 0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M301.2 34.85c-11.5-5.188-25.02-3.122-34.44 5.253L131.8 160H48c-26.51 0-48 21.49-48 47.1v95.1c0 26.51 21.49 47.1 48 47.1h83.84l134.9 119.9c5.984 5.312 13.58 8.094 21.26 8.094c4.438 0 8.972-.9375 13.17-2.844c11.5-5.156 18.82-16.56 18.82-29.16V64C319.1 51.41 312.7 40 301.2 34.85zM513.9 255.1l47.03-47.03c9.375-9.375 9.375-24.56 0-33.94s-24.56-9.375-33.94 0L480 222.1L432.1 175c-9.375-9.375-24.56-9.375-33.94 0s-9.375 24.56 0 33.94l47.03 47.03l-47.03 47.03c-9.375 9.375-9.375 24.56 0 33.94c9.373 9.373 24.56 9.381 33.94 0L480 289.9l47.03 47.03c9.373 9.373 24.56 9.381 33.94 0c9.375-9.375 9.375-24.56 0-33.94L513.9 255.1z"/></svg>
-                            <svg v-else-if="volume <= 30" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M412.6 181.9c-10.28-8.344-25.41-6.875-33.75 3.406c-8.406 10.25-6.906 25.37 3.375 33.78C393.5 228.4 400 241.8 400 256c0 14.19-6.5 27.62-17.81 36.87c-10.28 8.406-11.78 23.53-3.375 33.78c4.719 5.812 11.62 8.812 18.56 8.812c5.344 0 10.75-1.781 15.19-5.406C435.1 311.6 448 284.7 448 256S435.1 200.4 412.6 181.9zM301.2 34.84c-11.5-5.187-25.01-3.116-34.43 5.259L131.8 160H48c-26.51 0-48 21.49-48 47.1v95.1c0 26.51 21.49 47.1 48 47.1h83.84l134.9 119.9C272.7 477.2 280.3 480 288 480c4.438 0 8.959-.9313 13.16-2.837C312.7 472 320 460.6 320 448V64C320 51.41 312.7 39.1 301.2 34.84z"/></svg>
-                            <svg v-else-if="volume <= 75" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512"><path d="M444.6 181.9c-10.28-8.344-25.41-6.875-33.75 3.406c-8.406 10.25-6.906 25.37 3.375 33.78C425.5 228.4 432 241.8 432 256c0 14.19-6.5 27.62-17.81 36.87c-10.28 8.406-11.78 23.53-3.375 33.78c4.719 5.812 11.62 8.812 18.56 8.812c5.344 0 10.75-1.781 15.19-5.406C467.1 311.6 480 284.7 480 256S467.1 200.4 444.6 181.9zM505.1 108c-10.22-8.344-25.34-6.906-33.78 3.344c-8.406 10.25-6.906 25.37 3.344 33.78C508.6 172.9 528 213.3 528 256s-19.44 83.09-53.31 110.9c-10.25 8.406-11.75 23.53-3.344 33.78c4.75 5.781 11.62 8.781 18.56 8.781c5.375 0 10.75-1.781 15.22-5.437C550.2 367.1 576 313.1 576 256S550.2 144.9 505.1 108zM333.2 34.84c-11.5-5.187-25.01-3.116-34.43 5.259L163.8 160H80c-26.51 0-48 21.49-48 47.1v95.1c0 26.51 21.49 47.1 48 47.1h83.84l134.9 119.9C304.7 477.2 312.3 480 320 480c4.438 0 8.959-.9313 13.16-2.837C344.7 472 352 460.6 352 448V64C352 51.41 344.7 39.1 333.2 34.84z"/></svg>
-                            <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512"><path d="M412.6 182c-10.28-8.334-25.41-6.867-33.75 3.402c-8.406 10.24-6.906 25.35 3.375 33.74C393.5 228.4 400 241.8 400 255.1c0 14.17-6.5 27.59-17.81 36.83c-10.28 8.396-11.78 23.5-3.375 33.74c4.719 5.806 11.62 8.802 18.56 8.802c5.344 0 10.75-1.779 15.19-5.399C435.1 311.5 448 284.6 448 255.1S435.1 200.4 412.6 182zM473.1 108.2c-10.22-8.334-25.34-6.898-33.78 3.34c-8.406 10.24-6.906 25.35 3.344 33.74C476.6 172.1 496 213.3 496 255.1s-19.44 82.1-53.31 110.7c-10.25 8.396-11.75 23.5-3.344 33.74c4.75 5.775 11.62 8.771 18.56 8.771c5.375 0 10.75-1.779 15.22-5.431C518.2 366.9 544 313 544 255.1S518.2 145 473.1 108.2zM534.4 33.4c-10.22-8.334-25.34-6.867-33.78 3.34c-8.406 10.24-6.906 25.35 3.344 33.74C559.9 116.3 592 183.9 592 255.1s-32.09 139.7-88.06 185.5c-10.25 8.396-11.75 23.5-3.344 33.74C505.3 481 512.2 484 519.2 484c5.375 0 10.75-1.779 15.22-5.431C601.5 423.6 640 342.5 640 255.1S601.5 88.34 534.4 33.4zM301.2 34.98c-11.5-5.181-25.01-3.076-34.43 5.29L131.8 160.1H48c-26.51 0-48 21.48-48 47.96v95.92c0 26.48 21.49 47.96 48 47.96h83.84l134.9 119.8C272.7 477 280.3 479.8 288 479.8c4.438 0 8.959-.9314 13.16-2.835C312.7 471.8 320 460.4 320 447.9V64.12C320 51.55 312.7 40.13 301.2 34.98z"/></svg>
+                            <svg v-if="volume === 0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512">
+                                <path
+                                    d="M301.2 34.85c-11.5-5.188-25.02-3.122-34.44 5.253L131.8 160H48c-26.51 0-48 21.49-48 47.1v95.1c0 26.51 21.49 47.1 48 47.1h83.84l134.9 119.9c5.984 5.312 13.58 8.094 21.26 8.094c4.438 0 8.972-.9375 13.17-2.844c11.5-5.156 18.82-16.56 18.82-29.16V64C319.1 51.41 312.7 40 301.2 34.85zM513.9 255.1l47.03-47.03c9.375-9.375 9.375-24.56 0-33.94s-24.56-9.375-33.94 0L480 222.1L432.1 175c-9.375-9.375-24.56-9.375-33.94 0s-9.375 24.56 0 33.94l47.03 47.03l-47.03 47.03c-9.375 9.375-9.375 24.56 0 33.94c9.373 9.373 24.56 9.381 33.94 0L480 289.9l47.03 47.03c9.373 9.373 24.56 9.381 33.94 0c9.375-9.375 9.375-24.56 0-33.94L513.9 255.1z" />
+                            </svg>
+                            <svg v-else-if="volume <= 30" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                                <path
+                                    d="M412.6 181.9c-10.28-8.344-25.41-6.875-33.75 3.406c-8.406 10.25-6.906 25.37 3.375 33.78C393.5 228.4 400 241.8 400 256c0 14.19-6.5 27.62-17.81 36.87c-10.28 8.406-11.78 23.53-3.375 33.78c4.719 5.812 11.62 8.812 18.56 8.812c5.344 0 10.75-1.781 15.19-5.406C435.1 311.6 448 284.7 448 256S435.1 200.4 412.6 181.9zM301.2 34.84c-11.5-5.187-25.01-3.116-34.43 5.259L131.8 160H48c-26.51 0-48 21.49-48 47.1v95.1c0 26.51 21.49 47.1 48 47.1h83.84l134.9 119.9C272.7 477.2 280.3 480 288 480c4.438 0 8.959-.9313 13.16-2.837C312.7 472 320 460.6 320 448V64C320 51.41 312.7 39.1 301.2 34.84z" />
+                            </svg>
+                            <svg v-else-if="volume <= 75" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512">
+                                <path
+                                    d="M444.6 181.9c-10.28-8.344-25.41-6.875-33.75 3.406c-8.406 10.25-6.906 25.37 3.375 33.78C425.5 228.4 432 241.8 432 256c0 14.19-6.5 27.62-17.81 36.87c-10.28 8.406-11.78 23.53-3.375 33.78c4.719 5.812 11.62 8.812 18.56 8.812c5.344 0 10.75-1.781 15.19-5.406C467.1 311.6 480 284.7 480 256S467.1 200.4 444.6 181.9zM505.1 108c-10.22-8.344-25.34-6.906-33.78 3.344c-8.406 10.25-6.906 25.37 3.344 33.78C508.6 172.9 528 213.3 528 256s-19.44 83.09-53.31 110.9c-10.25 8.406-11.75 23.53-3.344 33.78c4.75 5.781 11.62 8.781 18.56 8.781c5.375 0 10.75-1.781 15.22-5.437C550.2 367.1 576 313.1 576 256S550.2 144.9 505.1 108zM333.2 34.84c-11.5-5.187-25.01-3.116-34.43 5.259L163.8 160H80c-26.51 0-48 21.49-48 47.1v95.1c0 26.51 21.49 47.1 48 47.1h83.84l134.9 119.9C304.7 477.2 312.3 480 320 480c4.438 0 8.959-.9313 13.16-2.837C344.7 472 352 460.6 352 448V64C352 51.41 344.7 39.1 333.2 34.84z" />
+                            </svg>
+                            <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512">
+                                <path
+                                    d="M412.6 182c-10.28-8.334-25.41-6.867-33.75 3.402c-8.406 10.24-6.906 25.35 3.375 33.74C393.5 228.4 400 241.8 400 255.1c0 14.17-6.5 27.59-17.81 36.83c-10.28 8.396-11.78 23.5-3.375 33.74c4.719 5.806 11.62 8.802 18.56 8.802c5.344 0 10.75-1.779 15.19-5.399C435.1 311.5 448 284.6 448 255.1S435.1 200.4 412.6 182zM473.1 108.2c-10.22-8.334-25.34-6.898-33.78 3.34c-8.406 10.24-6.906 25.35 3.344 33.74C476.6 172.1 496 213.3 496 255.1s-19.44 82.1-53.31 110.7c-10.25 8.396-11.75 23.5-3.344 33.74c4.75 5.775 11.62 8.771 18.56 8.771c5.375 0 10.75-1.779 15.22-5.431C518.2 366.9 544 313 544 255.1S518.2 145 473.1 108.2zM534.4 33.4c-10.22-8.334-25.34-6.867-33.78 3.34c-8.406 10.24-6.906 25.35 3.344 33.74C559.9 116.3 592 183.9 592 255.1s-32.09 139.7-88.06 185.5c-10.25 8.396-11.75 23.5-3.344 33.74C505.3 481 512.2 484 519.2 484c5.375 0 10.75-1.779 15.22-5.431C601.5 423.6 640 342.5 640 255.1S601.5 88.34 534.4 33.4zM301.2 34.98c-11.5-5.181-25.01-3.076-34.43 5.29L131.8 160.1H48c-26.51 0-48 21.48-48 47.96v95.92c0 26.48 21.49 47.96 48 47.96h83.84l134.9 119.8C272.7 477 280.3 479.8 288 479.8c4.438 0 8.959-.9314 13.16-2.835C312.7 471.8 320 460.4 320 447.9V64.12C320 51.55 312.7 40.13 301.2 34.98z" />
+                            </svg>
                         </Transition>
                     </div>
                 </div>
@@ -32,65 +43,36 @@
             <div class="ctrlbtns">
                 <div class="ctrlitem left">
                     <div class="time current">{{ currentTimeDisplay }}</div>
-                    <button 
-                        class="prev" 
-                        @click="playPrevious"
-                        @mousedown.stop 
-                        @dblclick.stop 
-                        data-pointer
-                    >
+                    <button class="prev" @click="playPrevious" @mousedown.stop @dblclick.stop data-pointer>
                         <font-awesome icon="backward" />
                     </button>
                 </div>
-                <button 
-                    class="play" 
-                    @click="togglePlay" 
-                    @mousedown.stop 
-                    @dblclick.stop 
-                    data-pointer
-                >
+                <button class="play" @click="togglePlay" @mousedown.stop @dblclick.stop data-pointer>
                     <Transition name="faded">
                         <font-awesome v-if="isPlaying" icon="pause" />
                         <font-awesome v-else icon="play" />
                     </Transition>
                 </button>
                 <div class="ctrlitem right">
-                    <button 
-                        class="next" 
-                        @click="() => playNext()"
-                        @mousedown.stop 
-                        @dblclick.stop 
-                        data-pointer
-                    >
+                    <button class="next" @click="() => playNext()" @mousedown.stop @dblclick.stop data-pointer>
                         <font-awesome icon="forward" />
                     </button>
                     <div class="time total">{{ durationDisplay }}</div>
                 </div>
             </div>
-            <div class="rangeinput" :class="{ 'disable': !isProgressBarEnabled }" @mousedown.stop @dblclick.stop data-pointer>
+            <div class="rangeinput" :class="{ 'disable': !isProgressBarEnabled }" @mousedown.stop @dblclick.stop
+                data-pointer>
                 <div class="ctrlprogress">
-                    <div 
-                        class="progress load" 
-                        :class="{ done: isBufferComplete }"
-                        :style="{ width: bufferProgress + '%' }" 
-                    />
+                    <div class="progress load" :class="{ done: isBufferComplete }"
+                        :style="{ width: bufferProgress + '%' }" />
                     <div class="progress" :style="{ width: progress + '%' }" />
                 </div>
-                <input 
-                    type="range" 
-                    min="0" 
-                    max="100" 
-                    v-model="progress" 
-                    @input="onProgressInput"
-                    @change="setProgress" 
-                />
+                <input type="range" min="0" max="100" v-model="progress" @input="onProgressInput"
+                    @change="setProgress" />
             </div>
         </div>
         <div class="panel">
-            <div></div>
-            <div class="volume">
-                <div class="progress"></div>
-            </div>
+            <StackedPanel />
         </div>
     </div>
 </template>
@@ -125,7 +107,7 @@ interface CacheState {
 // ============================================
 const isPlaying = ref(false);
 const progress = ref<number>(0);
-const volume =  ref<number>(50);
+const volume = ref<number>(50);
 const fadeVolume = ref<number>(1);
 const bufferProgress = ref(0);
 const isBufferComplete = ref(false);
@@ -188,9 +170,9 @@ const formatTime = (seconds: number, shouldShowPlaceholder: boolean = false): st
     if (shouldShowPlaceholder) {
         return '--:--';
     }
-    
+
     if (!isFinite(seconds) || isNaN(seconds)) return '--:--';
-    
+
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
@@ -214,7 +196,7 @@ const findTrackByAudioSrc = (audioSrc: string) => {
     }
 
     const srcFileName = decodedSrc.split('/').pop() || '';
-    
+
     return props.data.find(track => {
         if (audioSrc.includes(track.file) || decodedSrc.includes(track.file)) {
             return true;
@@ -230,7 +212,7 @@ const findTrackByAudioSrc = (audioSrc: string) => {
         if (srcFileBase && trackFileBase && srcFileBase === trackFileBase) {
             return true;
         }
-        
+
         return false;
     });
 };
@@ -242,19 +224,19 @@ const getCurrentBufferState = (): { progress: number; bufferedEnd: number; isCom
     if (!audioElement || !audioElement.duration) {
         return { progress: 0, bufferedEnd: 0, isComplete: false };
     }
-    
+
     try {
         if (audioElement.buffered.length > 0) {
             const bufferedEnd = audioElement.buffered.end(audioElement.buffered.length - 1);
             const audioDuration = audioElement.duration;
             const progress = (bufferedEnd / audioDuration) * 100;
             const isComplete = progress >= 99;
-            
+
             return { progress, bufferedEnd, isComplete };
         }
     } catch (e) {
     }
-    
+
     return { progress: 0, bufferedEnd: 0, isComplete: false };
 };
 
@@ -263,26 +245,26 @@ const getCurrentBufferState = (): { progress: number; bufferedEnd: number; isCom
  */
 const saveCacheState = () => {
     if (!audioElement || !audioElement.src) return;
-    
+
     const audioSrc = audioElement.src;
     const trackData = findTrackByAudioSrc(audioSrc);
-    
+
     if (!trackData) {
         return;
     }
-    
+
     const fileUrl = trackData.file;
     const bufferState = getCurrentBufferState();
     const existingCache = cacheStates.get(fileUrl);
-    
+
     if (existingCache?.isComplete) {
         return;
     }
-    
+
     if (existingCache && bufferState.progress < existingCache.bufferProgress) {
         return;
     }
-    
+
     const state: CacheState = {
         isLoaded: isAudioLoaded.value,
         duration: audioElement.duration || duration.value,
@@ -290,7 +272,7 @@ const saveCacheState = () => {
         isComplete: bufferState.isComplete || (existingCache?.isComplete ?? false),
         lastBufferedEnd: bufferState.bufferedEnd
     };
-    
+
     cacheStates.set(fileUrl, state);
 };
 
@@ -299,19 +281,19 @@ const saveCacheState = () => {
  */
 const restoreCacheState = (fileUrl: string): boolean => {
     const cached = cacheStates.get(fileUrl);
-    
+
     if (cached) {
         isRestoringCache = true;
-        
+
         isAudioLoaded.value = cached.isLoaded;
         duration.value = cached.duration;
         bufferProgress.value = cached.bufferProgress;
         isBufferComplete.value = cached.isComplete;
-        
+
         setTimeout(() => {
             isRestoringCache = false;
         }, 600);
-        
+
         return true;
     } else {
         isRestoringCache = false;
@@ -319,7 +301,7 @@ const restoreCacheState = (fileUrl: string): boolean => {
         duration.value = 0;
         bufferProgress.value = 0;
         isBufferComplete.value = false;
-        
+
         return false;
     }
 };
@@ -339,34 +321,34 @@ const fadeTo = (targetFadeVolume: number, maxDuration?: number): Promise<void> =
             resolve();
             return;
         }
-        
+
         if (fadeInterval) {
             clearInterval(fadeInterval);
             fadeInterval = null;
         }
-        
+
         const startFadeVolume = fadeVolume.value;
         const volumeChange = targetFadeVolume - startFadeVolume;
-        
+
         if (Math.abs(volumeChange) < 0.01) {
             fadeVolume.value = targetFadeVolume;
             updateActualVolume();
             resolve();
             return;
         }
-        
+
         const normalDuration = Math.abs(volumeChange) * 1000;
-        
-        const totalDuration = maxDuration !== undefined 
-            ? Math.min(normalDuration, maxDuration) 
+
+        const totalDuration = maxDuration !== undefined
+            ? Math.min(normalDuration, maxDuration)
             : normalDuration;
-        
+
         const steps = 50;
         const stepDuration = totalDuration / steps;
         const volumeStep = volumeChange / steps;
-        
+
         let currentStep = 0;
-        
+
         fadeInterval = setInterval(() => {
             if (!audioElement || currentStep >= steps) {
                 if (fadeInterval) {
@@ -378,7 +360,7 @@ const fadeTo = (targetFadeVolume: number, maxDuration?: number): Promise<void> =
                 resolve();
                 return;
             }
-            
+
             currentStep++;
             const newFadeVolume = startFadeVolume + (volumeStep * currentStep);
             fadeVolume.value = Math.max(0, Math.min(1, newFadeVolume));
@@ -396,15 +378,15 @@ const fadeTo = (targetFadeVolume: number, maxDuration?: number): Promise<void> =
  */
 const updateBufferProgress = () => {
     if (isRestoringCache) return;
-    
+
     if (!audioElement || !audioElement.duration) return;
-    
+
     const bufferState = getCurrentBufferState();
-    
+
     // 只增不减
     if (bufferState.progress >= bufferProgress.value) {
         bufferProgress.value = bufferState.progress;
-        
+
         if (bufferState.isComplete && !isBufferComplete.value) {
             isBufferComplete.value = true;
             stopBufferCheck();
@@ -417,7 +399,7 @@ const updateBufferProgress = () => {
  */
 const startBufferCheck = () => {
     if (bufferCheckInterval) return;
-    
+
     bufferCheckInterval = setInterval(() => {
         updateBufferProgress();
         saveCacheState();
@@ -452,34 +434,34 @@ const setPreloadStrategy = (strategy: 'none' | 'metadata' | 'auto') => {
  */
 const initAudio = () => {
     if (!currentTrack.value) return;
-    
+
     const fileUrl = currentTrack.value.file;
     const hasCachedState = restoreCacheState(fileUrl);
-    
+
     if (audioElement && audioElement.src && audioElement.src.includes(fileUrl)) {
         return;
     }
-    
+
     if (audioElement) {
         if (audioElement.src) {
             saveCacheState();
         }
-        
+
         audioElement.pause();
         audioElement.src = '';
         audioElement = null;
     }
-    
+
     stopBufferCheck();
     audioElement = new Audio();
     fadeVolume.value = 0;
     updateActualVolume();
     audioElement.preload = 'none';
-    
+
     // ========================================
     // 事件监听器
     // ========================================
-    
+
     audioElement.addEventListener('timeupdate', () => {
         if (!audioElement || isSeeking.value) return;
         currentTime.value = audioElement.currentTime;
@@ -487,34 +469,34 @@ const initAudio = () => {
             progress.value = (audioElement.currentTime / duration.value) * 100;
         }
     });
-    
+
     audioElement.addEventListener('progress', updateBufferProgress);
     audioElement.addEventListener('loadeddata', updateBufferProgress);
     audioElement.addEventListener('canplay', updateBufferProgress);
     audioElement.addEventListener('canplaythrough', updateBufferProgress);
-    
+
     audioElement.addEventListener('loadedmetadata', () => {
         if (!audioElement) return;
-        
+
         if (duration.value === 0 || !hasCachedState) {
             duration.value = audioElement.duration;
         }
-        
+
         isAudioLoaded.value = true;
         setTimeout(updateBufferProgress, 100);
     });
-    
+
     audioElement.addEventListener('play', () => {
         setPreloadStrategy('auto');
         startBufferCheck();
     });
-    
+
     audioElement.addEventListener('pause', () => {
         saveCacheState();
         setPreloadStrategy('metadata');
         stopBufferCheck();
     });
-    
+
     audioElement.addEventListener('ended', () => {
         isPlaying.value = false;
         if (audioElement) audioElement.volume = 0;
@@ -522,7 +504,7 @@ const initAudio = () => {
         stopBufferCheck();
         playNext(true);
     });
-    
+
     audioElement.addEventListener('error', (e) => {
         if (audioElement && audioElement.error) {
             isPlaying.value = false;
@@ -538,51 +520,51 @@ const initAudio = () => {
 
 const loadAudio = async () => {
     if (!audioElement || !currentTrack.value) return;
-    
+
     const fileUrl = currentTrack.value.file;
-    
+
     if (isAudioLoaded.value && audioElement.src.includes(fileUrl) && audioElement.readyState >= 1) {
         return;
     }
-    
+
     try {
         if (!audioElement.src || !audioElement.src.includes(fileUrl)) {
             audioElement.preload = 'metadata';
             audioElement.src = fileUrl;
         }
-        
+
         if (audioElement.readyState >= 1) {
             isAudioLoaded.value = true;
             setTimeout(updateBufferProgress, 100);
             return;
         }
-        
+
         await new Promise<void>((resolve, reject) => {
             if (!audioElement) {
                 reject(new Error('Audio element not found'));
                 return;
             }
-            
+
             const onLoaded = () => {
                 audioElement?.removeEventListener('loadedmetadata', onLoaded);
                 audioElement?.removeEventListener('error', onError);
                 resolve();
             };
-            
+
             const onError = () => {
                 audioElement?.removeEventListener('loadedmetadata', onLoaded);
                 audioElement?.removeEventListener('error', onError);
                 reject(new Error('Load failed'));
             };
-            
+
             audioElement.addEventListener('loadedmetadata', onLoaded, { once: true });
             audioElement.addEventListener('error', onError, { once: true });
-            
+
             if (audioElement.readyState >= 1) {
                 onLoaded();
             }
         });
-        
+
         isAudioLoaded.value = true;
         setTimeout(updateBufferProgress, 100);
     } catch (error) {
@@ -597,20 +579,20 @@ const loadAudio = async () => {
 
 const togglePlay = async () => {
     if (!audioElement || !currentTrack.value) return;
-    
+
     if (isPlaying.value) {
         isPlaying.value = false;
-        
+
         const remainingTime = duration.value - currentTime.value;
         const normalFadeDuration = fadeVolume.value * 1000;
-        
+
         // 500ms 冗余
-        const safeFadeDuration = remainingTime > 0.5 
+        const safeFadeDuration = remainingTime > 0.5
             ? Math.min(normalFadeDuration, (remainingTime - 0.5) * 1000)
             : 0;
-        
+
         await fadeTo(0, safeFadeDuration);
-        
+
         if (!isPlaying.value && audioElement) {
             audioElement.pause();
         }
@@ -635,9 +617,9 @@ const playNext = async (autoPlay = false) => {
     if (props.data.length === 0) return;
 
     albumCoverDirection.value = 'next'; // ✅ 设置为下一首方向
-    
+
     const shouldAutoPlay = autoPlay || !isPlaying.value;
-    
+
     if (audioElement && audioElement.src) {
         saveCacheState();
     }
@@ -650,15 +632,15 @@ const playPrevious = async () => {
     if (props.data.length === 0) return;
 
     albumCoverDirection.value = 'prev'; // ✅ 设置为上一首方向
-    
+
     const shouldAutoPlay = !isPlaying.value;
-    
+
     if (audioElement && audioElement.src) {
         saveCacheState();
     }
-    
-    currentTrackIndex.value = currentTrackIndex.value === 0 
-        ? props.data.length - 1 
+
+    currentTrackIndex.value = currentTrackIndex.value === 0
+        ? props.data.length - 1
         : currentTrackIndex.value - 1;
     await loadAndPlay(shouldAutoPlay);
 };
@@ -668,14 +650,14 @@ const playPrevious = async () => {
  */
 const loadAndPlay = async (shouldAutoPlay = false) => {
     if (!currentTrack.value) return;
-    
+
     const wasPlaying = isPlaying.value;
-    
+
     if (pauseDelayTimer) {
         clearTimeout(pauseDelayTimer);
         pauseDelayTimer = null;
     }
-    
+
     if (audioElement) {
         if (fadeInterval) {
             clearInterval(fadeInterval);
@@ -683,44 +665,44 @@ const loadAndPlay = async (shouldAutoPlay = false) => {
         }
         audioElement.volume = 0;
     }
-    
+
     progress.value = 0;
     currentTime.value = 0;
     stopBufferCheck();
     initAudio();
-    
+
     if (shouldAutoPlay || wasPlaying) {
         let loadingFailed = false;
-        
+
         pauseDelayTimer = setTimeout(() => {
             if (!isPlaying.value && !loadingFailed) {
                 isPlaying.value = false;
             }
             pauseDelayTimer = null;
         }, 300);
-        
+
         try {
             await loadAudio();
-            
+
             if (audioElement) {
                 await audioElement.play();
-                
+
                 if (pauseDelayTimer) {
                     clearTimeout(pauseDelayTimer);
                     pauseDelayTimer = null;
                 }
-                
+
                 isPlaying.value = true;
                 fadeTo(1);
             }
         } catch (error) {
             loadingFailed = true;
-            
+
             if (pauseDelayTimer) {
                 clearTimeout(pauseDelayTimer);
                 pauseDelayTimer = null;
             }
-            
+
             console.error('[Player] Auto play failed:', error);
             isPlaying.value = false;
         }
@@ -739,10 +721,10 @@ const loadAndPlay = async (shouldAutoPlay = false) => {
  */
 const updateActualVolume = () => {
     if (!audioElement) return;
-    
+
     const globalVolume = volume.value / 100;
     const actualVolume = globalVolume * fadeVolume.value;
-    
+
     audioElement.volume = Math.max(0, Math.min(1, actualVolume));
 };
 
@@ -752,7 +734,7 @@ const updateActualVolume = () => {
 const onVolumeInput = (event: Event) => {
     const target = event.target as HTMLInputElement;
     const value = parseFloat(target.value);
-    
+
     if (!isNaN(value)) {
         volume.value = value;
         updateActualVolume();
@@ -765,11 +747,11 @@ const onVolumeInput = (event: Event) => {
 const setVolume = (event: Event) => {
     const target = event.target as HTMLInputElement;
     const value = parseFloat(target.value);
-    
+
     if (!isNaN(value)) {
         volume.value = value;
         updateActualVolume();
-        
+
         try {
             localStorage.setItem('musicPlayerVolume', value.toString());
         } catch (e) {
@@ -788,15 +770,15 @@ const onProgressInput = (event: Event) => {
     if (!isProgressBarEnabled.value) {
         return;
     }
-    
+
     isSeeking.value = true;
-    
+
     const target = event.target as HTMLInputElement;
     const value = parseFloat(target.value);
-    
+
     if (!isNaN(value)) {
         progress.value = value;
-        
+
         if (duration.value > 0) {
             currentTime.value = (value / 100) * duration.value;
         }
@@ -811,23 +793,23 @@ const setProgress = async (event: Event) => {
         isSeeking.value = false;
         return;
     }
-    
+
     if (!audioElement || !duration.value) {
         isSeeking.value = false;
         return;
     }
-    
+
     const target = event.target as HTMLInputElement;
     const value = parseFloat(target.value);
-    
+
     if (isNaN(value)) {
         console.error('[Player] Invalid progress value:', target.value);
         isSeeking.value = false;
         return;
     }
-    
+
     progress.value = value;
-    
+
     if (!isAudioLoaded.value) {
         try {
             await loadAudio();
@@ -837,11 +819,11 @@ const setProgress = async (event: Event) => {
             return;
         }
     }
-    
+
     const newTime = (value / 100) * duration.value;
     audioElement.currentTime = newTime;
     currentTime.value = newTime;
-    
+
     isSeeking.value = false;
 };
 
@@ -869,7 +851,7 @@ onMounted(() => {
         }
     } catch (e) {
     }
-    
+
     if (props.data.length > 0) {
         initAudio();
     }
@@ -879,19 +861,19 @@ onUnmounted(() => {
     if (audioElement && audioElement.src) {
         saveCacheState();
     }
-    
+
     if (fadeInterval) {
         clearInterval(fadeInterval);
         fadeInterval = null;
     }
-    
+
     if (pauseDelayTimer) {
         clearTimeout(pauseDelayTimer);
         pauseDelayTimer = null;
     }
-    
+
     stopBufferCheck();
-    
+
     if (audioElement) {
         audioElement.pause();
         audioElement.src = '';
@@ -948,19 +930,19 @@ onUnmounted(() => {
             display: flex;
             position: absolute;
             filter: blur(5px);
-            height: calc(var(--size)* 3);
-            width: calc(var(--size)* 12);
+            height: 3em;
+            width: 12em;
             flex-direction: row-reverse;
             transition: opacity .6s, filter .6s, fill .6s;
-            transform: translate(calc(var(--size) * 19), calc(var(--size) * -8));
+            transform: translate(19em, -8em);
             fill: color-mix(in srgb, var(--lyntrix-color-high, #000), #000 60%);
 
             .progresscon {
                 height: 100%;
                 transition: background-color .3s, width .3s;
                 overflow: hidden;
-                width: calc(var(--size)* 3);
-                border-radius: var(--size);
+                width: 3em;
+                border-radius: 1em;
 
                 .progress {
                     pointer-events: none;
@@ -978,8 +960,9 @@ onUnmounted(() => {
                     margin: 0;
                     opacity: 0;
                     top: 0;
-                    width: calc(var(--size)* 3);
+                    width: 3em;
                     height: 100%;
+                    font-size: 1em;
                     transition: width .3s;
                     position: absolute;
                 }
@@ -990,13 +973,13 @@ onUnmounted(() => {
                     right: 0;
                     height: 100%;
                     pointer-events: none;
-                    width: calc(var(--size) * 3.2);
+                    width: 3.2em;
 
                     svg {
                         height: 100%;
                         width: 100%;
                         position: absolute;
-                        padding: calc(var(--size)* 0.5);
+                        padding: 0.5em;
                         padding-right: 0;
                         box-sizing: border-box;
                         transition: .3s;
@@ -1015,9 +998,9 @@ onUnmounted(() => {
                     input[type="range"] {
                         width: 100%;
                     }
-                    
+
                     .icon svg {
-                        padding: calc(var(--size)* 0.65);
+                        padding: 0.65em;
                     }
                 }
 
@@ -1064,8 +1047,8 @@ onUnmounted(() => {
 
                 .time {
                     width: 0;
-                    margin-bottom: calc(var(--size)* .25);
-                    font-size: calc(var(--size)* 1.8);
+                    margin-bottom: .1389em; // DEV
+                    font-size: 1.8em;
                     filter: blur(5px);
                     opacity: 0;
                     pointer-events: none;
@@ -1116,7 +1099,7 @@ onUnmounted(() => {
             width: 100%;
             opacity: 0;
             filter: blur(5px);
-            height: calc(var(--size) * 1.25);
+            height: 1.25em;
             display: flex;
             align-items: center;
             position: absolute;
@@ -1192,51 +1175,51 @@ onUnmounted(() => {
         opacity: 0;
         filter: blur(15px);
         position: absolute;
-        transition: opacity .6s, filter .6s, margin .6s;
+        transition: opacity .6s, filter .6s, margin .6s, height .6s;
         margin-top: var(--square-size);
-        top: calc(var(--size) * 17);
-        width: calc(var(--size) * 46);
-        height: calc(var(--size) * 18.5);
+        top: 16.5em;
+        width: 46em;
+        height: var(--square-size);
         justify-content: space-between;
         display: flex;
-        
+
     }
 }
 
 .content.infocus {
     .widget[data-float-item] .music-widget {
-        padding: calc(var(--size)* 2);
+        padding: 2em;
 
         .picture {
-            height: calc(var(--size)* 12.5);
-            width: calc(var(--size)* 12.5);
+            height: 12.5em;
+            width: 12.5em;
         }
 
         .info {
-            width: calc(var(--size) * 28.5);
-            height: calc(var(--size) * 6.5);
-            transform: translate(calc(var(--size) * 14.5), calc(var(--size) * -18.25));
+            width: 28.5em;
+            height: 6.5em;
+            transform: translate(14.5em, -18.25em);
 
             &.involume {
-                width: calc(var(--size) * 18);
+                width: 18em;
                 transition: transform 0.6s, width 0.3s;
             }
 
             .title {
-                font-size: calc(var(--size) * 2.4);
-                line-height: calc(var(--size) * 3);
-                padding: calc(var(--size) * 3);
+                font-size: 2.4em;
+                line-height: 1.25em;
+                padding: 1.25em;
                 padding-right: 0;
-                margin-left: calc(var(--size) * -3);
-                margin-top: calc(var(--size) * -3);
+                margin-left: -1.25em;
+                margin-top: -1.25em;
             }
 
             .subtitle {
-                font-size: calc(var(--size) * 2);
-                line-height: calc(var(--size) * 2.4);
-                margin-top: calc(var(--size) * -5.5);
-                margin-left: calc(var(--size) * -3);
-                padding: calc(var(--size) * 3);
+                font-size: 2em;
+                line-height: 1.2em;
+                margin-top: -2.75em;
+                margin-left: -1.5em;
+                padding: 1.5em;
                 padding-right: 0;
             }
 
@@ -1247,9 +1230,9 @@ onUnmounted(() => {
         }
 
         .controls {
-            width: calc(var(--size) * 31);
-            height: calc(var(--size) * 3.5);
-            transform: translate(calc(var(--size) * 14.5), calc(var(--size) * -23.25));
+            width: 31em;
+            height: 3.5em;
+            transform: translate(14.5em, -23.25em);
 
             .ctrlitem {
                 gap: 30%;
@@ -1272,6 +1255,7 @@ onUnmounted(() => {
             margin-top: 0;
             opacity: 1;
             filter: none;
+            height: 19em;
         }
     }
 }
@@ -1291,18 +1275,18 @@ html.dark-mode {
                 }
             }
         }
-        
+
         .controls {
             .ctrlbtns {
                 color: #78c6ff;
             }
-            
+
             .ctrlprogress {
                 background-color: #a3e9ff55;
 
                 .progress {
                     background-color: #a3e9ff;
-                    
+
                     &.load {
                         background-color: #a3e9ff58;
                     }
@@ -1313,14 +1297,14 @@ html.dark-mode {
 
     .content.infocus {
         .widget[data-float-item] .music-widget {
-            transform: translate(calc(var(--size) * -0.3), calc(var(--size) * -0.3));
-            
+            transform: translate(-0.3em, -0.3em);
+
             .info {
-                transform: translate(calc(var(--size) * 14.532), calc(var(--size) * -17.95));
+                transform: translate(14.532em, -17.95em);
             }
 
             .controls {
-                transform: translate(calc(var(--size) * 14.532), calc(var(--size) * -22.682));
+                transform: translate(14.532em, -22.682em);
             }
         }
     }
