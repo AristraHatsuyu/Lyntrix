@@ -5,8 +5,7 @@
         </div>
         <div class="info" :class="{ 'involume': entervolume }">
             <div class="title">
-                <TextFlip :duration="500"
-                    :words="currentTrack?.title.replace(/ /g, '&nbsp;') || 'Not&nbsp;Playing'" />
+                <TextFlip :duration="500" :words="currentTrack?.title.replace(/ /g, '&nbsp;') || 'Not&nbsp;Playing'" />
             </div>
             <div class="subtitle">
                 <TextFlip :duration="500" :words="currentTrack?.author.replace(/ /g, '&nbsp;') || '--'" />
@@ -15,7 +14,7 @@
                 <div class="progresscon" @mousedown.stop @dblclick.stop data-pointer @mouseenter="entervolume = true"
                     @mouseleave="entervolume = false">
                     <div class="progress" :style="{ width: volume + '%' }"></div>
-                    <input type="range" min="0" max="100" v-model="volume" @input="onVolumeInput" @change="setVolume" />
+                    <input type="range" min="0" max="100" v-model="volume" @input="onVolumeInput" />
                     <div class="icon">
                         <Transition name="fadee">
                             <svg v-if="volume === 0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512">
@@ -67,7 +66,7 @@
                         :style="{ width: bufferProgress + '%' }" />
                     <div class="progress" :style="{ width: progress + '%' }" />
                 </div>
-                <input type="range" min="0" max="100" v-model="progress" @input="onProgressInput"
+                <input type="range" min="0" max="100" step="0.1" v-model="progress" @input="onProgressInput"
                     @change="setProgress" />
             </div>
         </div>
@@ -103,14 +102,15 @@ interface CacheState {
 }
 
 // ============================================
-// Web Audio API 均衡器系统
+// Audio API 均衡器系统
 // ============================================
+let preGainNode: GainNode | null = null;
 let audioContext: AudioContext | null = null;
 let audioSource: MediaElementAudioSourceNode | null = null;
 let equalizerNodes: BiquadFilterNode[] = [];
-let compressorNode: DynamicsCompressorNode | null = null; // 🆕 软限幅器
+let compressorNode: DynamicsCompressorNode | null = null;
 const isEqualizerInitialized = ref(false);
-const currentPreGain = ref(0); // 🆕 当前预增益补偿值（dB）
+const currentPreGain = ref(0);
 
 // ============================================
 // 均衡器数据类型
@@ -253,7 +253,7 @@ const findTrackByAudioSrc = (audioSrc: string) => {
 };
 
 /**
- * 从 audio.buffered 实时读取缓冲进度
+ * 实时读取缓冲进度
  */
 const getCurrentBufferState = (): { progress: number; bufferedEnd: number; isComplete: boolean } => {
     if (!audioElement || !audioElement.duration) {
@@ -467,9 +467,6 @@ const setPreloadStrategy = (strategy: 'none' | 'metadata' | 'auto') => {
 /**
  * 初始化音频对象
  */
-/**
- * 初始化音频对象
- */
 const initAudio = () => {
     if (!currentTrack.value) return;
 
@@ -567,6 +564,14 @@ const initAudio = () => {
 // ============================================
 
 const loadAudio = async () => {
+    if (!isEqualizerInitialized.value) {
+        const success = initEqualizer();
+        if (success) {
+            connectAudioToEqualizer();
+            applyEqualizerSettings(equalizerSettings.value);
+        }
+    }
+
     if (!audioElement || !currentTrack.value) return;
 
     const fileUrl = currentTrack.value.file;
@@ -644,15 +649,6 @@ const togglePlay = async () => {
             audioElement.pause();
         }
     } else {
-        // 🆕 首次播放时初始化均衡器
-        if (!isEqualizerInitialized.value) {
-            const success = initEqualizer();
-            if (success) {
-                connectAudioToEqualizer();
-                applyEqualizerSettings(equalizerSettings.value);
-            }
-        }
-
         try {
             if (!isAudioLoaded.value) {
                 await loadAudio();
@@ -772,7 +768,7 @@ const loadAndPlay = async (shouldAutoPlay = false) => {
 // ============================================
 
 /**
- * 更新音频元素的实际音量（考虑预增益补偿）
+ * 更新音频元素的实际音量
  * 实际音量 = 全局音量 × 淡入淡出系数 × 预增益补偿
  */
 const updateActualVolume = () => {
@@ -780,7 +776,7 @@ const updateActualVolume = () => {
 
     const globalVolume = volume.value / 100; // 用户设置的音量 0-1
     const fadeCoefficient = fadeVolume.value; // 淡入淡出系数 0-1
-    
+
     // 🆕 fadeVolume 现在已经包含了预增益补偿
     const actualVolume = globalVolume * fadeCoefficient;
 
@@ -797,24 +793,10 @@ const onVolumeInput = (event: Event) => {
     if (!isNaN(value)) {
         volume.value = value;
         updateActualVolume();
-    }
-};
-
-/**
- * 音量条释放（可选，用于保存设置等）
- */
-const setVolume = (event: Event) => {
-    const target = event.target as HTMLInputElement;
-    const value = parseFloat(target.value);
-
-    if (!isNaN(value)) {
-        volume.value = value;
-        updateActualVolume();
 
         try {
             localStorage.setItem('musicPlayerVolume', value.toString());
-        } catch (e) {
-        }
+        } catch (e) { }
     }
 };
 
@@ -822,71 +804,77 @@ const setVolume = (event: Event) => {
 // 均衡器控制
 // ============================================
 
-/**
- * 初始化均衡器（创建 AudioContext 和滤波器链路）
- */
-/**
- * 初始化均衡器（专业级配置）
- */
 const initEqualizer = () => {
     try {
-        // 检查浏览器支持
         const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
         if (!AudioContextClass) {
             console.warn('[EQ] Web Audio API not supported');
             return false;
         }
 
-        // 创建 AudioContext
         audioContext = new AudioContextClass();
         console.log('[EQ] AudioContext created');
 
-        // 🎯 专业级配置：滤波器类型 + Q值
         const filterConfigs = [
-            // 频段    类型         Q值    说明
-            { feq: 31,    type: 'lowshelf',  Q: 0.7 },  // 超低频 - 货架式
-            { feq: 62,    type: 'lowshelf',  Q: 0.7 },  // 低频 - 货架式
-            { feq: 125,   type: 'peaking',   Q: 0.5 },  // 低中频 - 宽带
-            { feq: 250,   type: 'peaking',   Q: 0.6 },  // 中频
-            { feq: 500,   type: 'peaking',   Q: 0.7 },  // 中频
-            { feq: 1000,  type: 'peaking',   Q: 0.8 },  // 中高频
-            { feq: 2000,  type: 'peaking',   Q: 0.9 },  // 高频
-            { feq: 4000,  type: 'peaking',   Q: 1.0 },  // 高频
-            { feq: 8000,  type: 'peaking',   Q: 1.1 },  // 超高频
-            { feq: 16000, type: 'highshelf', Q: 0.7 }   // 极高频 - 货架式
+            // 频段    类型         Q
+            { feq: 32, type: 'lowshelf', Q: 0.707 },
+            { feq: 63, type: 'peaking', Q: 1.05 },
+            { feq: 125, type: 'peaking', Q: 1.10 },
+            { feq: 250, type: 'peaking', Q: 1.15 },
+            { feq: 500, type: 'peaking', Q: 1.20 },
+            { feq: 1000, type: 'peaking', Q: 1.20 },
+            { feq: 2000, type: 'peaking', Q: 1.20 },
+            { feq: 4000, type: 'peaking', Q: 1.15 },
+            { feq: 8000, type: 'peaking', Q: 1.10 },
+            { feq: 16000, type: 'highshelf', Q: 0.707 }
         ];
 
-        // 创建滤波器节点
         equalizerNodes = filterConfigs.map((config, index) => {
             const filter = audioContext!.createBiquadFilter();
             filter.type = config.type as BiquadFilterType;
             filter.frequency.value = config.feq;
             filter.Q.value = config.Q;
-            filter.gain.value = 0; // 默认 0dB
-            
+            filter.gain.value = 0;
             console.log(`[EQ] Band ${index}: ${config.feq}Hz (${config.type}, Q=${config.Q})`);
             return filter;
         });
 
-        // 🆕 创建软限幅器（防止削波）
-        compressorNode = audioContext.createDynamicsCompressor();
-        compressorNode.threshold.value = -6;     // 阈值 -6dB（开始压缩）
-        compressorNode.knee.value = 10;          // 拐点平滑度
-        compressorNode.ratio.value = 12;         // 压缩比 12:1（接近限幅器）
-        compressorNode.attack.value = 0.003;     // 3ms 快速响应
-        compressorNode.release.value = 0.25;     // 250ms 释放
-        console.log('[EQ] Soft limiter created (threshold: -6dB)');
+        // 预增益节点（独立于音量控制）
+        preGainNode = audioContext.createGain();
+        preGainNode.gain.value = dBToLinear(-1.5);
 
-        // 🔗 串联所有节点：
-        // equalizer[0] → equalizer[1] → ... → equalizer[9] → compressor → destination
+        const dcCut = audioContext.createBiquadFilter();
+        dcCut.type = 'highpass';
+        dcCut.frequency.value = 20;
+        dcCut.Q.value = 0.707;
+
+        const airLowpass = audioContext.createBiquadFilter();
+        airLowpass.type = 'lowpass';
+        airLowpass.frequency.value = 19500;
+        airLowpass.Q.value = 0.707;
+
+        compressorNode = audioContext.createDynamicsCompressor();
+        compressorNode.threshold.value = -0.5;
+        compressorNode.knee.value = 2;
+        compressorNode.ratio.value = 10;
+        compressorNode.attack.value = 0.003;
+        compressorNode.release.value = 0.2;
+        console.log('[EQ] Gentle limiter created (threshold: -0.5dB, ratio: 10:1)');
+
+        preGainNode.connect(dcCut);
+        dcCut.connect(equalizerNodes[0]);
+
         for (let i = 0; i < equalizerNodes.length - 1; i++) {
             equalizerNodes[i].connect(equalizerNodes[i + 1]);
         }
-        equalizerNodes[equalizerNodes.length - 1].connect(compressorNode);
+
+        equalizerNodes[equalizerNodes.length - 1].connect(airLowpass);
+        airLowpass.connect(compressorNode);
         compressorNode.connect(audioContext.destination);
 
         isEqualizerInitialized.value = true;
-        console.log('[EQ] Professional equalizer chain initialized ✓');
+        console.log('[EQ] A-Chain initialized ✓');
+        console.log('[EQ] Signal chain: Source → PreGain(-1.5dB) → 20Hz HP → EQ×10 → 19.5k LP → Limiter → Output');
         return true;
     } catch (error) {
         console.error('[EQ] Initialization failed:', error);
@@ -895,73 +883,70 @@ const initEqualizer = () => {
 };
 
 /**
- * 计算预增益补偿（防止削波）
+ * 计算预增益补偿
  * @param settings 均衡器设置
- * @returns 需要降低的增益值（dB，正数）
+ * @returns 需要降低的总增益值（dB，正数）
  */
 const calculatePreGain = (settings: EqualizerBand[]): number => {
-    // 策略1：计算所有正增益的总和
-    const positiveGains = settings
-        .map(band => Math.max(0, band.value - 12)) // 只取正增益
-        .filter(gain => gain > 0);
-
-    if (positiveGains.length === 0) {
-        return 0; // 没有提升，不需要补偿
-    }
-
-    // 策略2：使用加权平均（低频权重更高，因为能量更大）
+    const BASE_HEADROOM_DB = 1.5;
     const weights = [
-        1.5, 1.5, // 31Hz, 62Hz - 低频权重高
-        1.3, 1.2, // 125Hz, 250Hz
-        1.0, 1.0, 1.0, // 中频
-        0.9, 0.8, 0.7  // 高频权重低
+        1.8,  // 32Hz
+        1.6,  // 63Hz
+        1.4,  // 125Hz
+        1.2,  // 250Hz
+        1.0,  // 500Hz
+        1.0,  // 1kHz
+        0.9,  // 2kHz
+        0.9,  // 4kHz
+        0.8,  // 8kHz
+        0.7   // 16kHz
     ];
 
-    let weightedSum = 0;
-    let totalWeight = 0;
+    const posGains = settings.map(b => Math.max(0, (b.value - 12)));
+    const maxBoost = Math.max(0, ...posGains);
 
-    settings.forEach((band, index) => {
-        const gain = band.value - 12;
-        if (gain > 0) {
-            weightedSum += gain * weights[index];
-            totalWeight += weights[index];
+    let wSum = 0;
+    let linSum = 0;
+    for (let i = 0; i < posGains.length; i++) {
+        if (posGains[i] > 0) {
+            const w = weights[i];
+            wSum += w;
+            linSum += w * Math.pow(10, posGains[i] / 20);
         }
-    });
+    }
 
-    const averageGain = totalWeight > 0 ? weightedSum / totalWeight : 0;
+    const eqBoostDB = (wSum > 0)
+        ? (20 * Math.log10(linSum / wSum))
+        : 0;
 
-    // 策略3：保守补偿（补偿80%，留20%余量给压缩器）
-    const preGain = averageGain * 0.8;
+    const dynamicCut = Math.max(maxBoost * 0.6, eqBoostDB * 0.85);
+    const preGainDB = BASE_HEADROOM_DB + dynamicCut;
+    const clamped = Math.max(0, Math.min(12, preGainDB));
 
-    console.log(`[EQ] Pre-gain calculated: -${preGain.toFixed(1)}dB (avg boost: ${averageGain.toFixed(1)}dB)`);
-    return preGain;
+    console.log(`[EQ] Pre-gain: -${clamped.toFixed(2)} dB (base ${BASE_HEADROOM_DB} + dyn ${dynamicCut.toFixed(2)} | maxBoost ${maxBoost.toFixed(2)} / eqBoost ${eqBoostDB.toFixed(2)})`);
+    return clamped;
 };
 
 /**
  * 连接音频元素到均衡器链路
  */
 const connectAudioToEqualizer = () => {
-    if (!audioContext || !audioElement || equalizerNodes.length === 0) {
+    if (!audioContext || !audioElement || !preGainNode) {
         console.warn('[EQ] Cannot connect: missing context or nodes');
         return;
     }
 
     try {
-        // 如果已有旧的音频源，先断开
         if (audioSource) {
-            audioSource.disconnect();
+            try { audioSource.disconnect(); } catch { }
             audioSource = null;
         }
 
-        // 创建新的音频源节点
         audioSource = audioContext.createMediaElementSource(audioElement);
+        audioSource.connect(preGainNode);
 
-        // 🔗 连接：audioElement → audioSource → equalizer[0] → ... → compressor → destination
-        audioSource.connect(equalizerNodes[0]);
-
-        console.log('[EQ] Audio connected to professional equalizer chain ✓');
+        console.log('[EQ] Audio connected to A-chain ✓');
     } catch (error) {
-        // MediaElementSource 只能创建一次，如果已存在会抛出异常
         if (error instanceof Error && error.name === 'InvalidStateError') {
             console.log('[EQ] Audio source already exists (expected behavior)');
         } else {
@@ -979,14 +964,13 @@ const disconnectAudio = () => {
             audioSource.disconnect();
             console.log('[EQ] Audio disconnected');
         } catch (error) {
-            // 可能已经断开，忽略错误
         }
         audioSource = null;
     }
 };
 
 /**
- * 应用均衡器设置（专业级 - 带预增益补偿）
+ * 应用均衡器设置（优化版 - 独立预增益）
  */
 const applyEqualizerSettings = (settings: EqualizerBand[]) => {
     if (!isEqualizerInitialized.value || equalizerNodes.length === 0) {
@@ -994,66 +978,62 @@ const applyEqualizerSettings = (settings: EqualizerBand[]) => {
         return;
     }
 
-    // 🎯 步骤1：应用每个频段的增益
-    settings.forEach((band, index) => {
-        if (equalizerNodes[index]) {
-            // 将滑块值（0-24）转换为增益值（-12dB 到 +12dB）
-            const gainDB = band.value - 12;
-            
-            // 🆕 限制增益范围为 ±10dB（更安全）
-            const clampedGain = Math.max(-10, Math.min(10, gainDB));
-            
-            equalizerNodes[index].gain.value = clampedGain;
-        }
-    });
+    const now = audioContext!.currentTime;
 
-    // 🎯 步骤2：计算并应用预增益补偿
+    for (let i = 0; i < settings.length; i++) {
+        const band = settings[i];
+        const node = equalizerNodes[i];
+        if (!node) continue;
+
+        const targetDB = Math.max(-12, Math.min(12, band.value - 12));
+        const target = targetDB;
+
+        node.gain.cancelScheduledValues(now);
+        node.gain.setValueAtTime(node.gain.value, now);
+        node.gain.linearRampToValueAtTime(target, now + 0.08);
+    }
+
     const preGainDB = calculatePreGain(settings);
     currentPreGain.value = preGainDB;
 
-    // 将预增益转换为线性比例：dB → linear
-    // formula: linear = 10^(dB/20)
-    const preGainLinear = Math.pow(10, -preGainDB / 20);
-
-    // 🎯 步骤3：平滑调整fadeVolume（避免音量突变）
-    if (audioElement && isPlaying.value) {
-        // 播放中：平滑过渡（使用现有的fadeTo机制）
-        const targetFadeVolume = Math.max(0.1, Math.min(1.0, preGainLinear));
-        
-        // 计算当前应该的fadeVolume（考虑预增益）
-        const currentIdealFade = isPlaying.value ? 1.0 : 0.0;
-        const adjustedFadeVolume = currentIdealFade * targetFadeVolume;
-        
-        // 直接设置（因为变化通常很小）
-        fadeVolume.value = adjustedFadeVolume;
-        updateActualVolume();
+    if (preGainNode) {
+        const toLinear = dBToLinear(-preGainDB);
+        preGainNode.gain.cancelScheduledValues(now);
+        preGainNode.gain.setValueAtTime(preGainNode.gain.value, now);
+        preGainNode.gain.linearRampToValueAtTime(toLinear, now + 0.05); // 50ms 平滑
+        console.log(`[EQ] Pre-gain applied: ${(toLinear * 100).toFixed(1)}% (-${preGainDB.toFixed(2)} dB)`);
     }
 
-    // 🎯 步骤4：日志输出
-    const gainInfo = settings.map(s => {
-        const gain = s.value - 12;
-        return gain !== 0 ? `${s.text}Hz:${gain > 0 ? '+' : ''}${gain.toFixed(1)}dB` : null;
-    }).filter(Boolean).join(', ');
+    const activeGains = settings
+        .map((s, i) => {
+            const g = Math.max(-12, Math.min(12, s.value - 12));
+            return g !== 0 ? `${s.text}:${g > 0 ? '+' : ''}${g.toFixed(1)}` : null;
+        })
+        .filter(Boolean);
 
-    console.log(`[EQ] Applied: ${gainInfo || 'Flat (0dB)'}`);
-    console.log(`[EQ] Pre-gain compensation: -${preGainDB.toFixed(1)}dB (volume: ${(preGainLinear * 100).toFixed(1)}%)`);
+    if (activeGains.length > 0) {
+        console.log(`[EQ] Active bands: ${activeGains.join(', ')} dB`);
+    } else {
+        console.log('[EQ] Flat response (all bands at 0dB)');
+    }
 };
 
 /**
  * 均衡器值改变时的回调
  */
 const onEqualizerChanged = (newSettings: EqualizerBand[]) => {
-    console.log('[Player] Equalizer changed:', newSettings);
+    console.log('[Player] Equalizer settings changed');
 
-    // 如果均衡器还未初始化，等待首次播放
     if (!isEqualizerInitialized.value) {
         console.log('[EQ] Settings saved, will apply on first play');
         return;
     }
 
-    // 应用均衡器设置
     applyEqualizerSettings(newSettings);
 };
+
+/** dB 转线性增益 */
+const dBToLinear = (db: number) => Math.pow(10, db / 20);
 
 // ============================================
 // 进度条控制
@@ -1176,13 +1156,8 @@ onUnmounted(() => {
         audioElement = null;
     }
 
-    // 🆕 清理均衡器资源（优化版）
     if (audioSource) {
-        try {
-            audioSource.disconnect();
-        } catch (e) {
-            // 忽略断开错误
-        }
+        audioSource.disconnect();
         audioSource = null;
     }
 
@@ -1190,31 +1165,16 @@ onUnmounted(() => {
         try {
             node.disconnect();
         } catch (e) {
-            // 忽略断开错误
         }
     });
     equalizerNodes = [];
 
-    // 🆕 清理压缩器
-    if (compressorNode) {
-        try {
-            compressorNode.disconnect();
-        } catch (e) {
-            // 忽略错误
-        }
-        compressorNode = null;
-    }
-
     if (audioContext && audioContext.state !== 'closed') {
-        audioContext.close().catch(() => {
-            // 忽略关闭错误
-        });
+        audioContext.close().catch(() => { });
         audioContext = null;
     }
 
     isEqualizerInitialized.value = false;
-    currentPreGain.value = 0;
-    console.log('[EQ] Professional equalizer resources cleaned up ✓');
 });
 </script>
 

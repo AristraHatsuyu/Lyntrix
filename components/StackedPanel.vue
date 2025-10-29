@@ -289,7 +289,7 @@ defineExpose({
                         pointer-events: none;
                         display: flex;
                         flex-direction: column-reverse;
-                        background-color: color-mix(in srgb, color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFF 20%), #000 15%);
+                        background-color: color-mix(in srgb, var(--lyntrix-color-high, #fff), #fff 50%);
 
                         .progress {
                             height: 0%;
