@@ -69,6 +69,7 @@ const onAfterEnter = () => (isFlipping.value = false);
     position: relative;
     width: 100%;
     height: 100%;
+    transition: perspective .6s;
     perspective: calc(var(--square-size) * 1.25);
 }
 
@@ -81,6 +82,7 @@ const onAfterEnter = () => (isFlipping.value = false);
     backface-visibility: hidden;
     background-color: rgba(0, 0, 0, 0.2);
     transform-style: preserve-3d;
+    transition: border-radius .6s;
     border-radius: calc(var(--square-size) * 0.18);
     box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.15);
 }
