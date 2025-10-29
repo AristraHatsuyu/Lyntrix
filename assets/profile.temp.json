@@ -93,7 +93,8 @@
                 {
                     "title": "桜樹街道",
                     "author": "Kozato Snow",
-                    "file": "/media/桜樹街道.flac"
+                    "file": "/media/桜樹街道.flac",
+                    "image": "/media/桜樹街道.jpg"
                 }
             ],
             "columns": 2,

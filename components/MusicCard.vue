@@ -902,7 +902,7 @@ onUnmounted(() => {
 
 <style lang="scss">
 .music-widget {
-    transition: padding .6s;
+    transition: padding .6s, transform .6s;
 
     .picture {
         height: calc(var(--square-size) * 0.75);
@@ -951,7 +951,7 @@ onUnmounted(() => {
             height: calc(var(--size)* 3);
             width: calc(var(--size)* 12);
             flex-direction: row-reverse;
-            transition: opacity .6s, filter .6s;
+            transition: opacity .6s, filter .6s, fill .6s;
             transform: translate(calc(var(--size) * 19), calc(var(--size) * -8));
             fill: color-mix(in srgb, var(--lyntrix-color-high, #000), #000 60%);
 
@@ -1112,22 +1112,20 @@ onUnmounted(() => {
 
 
         .rangeinput {
-            top: 140%;
+            top: 130%;
             width: 100%;
             opacity: 0;
             filter: blur(5px);
-            height: calc(var(--size) * 1);
+            height: calc(var(--size) * 1.25);
             display: flex;
             align-items: center;
             position: absolute;
-            pointer-events: none;
             transition: filter .6s, opacity .6s;
 
             .ctrlprogress {
-                top: 0%;
                 width: 100%;
-                height: calc(var(--size) * 0.75);
-                transition: background-color .6s, top .3s, height .3s;
+                height: 65%;
+                transition: background-color .6s, height .3s;
                 border-radius: 100px;
                 overflow: hidden;
                 position: relative;
@@ -1154,12 +1152,11 @@ onUnmounted(() => {
 
             &:active {
                 .ctrlprogress {
-                    top: -7.5%;
-                    height: calc(var(--size) * 1.25);
-                    transition: filter .6s, opacity .6s, background-color .6s, height .5s .1s, top .5s .1s;
+                    height: 100%;
+                    transition: background-color .6s, height .5s .1s;
 
                     .progress {
-                        transition: background-color 6s, width 0.1s ease;
+                        transition: background-color 6s, width 0.1s ease, opacity .3s;
                     }
                 }
             }
@@ -1252,7 +1249,7 @@ onUnmounted(() => {
         .controls {
             width: calc(var(--size) * 31);
             height: calc(var(--size) * 3.5);
-            transform: translate(calc(var(--size) * 14.5), calc(var(--size) * -23.75));
+            transform: translate(calc(var(--size) * 14.5), calc(var(--size) * -23.25));
 
             .ctrlitem {
                 gap: 30%;
@@ -1266,7 +1263,6 @@ onUnmounted(() => {
             }
 
             .rangeinput {
-                pointer-events: auto;
                 filter: none;
                 opacity: 1;
             }
@@ -1282,8 +1278,50 @@ onUnmounted(() => {
 
 html.dark-mode {
     .music-widget {
-        .controls .ctrlbtns {
-            color: #78c6ff;
+        .info {
+            .volume {
+                fill: #78c6ff;
+
+                .progresscon:hover {
+                    background-color: #a3e9ff55;
+
+                    .progress {
+                        background-color: #a3e9ff60;
+                    }
+                }
+            }
+        }
+        
+        .controls {
+            .ctrlbtns {
+                color: #78c6ff;
+            }
+            
+            .ctrlprogress {
+                background-color: #a3e9ff55;
+
+                .progress {
+                    background-color: #a3e9ff;
+                    
+                    &.load {
+                        background-color: #a3e9ff58;
+                    }
+                }
+            }
+        }
+    }
+
+    .content.infocus {
+        .widget[data-float-item] .music-widget {
+            transform: translate(calc(var(--size) * -0.3), calc(var(--size) * -0.3));
+            
+            .info {
+                transform: translate(calc(var(--size) * 14.532), calc(var(--size) * -17.95));
+            }
+
+            .controls {
+                transform: translate(calc(var(--size) * 14.532), calc(var(--size) * -22.682));
+            }
         }
     }
 }
@@ -1316,7 +1354,7 @@ html.dark-mode {
 .fadee-leave-to {
     opacity: 0;
     transform: scale(0.8);
-    filter: blur(2px);
+    filter: blur(3px);
 }
 
 .fadee-enter-to,

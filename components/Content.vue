@@ -787,7 +787,7 @@ const handleProjectClick = (event: MouseEvent) => {
                     border-radius: calc(var(--size) * 0.8);
                     overflow: hidden;
                     filter: blur(15px);
-                    transition: margin 0.3s, opacity 0.6s, filter 0.6s;
+                    transition: margin 0.6s, opacity 0.6s, filter 0.6s;
                 }
             }
 
@@ -817,6 +817,10 @@ html.dark-mode {
                     background-color: #91d1ff3a;
                     box-shadow: 0 0 24px #78c1f664, 0 0 10px #73bef351;
                 }
+
+                &[data-float-item=music], &[data-float-item=image] {
+                    border-width: calc(var(--size) * 0.3);
+                }
             }
         }
 
@@ -845,11 +849,11 @@ html.dark-mode {
         .widget {
             filter: blur(15px);
 
-            .widget[data-float-item="image"] {
+            .widget[data-float-item=image] {
                 border-radius: calc(var(--size)* 3);
             }
 
-            &[data-float-item="music"] {
+            &[data-float-item=music] {
                 border-radius: calc(var(--size)* 3);
             }
         }
@@ -890,7 +894,7 @@ html.dark-mode {
             filter: none;
         }
 
-        .widget[data-float-item="image"] {
+        .widget[data-float-item=image] {
             animation: none;
         }
 
