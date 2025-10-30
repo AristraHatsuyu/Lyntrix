@@ -52,6 +52,7 @@ body {
 }
 
 * {
+    outline: none;
     --scroll-shift: calc(-140vh * var(--scroll-y-percent) + 35vh);
     cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8' width='8px' height='8px'><circle cx='4' cy='4' r='4' fill='white' opacity='.6' /></svg>") 4 4, auto;
 }
