@@ -71,7 +71,9 @@
             </div>
         </div>
         <div class="panel">
-            <StackedPanel v-model="equalizerSettings" v-model:eqcontrol="equalizerEnabled" @change="onEqualizerChanged" />
+            <StackedPanel v-model="equalizerSettings" v-model:eqcontrol="equalizerEnabled"
+                :tracks="playlist.queue.value" :current-index="playlist.currentIndex.value" :mode="playlist.mode.value"
+                @change="onEqualizerChanged" @play-item="handlePlayItem" @cycle-mode="handleCycleMode" />
         </div>
     </div>
 </template>
@@ -80,38 +82,40 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import type { TrackItem, EqualizerBand } from '@/composables/audio/audioTypes';
 import { useAudioPlayer } from '@/composables/audio/useAudioPlayer';
+import { usePlaylistController } from '@/composables/audio/usePlaylistController';
 
 interface Props { data: TrackItem[] }
 const props = withDefaults(defineProps<Props>(), { data: () => [] });
 
 const player = useAudioPlayer(props.data);
+const playlist = usePlaylistController(player);
 
 // 专辑封面方向 & 音量条 hover
 const albumCoverDirection = ref<'next' | 'prev'>('next');
 const entervolume = ref(false);
 
-// 均衡器面板的 v-model（保留与你原始值一致）
+// ===== 均衡器 v-model =====
 const equalizerSettings = ref<EqualizerBand[]>([
-  { text: '31', feq: 31, value: 12 },
-  { text: '62', feq: 62, value: 12 },
-  { text: '125', feq: 125, value: 12 },
-  { text: '250', feq: 250, value: 12 },
-  { text: '500', feq: 500, value: 12 },
-  { text: '1k', feq: 1000, value: 12 },
-  { text: '2k', feq: 2000, value: 12 },
-  { text: '4k', feq: 4000, value: 12 },
-  { text: '8k', feq: 8000, value: 12 },
-  { text: '16k', feq: 16000, value: 12 }
+    { text: '31', feq: 31, value: 12 },
+    { text: '62', feq: 62, value: 12 },
+    { text: '125', feq: 125, value: 12 },
+    { text: '250', feq: 250, value: 12 },
+    { text: '500', feq: 500, value: 12 },
+    { text: '1k', feq: 1000, value: 12 },
+    { text: '2k', feq: 2000, value: 12 },
+    { text: '4k', feq: 4000, value: 12 },
+    { text: '8k', feq: 8000, value: 12 },
+    { text: '16k', feq: 16000, value: 12 }
 ]);
 
-// ✅ 提供一个 ref 来实时控制均衡器开关（并对外暴露）
+// ✅ 均衡器开关（透传给 StackedPanel 的 v-model:eqcontrol）
 const equalizerEnabled = ref(false);
 watch(equalizerEnabled, (v) => player.setEQEnabled(v), { immediate: true });
 defineExpose({ equalizerEnabled });
 
-// ===== 状态桥接（与 template 名称保持一致）=====
+// ===== 状态桥接 =====
 const currentTrack = computed(() => player.currentTrack.value);
-const isPlaying = computed(() => player.isPlaying.value); // 使用了“带保护期”的 UI 状态
+const isPlaying = computed(() => player.isPlaying.value);
 const isProgressBarEnabled = computed(() => player.isProgressBarEnabled.value);
 const currentTimeDisplay = computed(() => player.currentTimeDisplay.value);
 const durationDisplay = computed(() => player.durationDisplay.value);
@@ -119,46 +123,63 @@ const bufferProgress = computed(() => player.bufferProgress.value);
 const isBufferComplete = computed(() => player.isBufferComplete.value);
 
 const volume = computed<number>({
-  get: () => player.volume.value,
-  set: (val: number) => { player.volume.value = val; }
+    get: () => player.volume.value,
+    set: (val: number) => { player.onVolumeChange(val); }
 });
 
 const progress = computed<number>({
-  get: () => player.progress.value,
-  set: (val: number) => { player.progress.value = val; }
+    get: () => player.progress.value,
+    set: (val: number) => { player.onProgressInput(val); }
 });
 
-// ===== 事件（与 template 绑定名一致）=====
+// ===== 事件 =====
 const onVolumeInput = (e: Event) => {
-  const val = Number((e.target as HTMLInputElement).value);
-  if (!Number.isNaN(val)) player.onVolumeChange(val);
+    const val = Number((e.target as HTMLInputElement).value);
+    if (!Number.isNaN(val)) player.onVolumeChange(val);
 };
 
 const onProgressInput = (e: Event) => {
-  const val = Number((e.target as HTMLInputElement).value);
-  if (!Number.isNaN(val)) player.onProgressInput(val);
+    const val = Number((e.target as HTMLInputElement).value);
+    if (!Number.isNaN(val)) player.onProgressInput(val);
 };
 
 const setProgress = (e: Event) => {
-  const val = Number((e.target as HTMLInputElement).value);
-  if (!Number.isNaN(val)) player.setProgressValue(val);
+    const val = Number((e.target as HTMLInputElement).value);
+    if (!Number.isNaN(val)) player.setProgressValue(val);
 };
 
 const togglePlay = () => { player.togglePlay(); };
-const playNext = async () => { albumCoverDirection.value = 'next'; await player.playNext(); };
-const playPrevious = async () => { albumCoverDirection.value = 'prev'; await player.playPrevious(); };
+const playNext = async () => {
+    albumCoverDirection.value = 'next';
+    await playlist.next(); // ✅ 使用播放模式
+};
+const playPrevious = async () => {
+    albumCoverDirection.value = 'prev';
+    await playlist.prev(); // ✅ 使用播放模式
+};
 
 const onEqualizerChanged = (newSettings: EqualizerBand[]) => {
-
+    equalizerSettings.value = newSettings;
     player.applyEQ(equalizerSettings.value);
 };
 
-// 首次挂载：若外部组件（如 StackedPanel）已恢复 EQ 预设，立刻应用到音频链
-onMounted(() => {
-  player.applyEQ(equalizerSettings.value);
+// StackedPanel ←→ 播放列表 通讯
+const handlePlayItem = (index: number) => playlist.playAt(index);
+const handleCycleMode = () => playlist.cycleMode();
+// 可按需继续加：handleRemoveItem(index)、handleClear() 等
+
+player.setNavigator({
+    next: () => playlist.next(),     // 用户/媒体键：正常切歌
+    prev: () => playlist.prev(),     // 用户/媒体键：正常切歌
+    ended: () => playlist.onEnded(), // 媒体自然结束：遵循 repeat-one 重播
 });
 
-// 同步外部 data 变化
+// 挂载后同步一次 EQ
+onMounted(() => {
+    player.applyEQ(equalizerSettings.value);
+});
+
+// 外部 data 变化
 watch(() => props.data, (val) => { player.setPlaylist(val); });
 </script>
 
@@ -209,11 +230,10 @@ watch(() => props.data, (val) => { player.setPlaylist(val); });
             opacity: 0;
             display: flex;
             position: absolute;
-            filter: blur(5px);
             height: 3em;
             width: 12em;
             flex-direction: row-reverse;
-            transition: opacity .6s, filter .6s, fill .6s;
+            transition: opacity .6s, fill .6s;
             transform: translate(19em, -8em);
             fill: color-mix(in srgb, var(--lyntrix-color-high, #000), #000 60%);
 
@@ -316,25 +336,24 @@ watch(() => props.data, (val) => { player.setPlaylist(val); });
                 align-items: center;
                 transition: .6s;
 
+                .time {
+                    width: 0;
+                    margin-bottom: .14em;
+                    font-size: 1.8em;
+                    opacity: 0;
+                    pointer-events: none;
+                    transition: width .3s, transform .3s, opacity .6s;
+
+                    &.total {
+                        text-align: right;
+                    }
+                }
+
                 &.right {
                     justify-content: flex-end;
 
                     .time {
                         transform: translateX(-18px);
-                    }
-                }
-
-                .time {
-                    width: 0;
-                    margin-bottom: .14em;
-                    font-size: 1.8em;
-                    filter: blur(5px);
-                    opacity: 0;
-                    pointer-events: none;
-                    transition: width .3s, transform .3s, opacity .6s, filter .6s;
-
-                    &.total {
-                        text-align: right;
                     }
                 }
             }
@@ -377,12 +396,11 @@ watch(() => props.data, (val) => { player.setPlaylist(val); });
             top: 130%;
             width: 100%;
             opacity: 0;
-            filter: blur(5px);
             height: 1.25em;
             display: flex;
             align-items: center;
             position: absolute;
-            transition: filter .6s, opacity .6s;
+            transition: opacity .6s;
 
             .ctrlprogress {
                 width: 100%;
@@ -440,9 +458,8 @@ watch(() => props.data, (val) => { player.setPlaylist(val); });
 
     .panel {
         opacity: 0;
-        filter: blur(15px);
         position: absolute;
-        transition: opacity .6s, filter .6s, margin .6s, height .6s;
+        transition: opacity .6s, margin .6s, height .6s;
         margin-top: var(--square-size);
         top: 16.5em;
         width: 46em;
@@ -492,7 +509,6 @@ watch(() => props.data, (val) => { player.setPlaylist(val); });
 
             .volume {
                 opacity: 1;
-                filter: none;
             }
         }
 
@@ -507,7 +523,6 @@ watch(() => props.data, (val) => { player.setPlaylist(val); });
                 .time {
                     width: 40%;
                     transform: none;
-                    filter: none;
                     opacity: 1;
                 }
             }
@@ -519,7 +534,6 @@ watch(() => props.data, (val) => { player.setPlaylist(val); });
             }
 
             .rangeinput {
-                filter: none;
                 opacity: 1;
             }
         }

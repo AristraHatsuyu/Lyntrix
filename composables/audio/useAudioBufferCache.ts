@@ -2,7 +2,6 @@ import { ref } from 'vue';
 import type { CacheState } from './audioTypes';
 
 const MAX_CACHE_ITEMS = 30;
-// 组件之间可复用的缓存（等同你原来组件级的 Map，但现在抽出去）
 const cacheStates = new Map<string, CacheState>();
 
 export const useAudioBufferCache = () => {
@@ -19,7 +18,7 @@ export const useAudioBufferCache = () => {
                 const progress = (bufferedEnd / audio.duration) * 100;
                 return { progress, bufferedEnd, isComplete: progress >= 99 };
             }
-        } catch { /* ignore */ }
+        } catch { }
         return { progress: 0, bufferedEnd: 0, isComplete: false };
     };
 
@@ -69,7 +68,6 @@ export const useAudioBufferCache = () => {
             setTimeout(() => { isRestoringCache.value = false; }, 600);
             return true;
         }
-        // 无缓存，重置 UI
         isRestoringCache.value = false;
         targetIsLoadedRef.value = false;
         targetDurationRef.value = 0;

@@ -1,67 +1,67 @@
+<!-- AlbumCover.vue -->
 <template>
-    <div class="album-cover-container">
-        <Transition :name="direction === 'prev' ? 'flip-prev' : 'flip-next'" mode="out-in" @before-leave="onBeforeLeave"
-            @after-enter="onAfterEnter">
-            <div :key="cachedImageUrl" class="album-cover"
-                :style="{ backgroundImage: cachedImageUrl ? `url('${cachedImageUrl}')` : 'none' }">
-                <div v-if="!cachedImageUrl" class="placeholder"></div>
-            </div>
-        </Transition>
-    </div>
+  <div class="album-cover-container">
+    <Transition
+      :name="direction === 'prev' ? 'flip-prev' : 'flip-next'"
+      mode="out-in"
+      @before-leave="onBeforeLeave"
+      @after-enter="onAfterEnter"
+    >
+      <div
+        :key="cachedImageUrl"
+        class="album-cover"
+        :style="{ backgroundImage: cachedImageUrl ? `url('${cachedImageUrl}')` : 'none' }"
+      >
+        <div v-if="!cachedImageUrl" class="placeholder"></div>
+      </div>
+    </Transition>
+  </div>
 </template>
 
 <script setup lang="ts">
-interface Props {
-    imageUrl?: string;
-    direction?: 'next' | 'prev';
-}
+import { ref, watch, onMounted, onBeforeUnmount } from 'vue';
+import { useArtworkCache } from '@/composables/audio/useArtworkCache';
 
-const props = withDefaults(defineProps<Props>(), {
-    direction: 'next',
-});
+interface Props {
+  imageUrl?: string;
+  direction?: 'next' | 'prev';
+}
+const props = withDefaults(defineProps<Props>(), { direction: 'next' });
+
+const { ensure, retain, release } = useArtworkCache();
 
 const isFlipping = ref(false);
-
 const cachedImageUrl = ref<string>('');
-const imageCache = new Set<string>();
 
-const preloadImage = (url: string): Promise<void> => {
-    return new Promise((resolve) => {
-        if (!url) {
-            resolve();
-            return;
-        }
+let retainedUrl: string | undefined;
 
-        if (imageCache.has(url)) {
-            resolve();
-            return;
-        }
+const swapImage = async (url?: string) => {
+  // 释放上一张
+  if (retainedUrl) release(retainedUrl);
 
-        const img = new Image();
-        img.onload = () => {
-            imageCache.add(url);
-            resolve();
-        };
-
-        img.onerror = () => {
-            resolve();
-        };
-
-        img.src = url;
-    });
+  if (!url) {
+    cachedImageUrl.value = '';
+    retainedUrl = undefined;
+    return;
+  }
+  // 从缓存获得稳定 URL，并保留引用
+  const { displayUrl } = await ensure(url);
+  cachedImageUrl.value = displayUrl;
+  retainedUrl = url;
+  retain(url);
 };
 
-watch(() => props.imageUrl, async (newUrl) => {
-    if (!newUrl) {
-        cachedImageUrl.value = '';
-        return;
-    }
-    await preloadImage(newUrl);
-    cachedImageUrl.value = newUrl;
-}, { immediate: true });
+watch(() => props.imageUrl, (nu) => { void swapImage(nu); }, { immediate: true });
 
 const onBeforeLeave = () => (isFlipping.value = true);
 const onAfterEnter = () => (isFlipping.value = false);
+
+onMounted(() => {
+  if (props.imageUrl) retain(props.imageUrl);
+});
+onBeforeUnmount(() => {
+  if (retainedUrl) release(retainedUrl);
+});
 </script>
 
 <style lang="scss">

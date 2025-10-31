@@ -1,4 +1,5 @@
 // /composables/audio/useAudioEqualizer.ts
+
 import { ref } from 'vue';
 import type { EqualizerBand } from './audioTypes';
 import { dBToLinear } from './audioUtils';
@@ -25,7 +26,7 @@ const EQCFG = {
     DC_CUT_HZ: 20,
     AIR_LOWPASS_HZ: 19500,
 
-    // 压缩器（可关）
+    // 压缩器
     COMP_ENABLED: true,
     COMP_THRESHOLD_DB: -1.0,
     COMP_KNEE: 2,
@@ -33,7 +34,7 @@ const EQCFG = {
     COMP_ATTACK_S: 0.003,
     COMP_RELEASE_S: 0.2,
 
-    // 预增益策略：仅在“有正向提升”时才扣，零提升时 = 0dB
+    // 预增益策略
     BASE_HEADROOM_DB_WHEN_BOOST: 1.5,
     DYNAMIC_MAXBOOST_RATIO: 0.5,
     DYNAMIC_EQBOOST_RATIO: 0.7,
@@ -53,7 +54,6 @@ export const useAudioEqualizer = () => {
     let equalizerNodes: BiquadFilterNode[] = [];
     let compressorNode: DynamicsCompressorNode | null = null;
 
-    // 复用 source
     const sourceMap = new WeakMap<HTMLMediaElement, MediaElementAudioSourceNode>();
     let currentElement: HTMLMediaElement | null = null;
     let currentNode: MediaElementAudioSourceNode | null = null;
@@ -67,7 +67,6 @@ export const useAudioEqualizer = () => {
             }
             audioContext = new AudioContextClass();
 
-            // 频段
             equalizerNodes = EQCFG.BANDS.map((cfg) => {
                 const f = audioContext!.createBiquadFilter();
                 f.type = cfg.type as BiquadFilterType;
@@ -77,11 +76,9 @@ export const useAudioEqualizer = () => {
                 return f;
             });
 
-            // 预增益：初始 0dB（零提升=与直连等响）
             preGainNode = audioContext.createGain();
             preGainNode.gain.value = 1;
 
-            // 前后保护滤波
             const dcCut = audioContext.createBiquadFilter();
             dcCut.type = 'highpass';
             dcCut.frequency.value = EQCFG.DC_CUT_HZ;
@@ -92,7 +89,6 @@ export const useAudioEqualizer = () => {
             airLowpass.frequency.value = EQCFG.AIR_LOWPASS_HZ;
             airLowpass.Q.value = 0.707;
 
-            // 轻量压缩器（可关）
             if (EQCFG.COMP_ENABLED) {
                 compressorNode = audioContext.createDynamicsCompressor();
                 compressorNode.threshold.value = EQCFG.COMP_THRESHOLD_DB;
@@ -104,7 +100,6 @@ export const useAudioEqualizer = () => {
                 compressorNode = null;
             }
 
-            // 链路：preGain -> dcCut -> eqs... -> airLowpass -> (compressor?) -> destination
             preGainNode.connect(dcCut);
             dcCut.connect(equalizerNodes[0]);
             for (let i = 0; i < equalizerNodes.length - 1; i++) {
@@ -122,7 +117,6 @@ export const useAudioEqualizer = () => {
         }
     };
 
-    /** 仅当存在正向提升时才扣预增益；无提升返回 0dB */
     const calculatePreGain = (settings: EqualizerBand[]): number => {
         const pos = settings.map(b => Math.max(0, b.value - 12));
         const hasBoost = pos.some(v => v > 0);
@@ -146,7 +140,6 @@ export const useAudioEqualizer = () => {
         return Math.max(0, Math.min(EQCFG.MAX_PREGAIN_DB, preGainDB));
     };
 
-    // 绑定/复用 SourceNode
     const ensureNode = (audioEl: HTMLMediaElement) => {
         if (!audioContext) throw new Error('[EQ] No AudioContext');
         if (currentElement === audioEl && currentNode) return currentNode;
@@ -162,7 +155,6 @@ export const useAudioEqualizer = () => {
         return currentNode!;
     };
 
-    /** 连接到 EQ 链路 */
     const connectAudioToEqualizer = (audioEl: HTMLMediaElement | null) => {
         if (!audioEl || !audioContext || !preGainNode) return;
         const node = ensureNode(audioEl);
@@ -170,7 +162,6 @@ export const useAudioEqualizer = () => {
         node.connect(preGainNode);
     };
 
-    /** 旁路直连（关闭 EQ） */
     const connectBypass = (audioEl: HTMLMediaElement | null) => {
         if (!audioEl || !audioContext) return;
         const node = ensureNode(audioEl);
@@ -178,14 +169,12 @@ export const useAudioEqualizer = () => {
         node.connect(audioContext.destination);
     };
 
-    /** 仅断开当前 node */
     const disconnectAudio = () => { if (currentNode) { try { currentNode.disconnect(); } catch { } } };
 
     const applyEqualizerSettings = (settings: EqualizerBand[]) => {
         if (!isEqualizerInitialized.value || !audioContext || !preGainNode) return;
         const now = audioContext.currentTime;
 
-        // 设置各频段
         for (let i = 0; i < settings.length; i++) {
             const band = settings[i];
             const node = equalizerNodes[i];
@@ -196,8 +185,7 @@ export const useAudioEqualizer = () => {
             node.gain.linearRampToValueAtTime(targetDB, now + EQCFG.BAND_RAMP_S);
         }
 
-        // 动态预增益（只衰减、不增强）
-        const preGainDB = calculatePreGain(settings); // 可能为 0
+        const preGainDB = calculatePreGain(settings);
         currentPreGain.value = preGainDB;
 
         const linear = dBToLinear(-preGainDB);

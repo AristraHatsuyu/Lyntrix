@@ -1,4 +1,3 @@
-// 类型集中放这里，避免循环依赖
 export interface TrackItem {
     title: string;
     author: string;
@@ -17,6 +16,5 @@ export interface CacheState {
 export interface EqualizerBand {
     text: string;
     feq: number;
-    /** UI 值（0~24，对应 -12dB ~ +12dB） */
     value: number;
 }
