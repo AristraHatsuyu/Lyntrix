@@ -73,7 +73,9 @@
         <div class="panel">
             <StackedPanel v-model="equalizerSettings" v-model:eqcontrol="equalizerEnabled"
                 :tracks="playlist.queue.value" :current-index="playlist.currentIndex.value" :mode="playlist.mode.value"
-                @change="onEqualizerChanged" @play-item="handlePlayItem" @cycle-mode="handleCycleMode" />
+                :current-time="player.currentTime.value" :is-playing="player.isPlaying.value"
+                @change="onEqualizerChanged" @play-item="handlePlayItem" @cycle-mode="handleCycleMode"
+                @seek-to="handleSeekFromLyrics" />
         </div>
     </div>
 </template>
@@ -89,8 +91,6 @@ const props = withDefaults(defineProps<Props>(), { data: () => [] });
 
 const player = useAudioPlayer(props.data);
 const playlist = usePlaylistController(player);
-
-// 专辑封面方向 & 音量条 hover
 const albumCoverDirection = ref<'next' | 'prev'>('next');
 const entervolume = ref(false);
 
@@ -108,7 +108,6 @@ const equalizerSettings = ref<EqualizerBand[]>([
     { text: '16k', feq: 16000, value: 12 }
 ]);
 
-// ✅ 均衡器开关（透传给 StackedPanel 的 v-model:eqcontrol）
 const equalizerEnabled = ref(false);
 watch(equalizerEnabled, (v) => player.setEQEnabled(v), { immediate: true });
 defineExpose({ equalizerEnabled });
@@ -132,7 +131,6 @@ const progress = computed<number>({
     set: (val: number) => { player.onProgressInput(val); }
 });
 
-// ===== 事件 =====
 const onVolumeInput = (e: Event) => {
     const val = Number((e.target as HTMLInputElement).value);
     if (!Number.isNaN(val)) player.onVolumeChange(val);
@@ -151,11 +149,11 @@ const setProgress = (e: Event) => {
 const togglePlay = () => { player.togglePlay(); };
 const playNext = async () => {
     albumCoverDirection.value = 'next';
-    await playlist.next(); // ✅ 使用播放模式
+    await playlist.next();
 };
 const playPrevious = async () => {
     albumCoverDirection.value = 'prev';
-    await playlist.prev(); // ✅ 使用播放模式
+    await playlist.prev();
 };
 
 const onEqualizerChanged = (newSettings: EqualizerBand[]) => {
@@ -163,23 +161,26 @@ const onEqualizerChanged = (newSettings: EqualizerBand[]) => {
     player.applyEQ(equalizerSettings.value);
 };
 
-// StackedPanel ←→ 播放列表 通讯
 const handlePlayItem = (index: number) => playlist.playAt(index);
 const handleCycleMode = () => playlist.cycleMode();
-// 可按需继续加：handleRemoveItem(index)、handleClear() 等
+
+const handleSeekFromLyrics = (sec: number) => {
+    const dur = player.duration.value || 0;
+    if (dur <= 0) return;
+    const pct = Math.max(0, Math.min(100, (sec / dur) * 100));
+    player.setProgressValue(pct);
+};
 
 player.setNavigator({
-    next: () => playlist.next(),     // 用户/媒体键：正常切歌
-    prev: () => playlist.prev(),     // 用户/媒体键：正常切歌
-    ended: () => playlist.onEnded(), // 媒体自然结束：遵循 repeat-one 重播
+    next: () => playlist.next(),
+    prev: () => playlist.prev(),
+    ended: () => playlist.onEnded(),
 });
 
-// 挂载后同步一次 EQ
 onMounted(() => {
     player.applyEQ(equalizerSettings.value);
 });
 
-// 外部 data 变化
 watch(() => props.data, (val) => { player.setPlaylist(val); });
 </script>
 

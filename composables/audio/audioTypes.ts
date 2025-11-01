@@ -3,6 +3,7 @@ export interface TrackItem {
     author: string;
     file: string;
     image?: string;
+    lyrics?: string;
 }
 
 export interface CacheState {

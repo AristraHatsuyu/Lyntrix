@@ -1,25 +1,101 @@
 <template>
     <div class="stacked-wrapper" @mousedown.stop @dblclick.stop>
-        <div class="indicators bottom" :class="{ inlist: pageIndex === 1 }">
+        <div v-if="Math.ceil(listTracks.length / 4) > 1" class="indicators bottom"
+            :class="{ inlist: pageIndex === 1, totop: Math.ceil(listTracks.length / 4) > 1 }">
             <span v-for="(i, index) in Math.ceil(listTracks.length / 4)" :key="index"
                 :class="{ active: listIndex === index }" class="indicator" @click="listSlideTo(index)"
                 data-pointer></span>
         </div>
-        <div class="indicators" :class="{ inlist: pageIndex === 1 }">
+        <div class="indicators" :class="{ inlist: pageIndex === 1, totop: Math.ceil(listTracks.length / 4) > 1 }">
             <span v-for="(i, index) in 3" :key="index" :class="{ active: pageIndex === index }" class="indicator"
                 @click="slideTo(index)" data-pointer></span>
         </div>
 
-        <swiper :slidesPerView="1" :direction="'vertical'" :allowTouchMove="true" :speed="400" :effect="'creative'"
+        <swiper :slidesPerView="1" :direction="'vertical'" :allowTouchMove="true" :effect="'creative'"
             :modules="[EffectCreative]" :creativeEffect="{
                 prev: { translate: [0, '10%', -1], opacity: 0, scale: 0.95 },
                 next: { translate: [0, '20%', 0], scale: 1, opacity: 0 }
             }" @swiper="onSwiper" @slideChange="onSlideChange" class="stacked-swiper">
-
             <swiper-slide class="stacked-slide">
                 <div class="card">
-                    <div class="card-content">
-                        <h3 class="card-title">Panel 1</h3>
+                    <div class="lyrics-card">
+                        <div class="lyrics-left">
+                            <button class="modeswitch" :class="{ active: autoFollow }" @click="toggleAutoFollow"
+                                data-pointer>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+                                    <path
+                                        d="M534.6 182.6C547.1 170.1 547.1 149.8 534.6 137.3L470.6 73.3C461.4 64.1 447.7 61.4 435.7 66.4C423.7 71.4 416 83.1 416 96L416 128L256 128C150 128 64 214 64 320C64 337.7 78.3 352 96 352C113.7 352 128 337.7 128 320C128 249.3 185.3 192 256 192L416 192L416 224C416 236.9 423.8 248.6 435.8 253.6C447.8 258.6 461.5 255.8 470.7 246.7L534.7 182.7zM105.4 457.4C92.9 469.9 92.9 490.2 105.4 502.7L169.4 566.7C178.6 575.9 192.3 578.6 204.3 573.6C216.3 568.6 224 556.9 224 544L224 512L384 512C490 512 576 426 576 320C576 302.3 561.7 288 544 288C526.3 288 512 302.3 512 320C512 390.7 454.7 448 384 448L224 448L224 416C224 403.1 216.2 391.4 204.2 386.4C192.2 381.4 178.5 384.2 169.3 393.3L105.3 457.3z" />
+                                </svg>
+                            </button>
+                            <button @click="jumpLyric(-1)" :disabled="!hasLyrics || activeLineIndex <= 0"
+                                :data-pointer="hasLyrics && activeLineIndex > 0">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+                                    <path
+                                        d="M297.4 169.4C309.9 156.9 330.2 156.9 342.7 169.4L534.7 361.4C547.2 373.9 547.2 394.2 534.7 406.7C522.2 419.2 501.9 419.2 489.4 406.7L320 237.3L150.6 406.6C138.1 419.1 117.8 419.1 105.3 406.6C92.8 394.1 92.8 373.8 105.3 361.3L297.3 169.3z" />
+                                </svg>
+                            </button>
+                            <button @click="jumpLyric(1)"
+                                :disabled="!hasLyrics || activeLineIndex >= (activeLines.length - 1)"
+                                :data-pointer="hasLyrics && activeLineIndex < (activeLines.length - 1)">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
+                                    <path
+                                        d="M297.4 470.6C309.9 483.1 330.2 483.1 342.7 470.6L534.7 278.6C547.2 266.1 547.2 245.8 534.7 233.3C522.2 220.8 501.9 220.8 489.4 233.3L320 402.7L150.6 233.4C138.1 220.9 117.8 220.9 105.3 233.4C92.8 245.9 92.8 266.2 105.3 278.7L297.3 470.7z" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        <div class="lyrics-right">
+                            <swiper class="lyrics-swiper" :direction="'vertical'" :mousewheel="true"
+                                :modules="[Mousewheel]" :speed="750" :slidesPerView="'auto'"
+                                :freeMode="{ enabled: true, sticky: true }" :observeParents="true"
+                                :observeSlideChildren="true" :roundLengths="true" :watchSlidesProgress="true"
+                                :slidesOffsetBefore="offsetBeforePx" :slidesOffsetAfter="offsetAfterPx"
+                                @swiper="onLyricsSwiper">
+                                <template v-if="hasLyrics">
+                                    <swiper-slide class="lyrics-slide first"
+                                        :class="{ show: firstwait && activeLines[0].t > props.currentTime }">
+                                        <div class="lyrics-empty">
+                                            <div class="dot-group">
+                                                <span class="dot"
+                                                    :class="{ current: activeLines[0].t / 4 < props.currentTime }"
+                                                    :style="{ transitionDuration: `${Math.round(activeLines[0].t * 1000 / 4)}ms` }"></span>
+                                                <span class="dot"
+                                                    :class="{ current: activeLines[0].t * 2 / 4 < props.currentTime }"
+                                                    :style="{ transitionDuration: `${Math.round(activeLines[0].t * 1000 / 4)}ms` }"></span>
+                                                <span class="dot"
+                                                    :class="{ current: activeLines[0].t * 3 / 4 < props.currentTime }"
+                                                    :style="{ transitionDuration: `${Math.round(activeLines[0].t * 1000 / 4)}ms` }"></span>
+                                            </div>
+                                        </div>
+                                    </swiper-slide>
+                                    <swiper-slide v-for="(line, idx) in activeLines" :key="idx" class="lyrics-slide"
+                                        @click.stop="onClickLyric(idx, line.t)"
+                                        :class="{ active: idx === activeLineIndex, next: idx === activeLineIndex + 1, inline: activeLines[0].t < props.currentTime, empty: line.main == '' }"
+                                        data-pointer>
+                                        <div class="lyrics-content" v-if="line.main != ''">
+                                            <div class="lyrics-text">{{ wrapDisplay(line.main) }}</div>
+                                        </div>
+                                        <div class="lyrics-empty" v-else>
+                                            <div class="dot-group">
+                                                <span class="dot"
+                                                    :class="{ current: line.t + (activeLines[idx + 1].t - line.t) / 4 < props.currentTime }"
+                                                    :style="{ transitionDuration: `${Math.round(line.t + (activeLines[idx + 1].t - line.t) * 1000 / 4)}ms` }"></span>
+                                                <span class="dot"
+                                                    :class="{ current: line.t + (activeLines[idx + 1].t - line.t) * 2 / 4 < props.currentTime }"
+                                                    :style="{ transitionDuration: `${Math.round(line.t + (activeLines[idx + 1].t - line.t) * 1000 / 4)}ms` }"></span>
+                                                <span class="dot"
+                                                    :class="{ current: line.t + (activeLines[idx + 1].t - line.t) * 3 / 4 < props.currentTime }"
+                                                    :style="{ transitionDuration: `${Math.round(line.t + (activeLines[idx + 1].t - line.t) * 1000 / 4)}ms` }"></span>
+                                            </div>
+                                        </div>
+                                    </swiper-slide>
+                                </template>
+                                <template v-else>
+                                    <swiper-slide class="lyrics-slide">
+                                    </swiper-slide>
+                                </template>
+                            </swiper>
+                        </div>
                     </div>
                 </div>
             </swiper-slide>
@@ -28,14 +104,14 @@
                 <div class="card">
                     <div class="queue-card">
                         <div class="queue-left">
-                            <button @click="$emit('cycle-mode')" class="modeswitch">
+                            <button @click="$emit('cycle-mode')" class="modeswitch" data-pointer>
                                 <Transition name="fadee">
                                     <svg v-if="props.mode === 'repeat-all'" xmlns="http://www.w3.org/2000/svg"
                                         viewBox="0 0 640 640">
                                         <path
                                             d="M534.6 182.6C547.1 170.1 547.1 149.8 534.6 137.3L470.6 73.3C461.4 64.1 447.7 61.4 435.7 66.4C423.7 71.4 416 83.1 416 96L416 128L256 128C150 128 64 214 64 320C64 337.7 78.3 352 96 352C113.7 352 128 337.7 128 320C128 249.3 185.3 192 256 192L416 192L416 224C416 236.9 423.8 248.6 435.8 253.6C447.8 258.6 461.5 255.8 470.7 246.7L534.7 182.7zM105.4 457.4C92.9 469.9 92.9 490.2 105.4 502.7L169.4 566.7C178.6 575.9 192.3 578.6 204.3 573.6C216.3 568.6 224 556.9 224 544L224 512L384 512C490 512 576 426 576 320C576 302.3 561.7 288 544 288C526.3 288 512 302.3 512 320C512 390.7 454.7 448 384 448L224 448L224 416C224 403.1 216.2 391.4 204.2 386.4C192.2 381.4 178.5 384.2 169.3 393.3L105.3 457.3z" />
                                     </svg>
-                                    <svg v-else-if="props.mode === 'repeat-one'" style="padding: 1.25rem;"
+                                    <svg v-else-if="props.mode === 'repeat-one'" style="padding: 1.45rem;"
                                         xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                                         <path
                                             d="M264 320C277.3 320 288 309.3 288 296v-80c0-7.719-3.703-14.97-9.969-19.47C271.8 192 263.7 190.8 256.4 193.2l-24 8C219.8 205.4 213 219 217.2 231.6C220.6 241.7 229.1 248 240 248v48C240 309.3 250.8 320 264 320zM480 256c-17.67 0-32 14.31-32 32c0 52.94-43.06 96-96 96H192L192 344c0-9.469-5.578-18.06-14.23-21.94c-8.641-3.781-18.75-2.219-25.83 4.094l-80 72C66.89 402.7 64 409.2 64 416s2.891 13.28 7.938 17.84l80 72C156.4 509.9 162.2 512 168 512c3.312 0 6.615-.6875 9.756-2.062C186.4 506.1 192 497.5 192 488L192 448h160c88.22 0 160-71.78 160-160C512 270.3 497.7 256 480 256zM160 128h159.1L320 168c0 9.469 5.578 18.06 14.23 21.94C337.4 191.3 340.7 192 343.1 192c5.812 0 11.57-2.125 16.07-6.156l80-72C445.1 109.3 448 102.8 448 95.1s-2.891-13.28-7.938-17.84l-80-72C353-.1562 342.9-1.719 334.2 2.062C325.6 5.938 319.1 14.53 319.1 24L320 64H160C71.78 64 0 135.8 0 224c0 17.69 14.33 32 32 32s32-14.31 32-32C64 171.1 107.1 128 160 128z" />
@@ -47,13 +123,14 @@
                                     </svg>
                                 </Transition>
                             </button>
-                            <button @click="listprev" :disabled="listIndex === 0">
+                            <button @click="listprev" :disabled="listIndex === 0" :data-pointer="listIndex !== 0">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
                                     <path
                                         d="M297.4 169.4C309.9 156.9 330.2 156.9 342.7 169.4L534.7 361.4C547.2 373.9 547.2 394.2 534.7 406.7C522.2 419.2 501.9 419.2 489.4 406.7L320 237.3L150.6 406.6C138.1 419.1 117.8 419.1 105.3 406.6C92.8 394.1 92.8 373.8 105.3 361.3L297.3 169.3z" />
                                 </svg>
                             </button>
-                            <button @click="listnext" :disabled="listIndex === Math.ceil(listTracks.length / 4) - 1">
+                            <button @click="listnext" :disabled="listIndex === Math.ceil(listTracks.length / 4) - 1"
+                                :data-pointer="listIndex !== Math.ceil(listTracks.length / 4) - 1">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
                                     <path
                                         d="M297.4 470.6C309.9 483.1 330.2 483.1 342.7 470.6L534.7 278.6C547.2 266.1 547.2 245.8 534.7 233.3C522.2 220.8 501.9 220.8 489.4 233.3L320 402.7L150.6 233.4C138.1 220.9 117.8 220.9 105.3 233.4C92.8 245.9 92.8 266.2 105.3 278.7L297.3 470.7z" />
@@ -67,11 +144,12 @@
                                 :allowTouchMove="false">
                                 <swiper-slide v-for="i in Math.ceil(listTracks.length / 4)" class="vertical-slide"
                                     :key="i">
-                                    <ul class="grid grid-2col">
+                                    <ul class="grid"
+                                        :class="{ 'grid-2col': listTracks.slice((i - 1) * 4, (i - 1) * 4 + 4).length > 1 }">
                                         <li v-for="(item, index) in listTracks.slice((i - 1) * 4, (i - 1) * 4 + 4)"
                                             :key="index" :class="{ active: item.__index === props.currentIndex }"
                                             @click="$emit('play-item', item.__index)"
-                                            @dblclick="$emit('play-item', item.__index)">
+                                            @dblclick="$emit('play-item', item.__index)" data-pointer>
                                             <CachedArtwork class="thumb" :src="item.image"
                                                 :eager="i < eagerAboveTheFold || Math.abs(i - props.currentIndex) <= eagerAroundCurrent" />
                                             <div class="meta">
@@ -106,7 +184,7 @@
                             <button @click="fastset('low')" data-pointer>
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 512">
                                     <path
-                                        d="M256.2 140.6c-11 18.2-20.4 40.1-29.3 64.6c-9.2-27.9-19.8-57.4-32.9-84.7c2.4-4.5 4.9-8.9 7.5-13.2C226.3 66.4 263.3 32 320 32s93.7 34.4 118.6 75.4c23.8 39.2 40.3 90.2 55.2 136.5l.7 2.3c15.8 49.1 30.2 93.1 49.7 125.2C563 402.4 582.6 416 608 416c17.7 0 32 14.3 32 32s-14.3 32-32 32c-56.7 0-93.7-34.4-118.6-75.4c-23.8-39.2-40.3-90.2-55.2-136.5l-.7-2.3c-15.8-49.1-30.2-93.1-49.7-125.2C365 109.6 345.4 96 320 96s-45 13.6-63.8 44.6zM158.1 391.4c-2.4 4.5-4.9 8.9-7.5 13.2C125.7 445.6 88.7 480 32 480c-17.7 0-32-14.3-32-32s14.3-32 32-32c25.4 0 45-13.6 63.8-44.6c11-18.2 20.4-40.1 29.3-64.6c9.2 27.9 19.8 57.4 32.9 84.7zm225.8-20c11-18.2 20.4-40.1 29.3-64.6c9.2 27.9 19.8 57.4 32.9 84.7c-2.4 4.5-4.9 8.9-7.5 13.2C413.7 445.6 376.7 480 320 480s-93.7-34.4-118.6-75.4c-23.8-39.2-40.3-90.2-55.2-136.5l0 0-.7-2.3c-15.8-49.1-30.2-93.1-49.7-125.2C77 109.6 57.4 96 32 96C14.3 96 0 81.7 0 64S14.3 32 32 32c56.7 0 93.7 34.4 118.6 75.4c23.8 39.2 40.3 90.2 55.2 136.5l.7 2.3c15.8 49.1 30.2 93.1 49.7 125.2C275 402.4 294.6 416 320 416s45-13.6 63.8-44.6zM544.2 140.6c-11 18.2-20.4 40.1-29.3 64.6c-9.2-27.9-19.8-57.5-32.9-84.7c2.4-4.5 4.9-8.9 7.5-13.2C514.3 66.4 551.3 32 608 32c17.7 0 32 14.3 32 32s-14.3 32-32 32c-25.4 0-45 13.6-63.8 44.6z" />
+                                        d="M256.2 140.6c-11 18.2-20.4 40.1-29.3 64.6c-9.2-27.9-19.8-57.4-32.9-84.7c2.4-4.5 4.9-8.9 7.5-13.2C226.3 66.4 263.3 32 320 32s93.7 34.4 118.6 75.4c23.8 39.2 40.3 90.2 55.2 136.5l.7 2.3c15.8 49.1 30.2 93.1 49.7 125.2C563 402.4 582.6 416 608 416c17.7 0 32 14.3 32 32s-14.3 32-32 32c-56.7 0-93.7-34.4-118.6-75.4c-23.8-39.2-40.3-90.2-55.2-136.5l-.7-2.3c-15.8 49.1 30.2 93.1 49.7 125.2C275 402.4 294.6 416 320 416s45-13.6 63.8-44.6zM544.2 140.6c-11 18.2-20.4 40.1-29.3 64.6c-9.2-27.9-19.8-57.5-32.9-84.7c2.4-4.5 4.9-8.9 7.5-13.2C514.3 66.4 551.3 32 608 32c17.7 0 32 14.3 32 32s-14.3 32-32 32c-25.4 0-45 13.6-63.8 44.6z" />
                                 </svg>
                             </button>
                         </div>
@@ -119,7 +197,8 @@
                                         <div class="progress" :style="{ height: (item.value / 24 * 100) + '%' }" />
                                     </div>
                                     <input type="range" min="0" max="24" step="1" v-model="item.value"
-                                        @input="onEqualizerInput" />
+                                        @input="onEqualizerInput"
+                                        @wheel.prevent="item.value = Math.min(24, Math.max(0, Math.round(item.value + ($event.deltaY < 0 ? -1 : 1) * ($event.shiftKey ? 10 : 1) * 0.56)))" />
                                 </div>
                                 <div class="feq-text">{{ item.text }}</div>
                             </div>
@@ -132,30 +211,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { Swiper, SwiperSlide } from 'swiper/vue'
 import { EffectCreative, Mousewheel } from 'swiper/modules'
 import 'swiper/css'
 import 'swiper/css/effect-creative'
-
 import { useArtworkCache } from '@/composables/audio/useArtworkCache'
 
-// ========================
-// 类型
-// ========================
+/** ========================
+ * Types
+ * ====================== */
 interface EqualizerBand { text: string; feq: number; value: number; }
-interface TrackItem { title: string; author: string; file: string; image?: string; }
+interface TrackItem { title: string; author: string; file: string; image?: string; lyrics?: string }
+type LyricLine = { t: number; raw: string; main: string }
+type ParsedLyrics = { meta: { ti?: string; ar?: string; al?: string; by?: string; offset?: number }, lines: LyricLine[] }
 
-// ========================
-// Props / Emits / v-model
-// ========================
+/** ========================
+ * Props / Emits / v-model
+ * ====================== */
 interface Props {
     modelValue?: EqualizerBand[];
     tracks?: TrackItem[];
     currentIndex?: number;
     mode?: 'repeat-all' | 'repeat-one' | 'shuffle';
+    currentTime?: number;
+    isPlaying?: boolean;
 }
-
 const eqcontrol = defineModel<boolean>('eqcontrol')
 
 const props = withDefaults(defineProps<Props>(), {
@@ -173,42 +254,44 @@ const props = withDefaults(defineProps<Props>(), {
     ],
     tracks: () => [],
     currentIndex: 0,
-    mode: 'repeat-all'
-});
+    mode: 'repeat-all',
+    currentTime: 0,
+    isPlaying: false
+})
 
 const emit = defineEmits<{
     'update:modelValue': [value: EqualizerBand[]];
     'change': [value: EqualizerBand[]];
-    // 播放列表
     'play-item': [index: number];
     'cycle-mode': [];
+    'seek-to': [timeSec: number];
 }>()
 
-// ========================
-// Swiper 控制
-// ========================
+/** ========================
+ * Swiper
+ * ====================== */
 let swiperInstance: any = null
 let swiperListInstance: any = null
-const pageIndex = ref<number>(0)
-const listIndex = ref<number>(0)
+const pageIndex = ref(0)
+const listIndex = ref(0)
+const firstwait = ref(false)
 const onSwiper = (swiper: any) => { swiperInstance = swiper }
 const onSwiperList = (swiper: any) => { swiperListInstance = swiper }
 const onSlideChange = (swiper: any) => { pageIndex.value = swiper.activeIndex }
 const slideTo = (index: number) => { swiperInstance?.slideTo(index) }
 const listSlideTo = (index: number) => { swiperListInstance?.slideTo(index) }
-const listnext = () => { swiperListInstance.slideNext() }
-const listprev = () => { swiperListInstance.slidePrev() }
+const listnext = () => { swiperListInstance?.slideNext() }
+const listprev = () => { swiperListInstance?.slidePrev() }
 const onListSlideChange = (swiper: any) => { listIndex.value = swiper.activeIndex }
 
-// ========================
-// 均衡器逻辑
-// ========================
+/** ========================
+ * Equalizer
+ * ====================== */
 const equvolume = computed({
     get: () => props.modelValue,
     set: (value) => emit('update:modelValue', value)
 })
 const valueToGain = (value: number) => value - 12
-
 const onEqualizerInput = () => {
     const newValue = [...equvolume.value]
     emit('update:modelValue', newValue)
@@ -252,23 +335,16 @@ const switcheqctrl = () => {
     try { localStorage.setItem('equalizerEnable', String(newValue)) } catch { }
 }
 
-// ========================
-// 播放列表：数据 + 图标
-// ========================
+/** ========================
+ * Playlist
+ * ====================== */
 const listTracks = computed(() =>
     (props.tracks ?? []).map((t, idx) => ({ ...t, __index: idx }))
 )
-
-// ========================
-// 缩略图缓存 + 懒加载
-// ========================
 const eagerAboveTheFold = 8
 const eagerAroundCurrent = 2
 const artwork = useArtworkCache()
-
-function primeAll(tracks: TrackItem[]) {
-    artwork.primeFromPlaylist(tracks)
-}
+function primeAll(tracks: TrackItem[]) { artwork.primeFromPlaylist(tracks) }
 async function ensureNeighbors(center: number) {
     const n = props.tracks?.length ?? 0
     if (!n) return
@@ -278,6 +354,197 @@ async function ensureNeighbors(center: number) {
         const src = props.tracks?.[j]?.image
         if (src) void artwork.ensure(src)
     }
+}
+
+/** ========================
+ * LRC Cache & Parse
+ * ====================== */
+const lyricsCache: Map<string, Promise<ParsedLyrics>> = new Map();
+
+function parseLRC(raw: string): ParsedLyrics {
+    const text = raw.replace(/\ufeff/g, '').replace(/\r\n/g, '\n').trim()
+    const meta: ParsedLyrics['meta'] = {}
+    const lines: LyricLine[] = []
+    const metaRe = /^\[(ti|ar|al|by|offset):\s*(.*?)\s*\]$/i
+    const timeRe = /\[(\d{1,2}):(\d{1,2})(?:\.(\d{1,3}))?\]/g
+
+    for (const line of text.split('\n')) {
+        const m = line.match(metaRe)
+        if (m) {
+            const k = m[1].toLowerCase()
+            const v = m[2]
+            if (k === 'offset') meta.offset = Number(v) || 0
+            else (meta as any)[k] = v
+            continue
+        }
+        
+        let match: RegExpExecArray | null
+        const stamps: number[] = []
+        timeRe.lastIndex = 0
+        while ((match = timeRe.exec(line)) !== null) {
+            const mm = Number(match[1]) || 0
+            const ss = Number(match[2]) || 0
+            const ms = Number(match[3] || 0)
+            const t = mm * 60 + ss + ms / 1000
+            stamps.push(t)
+        }
+        const pure = line.replace(timeRe, '').trim()
+        if (!stamps.length && pure) {
+            continue
+        }
+        for (const t of stamps) {
+            lines.push({ t, raw: pure, main: pure })
+        }
+    }
+
+    const off = (meta.offset || 0) / 1000
+    lines.forEach(l => { l.t = Math.max(0, l.t + off) })
+    lines.sort((a, b) => a.t - b.t)
+
+    return { meta, lines }
+}
+
+async function ensureLyrics(url: string): Promise<ParsedLyrics> {
+    if (!url) return { meta: {}, lines: [] }
+
+    const cached = lyricsCache.get(url)
+    if (cached) return cached
+
+    const p = (async () => {
+        try {
+            const res = await fetch(url, { cache: 'force-cache' })
+            const text = await res.text()
+            return parseLRC(text)
+        } catch {
+            try {
+                const res2 = await fetch(url, { cache: 'no-cache' })
+                const text2 = await res2.text()
+                return parseLRC(text2)
+            } catch {
+                return { meta: {}, lines: [] }
+            }
+        }
+    })()
+
+    lyricsCache.set(url, p)
+    return p
+}
+
+function prefetchLyricsAround(center: number, span = 1) {
+    const n = props.tracks?.length ?? 0
+    if (!n) return
+    for (let d = -span; d <= span; d++) {
+        const j = (center + d + n) % n
+        const url = props.tracks?.[j]?.lyrics
+        if (url) void ensureLyrics(url)
+    }
+}
+
+/** ========================
+ * Lyrics Status
+ * ====================== */
+const currentTrack = computed(() => props.tracks?.[props.currentIndex ?? 0])
+const activeLyricsUrl = computed(() => currentTrack.value?.lyrics || '')
+const lyrics = ref<ParsedLyrics | null>(null)
+const activeLines = computed<LyricLine[]>(() => lyrics.value?.lines ?? [])
+const hasLyrics = computed(() => activeLines.value.length > 0)
+
+let lySwiper: any = null
+const onLyricsSwiper = (sw: any) => { lySwiper = sw }
+const autoFollow = ref(true)
+const activeLineIndex = ref(0)
+function binarySearch(lines: LyricLine[], t: number): number {
+    let lo = 0, hi = lines.length - 1, ans = 0
+    while (lo <= hi) {
+        const mid = (lo + hi) >> 1
+        if (lines[mid].t <= t) { ans = mid; lo = mid + 1 }
+        else hi = mid - 1
+    }
+    return ans
+}
+
+const ACTIVE_OFFSET_EM = 9
+const BOTTOM_OFFSET_EM = 8
+const offsetBeforePx = ref(0)
+const offsetAfterPx = ref(0)
+
+function recalcOffsets() {
+    const base = parseFloat(getComputedStyle(document.documentElement).fontSize || '16')
+    offsetBeforePx.value = Math.round(ACTIVE_OFFSET_EM * base)
+    offsetAfterPx.value = Math.round(BOTTOM_OFFSET_EM * base)
+    lySwiper?.update()
+}
+
+const FOLLOW_MIN_INTERVAL_MS = 200
+
+let lastFollowTs = 0
+function followToIndex(idx: number, force = false) {
+    if (!lySwiper) return
+    const now = performance.now()
+    if (!force && (now - lastFollowTs) < FOLLOW_MIN_INTERVAL_MS) return
+    lastFollowTs = now
+    const clamped = Math.max(0, Math.min(idx + 1, activeLines.value.length))
+    lySwiper.slideTo(clamped, 750)
+}
+
+function onClickLyric(idx: number, t: number) {
+    activeLineIndex.value = idx
+    followToIndex(idx, true)
+    emit('seek-to', t)
+}
+
+function toggleAutoFollow() {
+    autoFollow.value = !autoFollow.value
+    if (autoFollow.value && hasLyrics.value) followToIndex(activeLineIndex.value, true)
+}
+
+function jumpLyric(delta: number) {
+    if (!hasLyrics.value) return
+    const next = Math.max(0, Math.min(activeLines.value.length - 1, activeLineIndex.value + delta))
+    activeLineIndex.value = next
+    followToIndex(next, true)
+    emit('seek-to', activeLines.value[next]?.t ?? 0)
+}
+
+function wrapDisplay(s: string, L = 23): string {
+    const w = (c: string) => (c === ' ' ? 1 : /[^\x00-\x7F]/.test(c) ? 2 : 1);
+    const len = (t: string) => { let n = 0; for (const c of t) n += w(c); return n; };
+    const isPunc = (c: string) => /[,.!?;:'"，。！？；：“”、【】（）]/.test(c);
+
+    let r = '', line = '', cur = 0, space = -1;
+    for (let i = 0; i < s.length;) {
+        const cp = s.codePointAt(i)!;
+        const ch = String.fromCodePoint(cp);
+        const step = cp > 0xFFFF ? 2 : 1;
+
+        if (ch === '\n') { r += line + '\n'; line = ''; cur = 0; space = -1; i += step; continue; }
+
+        const ww = w(ch);
+        if (cur + ww <= L) { if (ch === ' ') space = line.length; line += ch; cur += ww; i += step; continue; }
+
+        if (space >= 0 && len(line.slice(0, space)) >= 3) {
+            if (isPunc(ch) && line.length > 0) {
+                r += line.slice(0, space - 1) + '\n';
+                line = line.slice(space - 1);
+            } else {
+                r += line.slice(0, space) + '\n';
+                line = line.slice(space + 1);
+            }
+            cur = len(line);
+            space = line.lastIndexOf(' ');
+            continue;
+        }
+
+        if (isPunc(ch) && line.length > 0) {
+            r += line.slice(0, -1) + '\n';
+            line = line.slice(-1);
+        } else {
+            r += line + '\n';
+            line = '';
+        }
+        cur = 0; space = -1;
+    }
+    return r + line;
 }
 
 onMounted(() => {
@@ -299,11 +566,53 @@ onMounted(() => {
     if (props.tracks?.length) {
         primeAll(props.tracks)
         ensureNeighbors(props.currentIndex ?? 0)
+        prefetchLyricsAround(props.currentIndex ?? 0, 1)
+    }
+
+    recalcOffsets()
+    window.addEventListener('resize', recalcOffsets, { passive: true })
+})
+
+onUnmounted(() => {
+    window.removeEventListener('resize', recalcOffsets)
+})
+
+watch(activeLyricsUrl, async (url) => {
+    if (!url) {
+        lyrics.value = null
+        activeLineIndex.value = 0
+        autoFollow.value = true
+        lySwiper?.slideTo(0, 0)
+        return
+    }
+    const parsed = await ensureLyrics(url)
+    firstwait.value = false
+    lyrics.value = parsed
+    activeLineIndex.value = 0
+    autoFollow.value = true
+    await nextTick()
+    recalcOffsets()
+    lySwiper?.slideTo(0, 0)
+    firstwait.value = true
+})
+
+watch(() => props.currentTime, (t) => {
+    if (!hasLyrics.value || typeof t !== 'number') return
+    const idx = binarySearch(activeLines.value, t)
+    if (idx !== activeLineIndex.value) {
+        activeLineIndex.value = idx
+        if (autoFollow.value) followToIndex(idx)
     }
 })
 
-watch(() => props.tracks, (t) => { if (t?.length) primeAll(t) })
-watch(() => props.currentIndex, (i) => { if (typeof i === 'number') ensureNeighbors(i) })
+watch(() => props.currentIndex, (idx) => {
+    if (typeof idx === 'number') {
+        ensureNeighbors(idx)
+        prefetchLyricsAround(idx, 1)
+    }
+})
+
+defineExpose({ toggleAutoFollow, jumpLyric })
 </script>
 
 <style lang="scss">
@@ -322,11 +631,11 @@ $content-br: 0.8em;
     border-radius: 1.75em;
 
     &:has(> .indicators:hover)>.indicators.bottom {
-        filter: blur(5px);
+        filter: blur(.5em);
     }
 
     &:has(> .indicators.bottom:hover)>.indicators {
-        filter: blur(5px);
+        filter: blur(.5em);
 
         &.bottom {
             filter: none;
@@ -362,22 +671,228 @@ $content-br: 0.8em;
     position: relative;
     overflow: hidden;
 
-    .card-content {
-        position: relative;
-        z-index: 1;
+    .lyrics-card {
         display: flex;
-        flex-direction: column;
+        height: 100%;
+        width: 100%;
+        padding: 0 1.25em;
+        box-sizing: border-box;
         align-items: center;
-        justify-content: center;
-        color: white;
-        text-align: center;
+        justify-content: space-between;
+        transition: filter .3s, transform .3s;
 
-        .card-title {
-            font-size: 3em;
-            font-weight: 700;
-            margin: 0 0 clamp(8px, 2%, 16px) 0;
-            letter-spacing: -0.02em;
+        .lyrics-left {
+            height: 100%;
+            width: 5.25em;
+            padding: 1.75em 0.5em;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
             box-sizing: border-box;
+
+            button {
+                box-sizing: border-box;
+                border-radius: $content-br;
+                border: none;
+                margin: 0;
+                height: 4.25em;
+                font-size: 1em;
+                width: 100%;
+                padding: 0;
+                position: relative;
+                box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.15);
+                transition: background-color 0.6s, opacity 0.3s, transform 0.3s, filter 0.3s, fill 0.3s;
+                fill: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #000000 50%);
+                background-color: $content-bg;
+
+                svg {
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    padding: .9em;
+                    box-sizing: border-box;
+                    position: absolute;
+                }
+
+                &:active {
+                    transform: scale(.925);
+                }
+
+                &:disabled {
+                    opacity: 0.5;
+                    transform: none;
+                }
+            }
+        }
+
+        .lyrics-right {
+            width: 82.5%;
+            height: 100%;
+            position: relative;
+
+            .lyrics-swiper {
+                width: 100%;
+                height: 100%;
+                margin-top: -3em;
+                overflow: visible;
+                position: relative;
+
+                .lyrics-slide {
+                    width: 100%;
+                    height: auto !important;
+                    min-height: 5.5em;
+                    display: flex;
+                    overflow: visible;
+                    align-items: center;
+                    justify-content: flex-start;
+                    transition: height .75s;
+
+                    .lyrics-content {
+                        padding: 0.5em 1.2em;
+                        width: 100%;
+                        margin: .5em 0;
+                        border-radius: 1em;
+                        box-sizing: border-box;
+                        transition: background-color .3s;
+
+                        .lyrics-text {
+                            opacity: .6;
+                            font-size: 2.6em;
+                            filter: blur(.1em);
+                            transform: scale(.9);
+                            transform-origin: left;
+                            transition: transform .75s, filter .75s, opacity .75s;
+                            white-space: pre-line;
+                            word-break: normal;
+                        }
+                    }
+
+                    .lyrics-empty {
+                        opacity: 0;
+                        filter: blur(1em);
+                        transform: scale(0.5);
+                        transition: transform .75s, opacity .75s, filter .75s;
+
+
+                        .dot-group {
+                            gap: .75em;
+                            display: flex;
+
+                            .dot {
+                                height: 1.25em;
+                                width: 1.25em;
+                                opacity: .25;
+                                border-radius: 50%;
+                                transition: opacity .3s linear, background-color .6s;
+                                background-color: color-mix(in srgb, var(--lyntrix-color-high, #000), #000 60%);
+
+                                &.current {
+                                    opacity: 1;
+                                }
+                            }
+                        }
+                    }
+
+                    &.empty {
+                        min-height: 0;
+                        height: 0 !important;
+                        padding-left: 1.2em;
+                    }
+
+                    &.next {
+                        &.inline .lyrics-content .lyrics-text {
+                            will-change: transform, opacity, filter;
+                            filter: blur(.05em);
+                        }
+
+                        &.empty {
+                            .lyrics-empty {
+                                will-change: transform, opacity, filter;
+                            }
+                        }
+                    }
+
+                    &.active {
+                        .lyrics-content .lyrics-text {
+                            will-change: transform, opacity, filter;
+                            filter: blur(.05em);
+                        }
+
+                        &.inline .lyrics-content .lyrics-text {
+                            will-change: transform, opacity, filter;
+                            transform: none;
+                            filter: none;
+                            opacity: 1;
+                        }
+                    }
+
+                    &.active.empty {
+                        height: 5.5em !important;
+
+                        .lyrics-empty {
+                            transition: transform 1.5s, opacity 1.5s, filter 1.5s;
+                            will-change: transform, opacity, filter;
+                            transform: none;
+                            filter: none;
+                            opacity: 1;
+
+                            .dot-group {
+                                animation: 5s ease 0s infinite normal none running heartbeat;
+                            }
+                        }
+                    }
+
+                    &:hover {
+                        .lyrics-content {
+                            will-change: transform, opacity, filter;
+                            background-color: #ffffff33;
+                        }
+                    }
+
+                    &.first {
+                        min-height: 0;
+                        height: 0 !important;
+                        padding-left: 1.2em;
+
+                        &.show {
+                            height: 5.5em !important;
+
+                            .lyrics-empty {
+                                transition: transform 1.5s, opacity 1.5s, filter 1.5s;
+                                will-change: transform, opacity, filter;
+                                transform: none;
+                                filter: none;
+                                opacity: 1;
+
+                                .dot-group {
+                                    animation: 5s ease 0s infinite normal none running heartbeat;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                &:hover {
+                    .lyrics-slide .lyrics-content .lyrics-text {
+                        filter: none !important;
+                    }
+                }
+
+                @keyframes heartbeat {
+                    0% {
+                        transform: scale(.85);
+                    }
+
+                    50% {
+                        transform: scale(1.15);
+                    }
+
+                    100% {
+                        transform: scale(.85);
+                    }
+                }
+            }
         }
     }
 
@@ -476,7 +991,6 @@ $content-br: 0.8em;
                             background-color: $content-bg;
                             transition: background-color .3s, box-shadow .3s;
                             box-sizing: border-box;
-                            cursor: pointer;
 
                             &.active {
                                 box-shadow: 0px 0px 15px rgba(10, 122, 194, 0.5);
@@ -652,7 +1166,6 @@ $content-br: 0.8em;
     }
 }
 
-/* 指示器 */
 .indicators {
     position: absolute;
     right: 1em;
@@ -671,7 +1184,7 @@ $content-br: 0.8em;
         top: auto;
         opacity: 0;
         bottom: 6.5em;
-        filter: blur(10px);
+        filter: blur(1em);
     }
 
     .indicator {
@@ -692,24 +1205,26 @@ $content-br: 0.8em;
         padding: 1.2em 1em;
         top: 4.85em;
 
+        &~.swiper .stacked-slide .lyrics-card,
         &~.swiper .stacked-slide .queue-card,
         &~.swiper .stacked-slide .equalizer {
-            filter: blur(5px);
-            transform: scale(.925);
+            filter: blur(.5em);
+            transform: scale(.95);
         }
 
 
+        &.bottom~.swiper .stacked-slide.swiper-slide-active .lyrics-card,
         &.bottom~.swiper .stacked-slide.swiper-slide-active .queue-card,
         &.bottom~.swiper .stacked-slide.swiper-slide-active .equalizer {
             filter: none;
             transform: none;
 
             .queue-left .modeswitch {
-                filter: blur(5px);
+                filter: blur(.5em);
             }
 
             .queue-right .vertical-swiper .vertical-slide {
-                transform: scale(.925);
+                transform: scale(.95);
             }
         }
 
@@ -732,7 +1247,7 @@ $content-br: 0.8em;
         }
     }
 
-    &.inlist {
+    &.inlist.totop {
         top: 1.75em;
 
         &.bottom {

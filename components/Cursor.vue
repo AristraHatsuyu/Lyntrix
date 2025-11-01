@@ -16,7 +16,7 @@ const mousedown = ref(false)
 // 判断是否是可点击元素
 function isPointerElement(element: HTMLElement | null): boolean {
     while (element) {
-        if (element.hasAttribute('data-pointer')) {
+        if (element.hasAttribute('data-pointer') && element.getAttribute('data-pointer') !== "false") {
             return true
         }
         element = element.parentElement // 递归检查父元素
