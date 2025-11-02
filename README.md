@@ -15,6 +15,7 @@ Lyntrix is a futuristic, animated, and highly customizable personal resume inter
 - 🌓 **Dark Mode Ready** – Built-in support for light/dark UI  
 - 🌐 **Responsive & Mobile-first** – Optimized for all devices  
 - 🔗 **Link-rich** – Showcase your work, social links, and projects
+- 🎵 **Music Card** – Play your favorite songs and using Lyntrics
 
 ---
 
@@ -39,6 +40,4 @@ Rename profile.temp.json to profile.json
 
 ⸻
 
-📦 Built With
-	•	Nuxt 3
-	•	And a bit of obsession for detail ✨
+📦 Built with a bit of obsession for detail ✨

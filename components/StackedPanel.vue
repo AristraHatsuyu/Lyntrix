@@ -7,8 +7,9 @@
                 data-pointer></span>
         </div>
         <div class="indicators" :class="{ inlist: pageIndex === 1, totop: Math.ceil(listTracks.length / 4) > 1 }">
-            <span v-for="(i, index) in (props.tracks[props.currentIndex].lyrics ? 3 : 2)" :key="index" :class="{ active: props.tracks[props.currentIndex].lyrics ? pageIndex === index : pageIndex === index+1 }" class="indicator"
-                @click="slideTo(index)" data-pointer></span>
+            <span v-for="(i, index) in (props.tracks[props.currentIndex].lyrics ? 3 : 2)" :key="index"
+                :class="{ active: props.tracks[props.currentIndex].lyrics ? pageIndex === index : pageIndex === index + 1 }"
+                class="indicator" @click="slideTo(index)" data-pointer></span>
         </div>
 
         <swiper :slidesPerView="1" :direction="'vertical'" :allowTouchMove="true" :effect="'creative'"
@@ -49,11 +50,10 @@
                                 :modules="[Mousewheel]" :speed="750" :slidesPerView="'auto'"
                                 :freeMode="{ enabled: true, sticky: true }" :observeParents="true"
                                 :observeSlideChildren="true" :roundLengths="true" :watchSlidesProgress="true"
-                                :slidesOffsetAfter="offsetAfterPx"
-                                @swiper="onLyricsSwiper">
+                                :slidesOffsetAfter="offsetAfterPx" @swiper="onLyricsSwiper">
                                 <template v-if="hasLyrics">
                                     <swiper-slide class="lyrics-slide first"
-                                        :class="{ show: firstwait && activeLines[0].t > props.currentTime, playing: isPlaying }">
+                                        :class="{ show: firstwait && activeLines[0].t > props.currentTime && activeLines[0].t > 8, playing: isPlaying }">
                                         <div class="lyrics-empty">
                                             <div class="dot-group">
                                                 <span class="dot"
@@ -73,7 +73,11 @@
                                         :class="{ active: idx === activeLineIndex, next: idx === activeLineIndex + 1, prev: idx === activeLineIndex - 1, inline: activeLines[0].t < props.currentTime, empty: line.main == '', playing: isPlaying }"
                                         data-pointer>
                                         <div class="lyrics-content" v-if="line.main != ''">
-                                            <div class="lyrics-text">{{ wrapDisplay(line.main) }}</div>
+                                            <div v-if="line.spans?.length" class="lyrics-text wordprog">
+                                                <span v-for="(wg, wi) in line.spans" :key="wi" class="wg"
+                                                    :class="wordClass(wg)" :style="wordStyle(wg)">{{ wg.tx }}</span>
+                                            </div>
+                                            <div v-else class="lyrics-text">{{ wrapDisplay(line.main) }}</div>
                                         </div>
                                         <div class="lyrics-empty" v-else>
                                             <div class="dot-group">
@@ -223,8 +227,31 @@ import { useArtworkCache } from '@/composables/audio/useArtworkCache'
  * ====================== */
 interface EqualizerBand { text: string; feq: number; value: number; }
 interface TrackItem { title: string; author: string; file: string; image?: string; lyrics?: string }
-type LyricLine = { t: number; raw: string; main: string }
+
+/** Support Lyntrics */
+type WordSpan = {
+    b: number;              // Begin Seconds
+    e: number;              // End Seconds
+    tx: string;             // Display Text
+    fx?: {
+        blur?: number;        // text-shadow blur px
+        op?: number;          // text-shadow opacity [0..1]
+        dir?: 'to right' | 'to left';
+    }
+}
+type LyricLine = { t: number; raw: string; main: string; spans?: WordSpan[]; e?: number }
 type ParsedLyrics = { meta: { ti?: string; ar?: string; al?: string; by?: string; offset?: number }, lines: LyricLine[] }
+
+/** Lyntrics **/
+type Lyntrics = {
+    v: number
+    lg?: string
+    dur?: number
+    gr?: 'w' | 'l' | 'n' | string
+    ofs?: number
+    ag?: unknown
+    sec?: any[]   // section: [type, begin, end, agentId?, lines[]], line: [key, begin, end, text, spans?]
+}
 
 /** ========================
  * Props / Emits / v-model
@@ -236,6 +263,7 @@ interface Props {
     mode?: 'repeat-all' | 'repeat-one' | 'shuffle';
     currentTime?: number;
     isPlaying?: boolean;
+    playbackRate?: number;
 }
 const eqcontrol = defineModel<boolean>('eqcontrol')
 
@@ -256,7 +284,8 @@ const props = withDefaults(defineProps<Props>(), {
     currentIndex: 0,
     mode: 'repeat-all',
     currentTime: 0,
-    isPlaying: false
+    isPlaying: false,
+    playbackRate: 1
 })
 
 const emit = defineEmits<{
@@ -278,7 +307,7 @@ const firstwait = ref(false)
 const onSwiper = (swiper: any) => { swiperInstance = swiper }
 const onSwiperList = (swiper: any) => { swiperListInstance = swiper }
 const onSlideChange = (swiper: any) => { pageIndex.value = swiper.activeIndex }
-const slideTo = (index: number) => { props.tracks[props.currentIndex].lyrics ? swiperInstance?.slideTo(index) : swiperInstance?.slideTo(index+1) }
+const slideTo = (index: number) => { props.tracks[props.currentIndex].lyrics ? swiperInstance?.slideTo(index) : swiperInstance?.slideTo(index + 1) }
 const listSlideTo = (index: number) => { swiperListInstance?.slideTo(index) }
 const listnext = () => { swiperListInstance?.slideNext() }
 const listprev = () => { swiperListInstance?.slidePrev() }
@@ -357,10 +386,11 @@ async function ensureNeighbors(center: number) {
 }
 
 /** ========================
- * LRC Cache & Parse
+ * Lyrics Cache & Parsers
  * ====================== */
 const lyricsCache: Map<string, Promise<ParsedLyrics>> = new Map();
 
+/** LRC 解析（原样） */
 function parseLRC(raw: string): ParsedLyrics {
     const text = raw.replace(/\ufeff/g, '').replace(/\r\n/g, '\n').trim()
     const meta: ParsedLyrics['meta'] = {}
@@ -377,7 +407,6 @@ function parseLRC(raw: string): ParsedLyrics {
             else (meta as any)[k] = v
             continue
         }
-        
         let match: RegExpExecArray | null
         const stamps: number[] = []
         timeRe.lastIndex = 0
@@ -389,37 +418,120 @@ function parseLRC(raw: string): ParsedLyrics {
             stamps.push(t)
         }
         const pure = line.replace(timeRe, '').trim()
-        if (!stamps.length && pure) {
-            continue
-        }
-        for (const t of stamps) {
-            lines.push({ t, raw: pure, main: pure })
-        }
+        if (!stamps.length && pure) continue
+        for (const t of stamps) lines.push({ t, raw: pure, main: pure })
     }
-
     const off = (meta.offset || 0) / 1000
     lines.forEach(l => { l.t = Math.max(0, l.t + off) })
     lines.sort((a, b) => a.t - b.t)
-
     return { meta, lines }
 }
 
+const WAIT_GAP_SEC = 8
+
+function patchWaitDots(lines: LyricLine[]): LyricLine[] {
+    if (!lines?.length) return lines
+    const out: LyricLine[] = []
+    for (let i = 0; i < lines.length; i++) {
+        const cur = lines[i]
+        out.push(cur)
+        if (i < lines.length - 1) {
+            const next = lines[i + 1]
+            if (typeof cur.e === 'number' && Number.isFinite(cur.e)) {
+                const gap = next.t - cur.e
+                if (gap > WAIT_GAP_SEC) {
+                    out.push({ t: cur.e, raw: '', main: '' })
+                }
+            }
+        }
+    }
+    return out
+}
+
+/** Lyntrics -> Line */
+function lyntricsToLines(lyn: Lyntrics): LyricLine[] {
+    const out: LyricLine[] = []
+    const sections = lyn?.sec ?? []
+    for (const sec of sections) {
+        const lines = Array.isArray(sec) ? (sec[4] || []) : []
+        for (const L of lines) {
+            // L: [key, begin, end, text, spans?]
+            const begin = Number(L?.[1])
+            const end = Number(L?.[2])
+            const text = String(L?.[3] ?? '')
+            const spansRaw = L?.[4] ?? []
+            const spans: WordSpan[] = []
+
+            if (Array.isArray(spansRaw)) {
+                for (const s of spansRaw) {
+                    if (Array.isArray(s)) {
+                        const tx = String(s[0] ?? '')
+                        const b = Number(s[1]); const e = Number(s[2])
+                        const m = s[3] || {}
+                        const fx = (m && typeof m === 'object')
+                            ? { blur: m.blur ?? m.blr, op: m.opacity ?? m.op, dir: m.dir }
+                            : undefined
+                        if (Number.isFinite(b) && Number.isFinite(e) && tx !== '') spans.push({ b, e, tx, fx })
+                    } else if (s && typeof s === 'object') {
+                        const tx = String(s.tx ?? '')
+                        const b = Number(s.b); const e = Number(s.e)
+                        const fx = s.fx
+                        if (Number.isFinite(b) && Number.isFinite(e) && tx !== '') spans.push({ b, e, tx, fx })
+                    }
+                }
+            }
+
+            if (Number.isFinite(begin) && text) {
+                const main = text || (spans.length ? spans.map(x => x.tx).join('') : '')
+                const line: LyricLine = { t: begin, raw: text, main, spans: spans.length ? spans : undefined }
+                if (Number.isFinite(end)) line.e = end
+                out.push(line)
+            }
+        }
+    }
+    out.sort((a, b) => a.t - b.t)
+    return out
+}
+
+function parseLyntricsObject(obj: any): ParsedLyrics {
+    try {
+        const lines = lyntricsToLines(obj as Lyntrics)
+        return { meta: {}, lines }
+    } catch {
+        return { meta: {}, lines: [] }
+    }
+}
+
+/** AutoLoad（.lyntrics.json / .lrc） */
 async function ensureLyrics(url: string): Promise<ParsedLyrics> {
     if (!url) return { meta: {}, lines: [] }
-
     const cached = lyricsCache.get(url)
     if (cached) return cached
+
+    const isJsonLike = /\.lyntrics\.json(\?.*)?$/.test(url)
 
     const p = (async () => {
         try {
             const res = await fetch(url, { cache: 'force-cache' })
-            const text = await res.text()
-            return parseLRC(text)
+            const ct = (res.headers.get('content-type') || '').toLowerCase()
+            if (ct.includes('application/json') || isJsonLike) {
+                const obj = await res.json()
+                return parseLyntricsObject(obj)
+            } else {
+                const text = await res.text()
+                try { return parseLyntricsObject(JSON.parse(text)) } catch { return parseLRC(text) }
+            }
         } catch {
             try {
                 const res2 = await fetch(url, { cache: 'no-cache' })
-                const text2 = await res2.text()
-                return parseLRC(text2)
+                const ct2 = (res2.headers.get('content-type') || '').toLowerCase()
+                if (ct2.includes('application/json') || isJsonLike) {
+                    const obj2 = await res2.json()
+                    return parseLyntricsObject(obj2)
+                } else {
+                    const text2 = await res2.text()
+                    try { return parseLyntricsObject(JSON.parse(text2)) } catch { return parseLRC(text2) }
+                }
             } catch {
                 return { meta: {}, lines: [] }
             }
@@ -441,7 +553,7 @@ function prefetchLyricsAround(center: number, span = 1) {
 }
 
 /** ========================
- * Lyrics Status
+ * Lyrics Status + rAF
  * ====================== */
 const currentTrack = computed(() => props.tracks?.[props.currentIndex ?? 0])
 const activeLyricsUrl = computed(() => currentTrack.value?.lyrics || '')
@@ -453,6 +565,50 @@ let lySwiper: any = null
 const onLyricsSwiper = (sw: any) => { lySwiper = sw }
 const autoFollow = ref(true)
 const activeLineIndex = ref(0)
+
+const softNow = ref(0)
+let rafId: number | null = null
+let anchorMediaTime = 0
+let anchorTs = 0
+
+const FADE_COAST_MS = 1100
+let coastUntilTs = 0
+let lastMotion = false
+
+function syncAnchor(from?: number) {
+    anchorMediaTime = (typeof from === 'number') ? from : (Number(props.currentTime) || 0)
+    anchorTs = performance.now()
+    softNow.value = anchorMediaTime
+}
+
+function startTicker() {
+    if (rafId != null) return
+    anchorTs = performance.now()
+    const tick = (ts: number) => {
+        const inCoast = ts < coastUntilTs
+        const motion = (props.isPlaying === true) || inCoast
+        const rate = props.playbackRate ?? 1
+
+        if (motion !== lastMotion) {
+            anchorMediaTime = softNow.value
+            anchorTs = ts
+            lastMotion = motion
+        }
+
+        const dt = (ts - anchorTs) / 1000
+        softNow.value = anchorMediaTime + (motion ? dt * rate : 0)
+
+        rafId = requestAnimationFrame(tick)
+    }
+    rafId = requestAnimationFrame(tick)
+}
+
+function stopTicker(update = true) {
+    if (rafId != null) cancelAnimationFrame(rafId)
+    rafId = null
+    if (update) softNow.value = anchorMediaTime
+}
+
 function binarySearch(lines: LyricLine[], t: number): number {
     let lo = 0, hi = lines.length - 1, ans = 0
     while (lo <= hi) {
@@ -465,7 +621,6 @@ function binarySearch(lines: LyricLine[], t: number): number {
 
 const BOTTOM_OFFSET_EM = 12.5
 const offsetAfterPx = ref(0)
-
 function recalcOffsets() {
     const base = parseFloat(getComputedStyle(document.querySelector('[data-float-item]') || document.documentElement).fontSize)
     offsetAfterPx.value = Math.round(BOTTOM_OFFSET_EM * base)
@@ -473,11 +628,10 @@ function recalcOffsets() {
 }
 
 const FOLLOW_MIN_INTERVAL_MS = 200
-
 let lastFollowTs = 0
 function followToIndex(idx: number, force = false) {
     if (!lySwiper) return
-    if (activeLines.value[idx-1] && activeLines.value[idx-1].main != '') lySwiper?.update()
+    if (activeLines.value[idx - 1] && activeLines.value[idx - 1].main != '') lySwiper?.update()
     const now = performance.now()
     if (!force && (now - lastFollowTs) < FOLLOW_MIN_INTERVAL_MS) return
     lastFollowTs = now
@@ -508,41 +662,48 @@ function wrapDisplay(s: string, L = 23): string {
     const w = (c: string) => (c === ' ' ? 1 : /[^\x00-\x7F]/.test(c) ? 2 : 1);
     const len = (t: string) => { let n = 0; for (const c of t) n += w(c); return n; };
     const isPunc = (c: string) => /[,.!?;:'"，。！？；：“”、【】（）]/.test(c);
-
     let r = '', line = '', cur = 0, space = -1;
     for (let i = 0; i < s.length;) {
-        const cp = s.codePointAt(i)!;
-        const ch = String.fromCodePoint(cp);
-        const step = cp > 0xFFFF ? 2 : 1;
-
+        const cp = s.codePointAt(i)!; const ch = String.fromCodePoint(cp); const step = cp > 0xFFFF ? 2 : 1;
         if (ch === '\n') { r += line + '\n'; line = ''; cur = 0; space = -1; i += step; continue; }
-
         const ww = w(ch);
         if (cur + ww <= L) { if (ch === ' ') space = line.length; line += ch; cur += ww; i += step; continue; }
-
         if (space >= 0 && len(line.slice(0, space)) >= 3) {
-            if (isPunc(ch) && line.length > 0) {
-                r += line.slice(0, space - 1) + '\n';
-                line = line.slice(space - 1);
-            } else {
-                r += line.slice(0, space) + '\n';
-                line = line.slice(space + 1);
-            }
-            cur = len(line);
-            space = line.lastIndexOf(' ');
-            continue;
+            if (isPunc(ch) && line.length > 0) { r += line.slice(0, space - 1) + '\n'; line = line.slice(space - 1); }
+            else { r += line.slice(0, space) + '\n'; line = line.slice(space + 1); }
+            cur = len(line); space = line.lastIndexOf(' '); continue;
         }
-
-        if (isPunc(ch) && line.length > 0) {
-            r += line.slice(0, -1) + '\n';
-            line = line.slice(-1);
-        } else {
-            r += line + '\n';
-            line = '';
-        }
+        if (isPunc(ch) && line.length > 0) { r += line.slice(0, -1) + '\n'; line = line.slice(-1); }
+        else { r += line + '\n'; line = ''; }
         cur = 0; space = -1;
     }
     return r + line;
+}
+
+const nowT = computed(() => softNow.value)
+
+function spanProgress(s: WordSpan, t: number): number {
+    if (!Number.isFinite(s.b) || !Number.isFinite(s.e)) return 0
+    if (t <= s.b) return 0
+    if (t >= s.e) return 1
+    const dur = Math.max(1e-4, s.e - s.b)
+    return (t - s.b) / dur
+}
+function wordClass(s: WordSpan) {
+    const t = nowT.value
+    return t < s.b ? 'future' : (t > s.e ? 'past' : 'current')
+}
+function wordStyle(s: WordSpan) {
+    const p = spanProgress(s, nowT.value)
+    const gp = (p <= 0) ? '-20%' : (p >= 1 ? '100%' : `${(p * 100).toFixed(6)}%`)
+    const ty = (p <= 0 ? 0 : (p >= 1 ? -1 : -1 * p))
+    return {
+        '--gradient-progress': gp,
+        '--gradient-direction': s.fx?.dir ?? 'to right',
+        ...(s.fx?.blur != null ? { '--text-shadow-blur-radius': `${s.fx.blur}px` } : null),
+        ...(s.fx?.op != null ? { '--text-shadow-opacity': `${s.fx.op}` } : null),
+        transform: `matrix(1, 0, 0, 1, 0, ${ty.toFixed(6)})`,
+    } as Record<string, string>
 }
 
 onMounted(() => {
@@ -570,10 +731,13 @@ onMounted(() => {
     recalcOffsets()
     window.addEventListener('resize', recalcOffsets, { passive: true })
     slideTo(0)
+    syncAnchor(Number(props.currentTime) || 0)
+    startTicker()
 })
 
 onUnmounted(() => {
     window.removeEventListener('resize', recalcOffsets)
+    stopTicker(false)
 })
 
 watch(activeLyricsUrl, async (url) => {
@@ -585,8 +749,9 @@ watch(activeLyricsUrl, async (url) => {
         return
     }
     const parsed = await ensureLyrics(url)
+    const patched = { ...parsed, lines: patchWaitDots(parsed.lines) }
     firstwait.value = false
-    lyrics.value = parsed
+    lyrics.value = patched
     activeLineIndex.value = 0
     autoFollow.value = true
     await nextTick()
@@ -596,7 +761,31 @@ watch(activeLyricsUrl, async (url) => {
 })
 
 watch(() => props.currentTime, (t) => {
-    if (!hasLyrics.value || typeof t !== 'number') return
+    const newT = Number(t) || 0
+    const drift = Math.abs(newT - softNow.value)
+    const now = performance.now()
+    const inCoast = now < coastUntilTs
+
+    const THRESH = inCoast ? 0.25 : 0.12
+    if (drift > THRESH) {
+        syncAnchor(newT)
+    }
+})
+
+watch(() => props.isPlaying, (p) => {
+    if (p) {
+        coastUntilTs = 0
+        syncAnchor(Number(props.currentTime) || softNow.value)
+        startTicker()
+    } else {
+        coastUntilTs = performance.now() + FADE_COAST_MS
+        syncAnchor(Number(props.currentTime) || softNow.value)
+        startTicker()
+    }
+})
+
+watch(softNow, (t) => {
+    if (!hasLyrics.value) return
     const idx = binarySearch(activeLines.value, t)
     if (idx !== activeLineIndex.value) {
         activeLineIndex.value = idx
@@ -610,9 +799,9 @@ watch(() => props.currentIndex, (idx) => {
         prefetchLyricsAround(idx, 1)
         if (pageIndex.value != 2) {
             slideTo(0)
-            setTimeout((idxs=idx)=>{
-                listSlideTo(Math.ceil((idxs+1) / 4)-1)
-            },300)
+            setTimeout((idxs = idx) => {
+                listSlideTo(Math.ceil((idxs + 1) / 4) - 1)
+            }, 300)
         }
     }
 })
@@ -770,6 +959,39 @@ $content-br: 0.8em;
                             transition: transform .75s, filter .75s, opacity .75s;
                             white-space: pre-line;
                             word-break: normal;
+
+                            &.wordprog {
+                                display: inline-flex;
+                                flex-wrap: wrap;
+                                gap: .02em;
+                                white-space: pre-wrap;
+
+                                .wg {
+                                    --gradient-progress: -20%;
+                                    --gradient-direction: to right;
+                                    --text-shadow-blur-radius: 0px;
+                                    --text-shadow-opacity: 0;
+
+                                    background-image: linear-gradient(var(--gradient-direction),
+                                            #000000e8 var(--gradient-progress),
+                                            #00000080 calc(var(--gradient-progress) + 20%));
+                                    background-clip: text;
+                                    -webkit-text-fill-color: transparent;
+                                    -webkit-background-clip: text;
+                                    will-change: transform;
+                                    text-shadow: 0 0 var(--text-shadow-blur-radius) rgba(0, 0, 0, var(--text-shadow-opacity));
+
+                                    &.past {
+                                        --gradient-progress: 100%;
+                                        transform: matrix(1, 0, 0, 1, 0, -1);
+                                    }
+
+                                    &.future {
+                                        --gradient-progress: -20%;
+                                        transform: matrix(1, 0, 0, 1, 0, 0);
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -851,10 +1073,6 @@ $content-br: 0.8em;
                         }
                     }
 
-                    &.playing .lyrics-empty .dot-group {
-                        animation: none;
-                    }
-
                     &.first {
                         min-height: 0;
                         height: 0 !important;
@@ -877,7 +1095,8 @@ $content-br: 0.8em;
                         }
                     }
 
-                    &.prev, &.active {
+                    &.playing.prev,
+                    &.playing.active {
                         .lyrics-empty .dot-group {
                             animation: 5s ease 0s infinite normal none running heartbeat;
                         }
