@@ -7,7 +7,7 @@
                 data-pointer></span>
         </div>
         <div class="indicators" :class="{ inlist: pageIndex === 1, totop: Math.ceil(listTracks.length / 4) > 1 }">
-            <span v-for="(i, index) in 3" :key="index" :class="{ active: pageIndex === index }" class="indicator"
+            <span v-for="(i, index) in (props.tracks[props.currentIndex].lyrics ? 3 : 2)" :key="index" :class="{ active: props.tracks[props.currentIndex].lyrics ? pageIndex === index : pageIndex === index+1 }" class="indicator"
                 @click="slideTo(index)" data-pointer></span>
         </div>
 
@@ -49,11 +49,11 @@
                                 :modules="[Mousewheel]" :speed="750" :slidesPerView="'auto'"
                                 :freeMode="{ enabled: true, sticky: true }" :observeParents="true"
                                 :observeSlideChildren="true" :roundLengths="true" :watchSlidesProgress="true"
-                                :slidesOffsetBefore="offsetBeforePx" :slidesOffsetAfter="offsetAfterPx"
+                                :slidesOffsetAfter="offsetAfterPx"
                                 @swiper="onLyricsSwiper">
                                 <template v-if="hasLyrics">
                                     <swiper-slide class="lyrics-slide first"
-                                        :class="{ show: firstwait && activeLines[0].t > props.currentTime }">
+                                        :class="{ show: firstwait && activeLines[0].t > props.currentTime, playing: isPlaying }">
                                         <div class="lyrics-empty">
                                             <div class="dot-group">
                                                 <span class="dot"
@@ -69,8 +69,8 @@
                                         </div>
                                     </swiper-slide>
                                     <swiper-slide v-for="(line, idx) in activeLines" :key="idx" class="lyrics-slide"
-                                        @click.stop="onClickLyric(idx, line.t)"
-                                        :class="{ active: idx === activeLineIndex, next: idx === activeLineIndex + 1, inline: activeLines[0].t < props.currentTime, empty: line.main == '' }"
+                                        @click.stop="line.main != '' ? onClickLyric(idx, line.t) : ''"
+                                        :class="{ active: idx === activeLineIndex, next: idx === activeLineIndex + 1, prev: idx === activeLineIndex - 1, inline: activeLines[0].t < props.currentTime, empty: line.main == '', playing: isPlaying }"
                                         data-pointer>
                                         <div class="lyrics-content" v-if="line.main != ''">
                                             <div class="lyrics-text">{{ wrapDisplay(line.main) }}</div>
@@ -278,7 +278,7 @@ const firstwait = ref(false)
 const onSwiper = (swiper: any) => { swiperInstance = swiper }
 const onSwiperList = (swiper: any) => { swiperListInstance = swiper }
 const onSlideChange = (swiper: any) => { pageIndex.value = swiper.activeIndex }
-const slideTo = (index: number) => { swiperInstance?.slideTo(index) }
+const slideTo = (index: number) => { props.tracks[props.currentIndex].lyrics ? swiperInstance?.slideTo(index) : swiperInstance?.slideTo(index+1) }
 const listSlideTo = (index: number) => { swiperListInstance?.slideTo(index) }
 const listnext = () => { swiperListInstance?.slideNext() }
 const listprev = () => { swiperListInstance?.slidePrev() }
@@ -463,14 +463,11 @@ function binarySearch(lines: LyricLine[], t: number): number {
     return ans
 }
 
-const ACTIVE_OFFSET_EM = 9
-const BOTTOM_OFFSET_EM = 8
-const offsetBeforePx = ref(0)
+const BOTTOM_OFFSET_EM = 12.5
 const offsetAfterPx = ref(0)
 
 function recalcOffsets() {
-    const base = parseFloat(getComputedStyle(document.documentElement).fontSize || '16')
-    offsetBeforePx.value = Math.round(ACTIVE_OFFSET_EM * base)
+    const base = parseFloat(getComputedStyle(document.querySelector('[data-float-item]') || document.documentElement).fontSize)
     offsetAfterPx.value = Math.round(BOTTOM_OFFSET_EM * base)
     lySwiper?.update()
 }
@@ -480,6 +477,7 @@ const FOLLOW_MIN_INTERVAL_MS = 200
 let lastFollowTs = 0
 function followToIndex(idx: number, force = false) {
     if (!lySwiper) return
+    if (activeLines.value[idx-1] && activeLines.value[idx-1].main != '') lySwiper?.update()
     const now = performance.now()
     if (!force && (now - lastFollowTs) < FOLLOW_MIN_INTERVAL_MS) return
     lastFollowTs = now
@@ -571,6 +569,7 @@ onMounted(() => {
 
     recalcOffsets()
     window.addEventListener('resize', recalcOffsets, { passive: true })
+    slideTo(0)
 })
 
 onUnmounted(() => {
@@ -609,6 +608,12 @@ watch(() => props.currentIndex, (idx) => {
     if (typeof idx === 'number') {
         ensureNeighbors(idx)
         prefetchLyricsAround(idx, 1)
+        if (pageIndex.value != 2) {
+            slideTo(0)
+            setTimeout((idxs=idx)=>{
+                listSlideTo(Math.ceil((idxs+1) / 4)-1)
+            },300)
+        }
     }
 })
 
@@ -734,7 +739,7 @@ $content-br: 0.8em;
             .lyrics-swiper {
                 width: 100%;
                 height: 100%;
-                margin-top: -3em;
+                margin-top: 3.75em;
                 overflow: visible;
                 position: relative;
 
@@ -771,7 +776,7 @@ $content-br: 0.8em;
                     .lyrics-empty {
                         opacity: 0;
                         filter: blur(1em);
-                        transform: scale(0.5);
+                        transform: scale(0.25);
                         transition: transform .75s, opacity .75s, filter .75s;
 
 
@@ -836,10 +841,6 @@ $content-br: 0.8em;
                             transform: none;
                             filter: none;
                             opacity: 1;
-
-                            .dot-group {
-                                animation: 5s ease 0s infinite normal none running heartbeat;
-                            }
                         }
                     }
 
@@ -848,6 +849,10 @@ $content-br: 0.8em;
                             will-change: transform, opacity, filter;
                             background-color: #ffffff33;
                         }
+                    }
+
+                    &.playing .lyrics-empty .dot-group {
+                        animation: none;
                     }
 
                     &.first {
@@ -864,11 +869,17 @@ $content-br: 0.8em;
                                 transform: none;
                                 filter: none;
                                 opacity: 1;
-
-                                .dot-group {
-                                    animation: 5s ease 0s infinite normal none running heartbeat;
-                                }
                             }
+                        }
+
+                        &.playing .lyrics-empty .dot-group {
+                            animation: 5s ease 0s infinite normal none running heartbeat;
+                        }
+                    }
+
+                    &.prev, &.active {
+                        .lyrics-empty .dot-group {
+                            animation: 5s ease 0s infinite normal none running heartbeat;
                         }
                     }
                 }
@@ -983,7 +994,7 @@ $content-br: 0.8em;
 
                         li {
                             display: grid;
-                            grid-template-columns: 56px 1fr;
+                            grid-template-columns: 5.5em 1fr;
                             gap: .5em;
                             align-items: center;
                             padding: 1em;
