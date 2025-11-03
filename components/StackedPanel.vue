@@ -11,7 +11,7 @@
                 :class="{ active: props.tracks[props.currentIndex].lyrics ? pageIndex === index : pageIndex === index + 1 }"
                 class="indicator" @click="slideTo(index)" data-pointer></span>
         </div>
-
+        
         <swiper :slidesPerView="1" :direction="'vertical'" :allowTouchMove="true" :effect="'creative'"
             :modules="[EffectCreative]" :creativeEffect="{
                 prev: { translate: [0, '10%', -1], opacity: 0, scale: 0.95 },
@@ -20,86 +20,72 @@
             <swiper-slide class="stacked-slide">
                 <div class="card">
                     <div class="lyrics-card">
-                        <div class="lyrics-left">
-                            <button class="modeswitch" :class="{ active: autoFollow }" @click="toggleAutoFollow"
-                                data-pointer>
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
-                                    <path
-                                        d="M534.6 182.6C547.1 170.1 547.1 149.8 534.6 137.3L470.6 73.3C461.4 64.1 447.7 61.4 435.7 66.4C423.7 71.4 416 83.1 416 96L416 128L256 128C150 128 64 214 64 320C64 337.7 78.3 352 96 352C113.7 352 128 337.7 128 320C128 249.3 185.3 192 256 192L416 192L416 224C416 236.9 423.8 248.6 435.8 253.6C447.8 258.6 461.5 255.8 470.7 246.7L534.7 182.7zM105.4 457.4C92.9 469.9 92.9 490.2 105.4 502.7L169.4 566.7C178.6 575.9 192.3 578.6 204.3 573.6C216.3 568.6 224 556.9 224 544L224 512L384 512C490 512 576 426 576 320C576 302.3 561.7 288 544 288C526.3 288 512 302.3 512 320C512 390.7 454.7 448 384 448L224 448L224 416C224 403.1 216.2 391.4 204.2 386.4C192.2 381.4 178.5 384.2 169.3 393.3L105.3 457.3z" />
-                                </svg>
-                            </button>
-                            <button @click="jumpLyric(-1)" :disabled="!hasLyrics || activeLineIndex <= 0"
-                                :data-pointer="hasLyrics && activeLineIndex > 0">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
-                                    <path
-                                        d="M297.4 169.4C309.9 156.9 330.2 156.9 342.7 169.4L534.7 361.4C547.2 373.9 547.2 394.2 534.7 406.7C522.2 419.2 501.9 419.2 489.4 406.7L320 237.3L150.6 406.6C138.1 419.1 117.8 419.1 105.3 406.6C92.8 394.1 92.8 373.8 105.3 361.3L297.3 169.3z" />
-                                </svg>
-                            </button>
-                            <button @click="jumpLyric(1)"
-                                :disabled="!hasLyrics || activeLineIndex >= (activeLines.length - 1)"
-                                :data-pointer="hasLyrics && activeLineIndex < (activeLines.length - 1)">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 640">
-                                    <path
-                                        d="M297.4 470.6C309.9 483.1 330.2 483.1 342.7 470.6L534.7 278.6C547.2 266.1 547.2 245.8 534.7 233.3C522.2 220.8 501.9 220.8 489.4 233.3L320 402.7L150.6 233.4C138.1 220.9 117.8 220.9 105.3 233.4C92.8 245.9 92.8 266.2 105.3 278.7L297.3 470.7z" />
-                                </svg>
-                            </button>
-                        </div>
-
-                        <div class="lyrics-right">
-                            <swiper class="lyrics-swiper" :direction="'vertical'" :mousewheel="true"
-                                :modules="[Mousewheel]" :speed="750" :slidesPerView="'auto'"
-                                :freeMode="{ enabled: true, sticky: true }" :observeParents="true"
-                                :observeSlideChildren="true" :roundLengths="true" :watchSlidesProgress="true"
-                                :slidesOffsetAfter="offsetAfterPx" @swiper="onLyricsSwiper">
-                                <template v-if="hasLyrics">
-                                    <swiper-slide class="lyrics-slide first"
-                                        :class="{ show: firstwait && activeLines[0].t > props.currentTime && activeLines[0].t > 8, playing: isPlaying }">
-                                        <div class="lyrics-empty">
-                                            <div class="dot-group">
-                                                <span class="dot"
-                                                    :class="{ current: activeLines[0].t / 4 < props.currentTime }"
-                                                    :style="{ transitionDuration: `${Math.round(activeLines[0].t * 1000 / 4)}ms` }"></span>
-                                                <span class="dot"
-                                                    :class="{ current: activeLines[0].t * 2 / 4 < props.currentTime }"
-                                                    :style="{ transitionDuration: `${Math.round(activeLines[0].t * 1000 / 4)}ms` }"></span>
-                                                <span class="dot"
-                                                    :class="{ current: activeLines[0].t * 3 / 4 < props.currentTime }"
-                                                    :style="{ transitionDuration: `${Math.round(activeLines[0].t * 1000 / 4)}ms` }"></span>
-                                            </div>
+                        <swiper class="lyrics-swiper" :direction="'vertical'" :mousewheel="true" :modules="[Mousewheel]"
+                            :speed="750" :slidesPerView="'auto'" :freeMode="{ enabled: true, sticky: true }"
+                            :observeParents="true" :observeSlideChildren="true" :roundLengths="true"
+                            :watchSlidesProgress="true" @swiper="onLyricsSwiper">
+                            <template v-if="hasLyrics">
+                                <swiper-slide class="lyrics-slide first"
+                                    :class="{ show: firstwait && activeLines[0].t > props.currentTime + 1 && activeLines[0].t > 5, playing: isPlaying }">
+                                    <div class="lyrics-empty">
+                                        <div class="dot-group">
+                                            <span class="dot"
+                                                :class="{ current: activeLines[0].t / 4 < props.currentTime }"
+                                                :style="{ transitionDuration: `${Math.round(activeLines[0].t * 1000 / 4)}ms` }"></span>
+                                            <span class="dot"
+                                                :class="{ current: activeLines[0].t * 2 / 4 < props.currentTime }"
+                                                :style="{ transitionDuration: `${Math.round(activeLines[0].t * 1000 / 4)}ms` }"></span>
+                                            <span class="dot"
+                                                :class="{ current: activeLines[0].t * 3 / 4 < props.currentTime }"
+                                                :style="{ transitionDuration: `${Math.round(activeLines[0].t * 1000 / 4)}ms` }"></span>
                                         </div>
-                                    </swiper-slide>
-                                    <swiper-slide v-for="(line, idx) in activeLines" :key="idx" class="lyrics-slide"
-                                        @click.stop="line.main != '' ? onClickLyric(idx, line.t) : ''"
-                                        :class="{ active: idx === activeLineIndex, next: idx === activeLineIndex + 1, prev: idx === activeLineIndex - 1, inline: activeLines[0].t < props.currentTime, empty: line.main == '', playing: isPlaying }"
-                                        data-pointer>
-                                        <div class="lyrics-content" v-if="line.main != ''">
-                                            <div v-if="line.spans?.length" class="lyrics-text wordprog">
-                                                <span v-for="(wg, wi) in line.spans" :key="wi" class="wg"
-                                                    :class="wordClass(wg)" :style="wordStyle(wg)">{{ wg.tx }}</span>
-                                            </div>
-                                            <div v-else class="lyrics-text">{{ wrapDisplay(line.main) }}</div>
+                                    </div>
+                                </swiper-slide>
+                                <swiper-slide
+                                    v-for="(line, idx) in activeLines"
+                                    :key="idx"
+                                    class="lyrics-slide"
+                                    @click.stop="line.main != '' ? onClickLyric(idx, line.t) : ''"
+                                    :class="{
+                                        active: idx === activeLineIndex,
+                                        next: idx === activeLineIndex + 1,
+                                        prev: idx === activeLineIndex - 1,
+                                        inline: activeLines[0].t > 5 ? activeLines[0].t < props.currentTime + 1 : true,
+                                        empty: line.main == '',
+                                        playing: isPlaying,
+                                        right: isLineRight(line)
+                                    }"
+                                    data-pointer
+                                    >
+                                    <div class="lyrics-content" v-if="line.main != ''">
+                                        <div v-if="line.spans?.length" class="lyrics-text wordprog">
+                                            <span v-for="(wg, wi) in line.spans" :key="wi" class="wg"
+                                                :class="wordClass(wg)" :style="wordStyle(wg)">{{ wg.tx }}</span>
                                         </div>
-                                        <div class="lyrics-empty" v-else>
-                                            <div class="dot-group">
-                                                <span class="dot"
-                                                    :class="{ current: line.t + (activeLines[idx + 1].t - line.t) / 4 < props.currentTime }"
-                                                    :style="{ transitionDuration: `${Math.round(line.t + (activeLines[idx + 1].t - line.t) * 1000 / 4)}ms` }"></span>
-                                                <span class="dot"
-                                                    :class="{ current: line.t + (activeLines[idx + 1].t - line.t) * 2 / 4 < props.currentTime }"
-                                                    :style="{ transitionDuration: `${Math.round(line.t + (activeLines[idx + 1].t - line.t) * 1000 / 4)}ms` }"></span>
-                                                <span class="dot"
-                                                    :class="{ current: line.t + (activeLines[idx + 1].t - line.t) * 3 / 4 < props.currentTime }"
-                                                    :style="{ transitionDuration: `${Math.round(line.t + (activeLines[idx + 1].t - line.t) * 1000 / 4)}ms` }"></span>
-                                            </div>
+                                        <div v-else class="lyrics-text">{{ wrapDisplay(line.main) }}</div>
+                                    </div>
+                                    <div class="lyrics-empty" v-else>
+                                        <div class="dot-group">
+                                            <span class="dot"
+                                                :class="{ current: line.t + (activeLines[idx + 1].t - line.t) / 4 < props.currentTime }"
+                                                :style="{ transitionDuration: `${Math.round(line.t + (activeLines[idx + 1].t - line.t) * 1000 / 4)}ms` }"></span>
+                                            <span class="dot"
+                                                :class="{ current: line.t + (activeLines[idx + 1].t - line.t) * 2 / 4 < props.currentTime }"
+                                                :style="{ transitionDuration: `${Math.round(line.t + (activeLines[idx + 1].t - line.t) * 1000 / 4)}ms` }"></span>
+                                            <span class="dot"
+                                                :class="{ current: line.t + (activeLines[idx + 1].t - line.t) * 3 / 4 < props.currentTime }"
+                                                :style="{ transitionDuration: `${Math.round(line.t + (activeLines[idx + 1].t - line.t) * 1000 / 4)}ms` }"></span>
                                         </div>
-                                    </swiper-slide>
-                                </template>
-                                <template v-else>
-                                    <swiper-slide class="lyrics-slide">
-                                    </swiper-slide>
-                                </template>
-                            </swiper>
-                        </div>
+                                    </div>
+                                </swiper-slide>
+                                <swiper-slide style="height: 12.5em;">
+                                </swiper-slide>
+                            </template>
+                            <template v-else>
+                                <swiper-slide class="lyrics-slide">
+                                </swiper-slide>
+                            </template>
+                        </swiper>
                     </div>
                 </div>
             </swiper-slide>
@@ -239,8 +225,8 @@ type WordSpan = {
         dir?: 'to right' | 'to left';
     }
 }
-type LyricLine = { t: number; raw: string; main: string; spans?: WordSpan[]; e?: number }
-type ParsedLyrics = { meta: { ti?: string; ar?: string; al?: string; by?: string; offset?: number }, lines: LyricLine[] }
+type LyricLine = { t: number; raw: string; main: string; spans?: WordSpan[]; e?: number, ag?: string; }
+type ParsedLyrics = { meta: { ti?: string; ar?: string; al?: string; by?: string; offset?: number; agMap?: Record<string, string> }, lines: LyricLine[] }
 
 /** Lyntrics **/
 type Lyntrics = {
@@ -453,9 +439,9 @@ function lyntricsToLines(lyn: Lyntrics): LyricLine[] {
     const out: LyricLine[] = []
     const sections = lyn?.sec ?? []
     for (const sec of sections) {
+        const agentId = (Array.isArray(sec) && typeof sec[3] === 'string') ? (sec[3] as string) : null
         const lines = Array.isArray(sec) ? (sec[4] || []) : []
         for (const L of lines) {
-            // L: [key, begin, end, text, spans?]
             const begin = Number(L?.[1])
             const end = Number(L?.[2])
             const text = String(L?.[3] ?? '')
@@ -485,6 +471,7 @@ function lyntricsToLines(lyn: Lyntrics): LyricLine[] {
                 const main = text || (spans.length ? spans.map(x => x.tx).join('') : '')
                 const line: LyricLine = { t: begin, raw: text, main, spans: spans.length ? spans : undefined }
                 if (Number.isFinite(end)) line.e = end
+                if (agentId) line.ag = agentId
                 out.push(line)
             }
         }
@@ -494,12 +481,32 @@ function lyntricsToLines(lyn: Lyntrics): LyricLine[] {
 }
 
 function parseLyntricsObject(obj: any): ParsedLyrics {
-    try {
-        const lines = lyntricsToLines(obj as Lyntrics)
-        return { meta: {}, lines }
-    } catch {
-        return { meta: {}, lines: [] }
+  try {
+    const agPairs = Array.isArray(obj?.ag) ? (obj.ag as any[]) : []
+    const agMap: Record<string, string> = {}
+    for (const pair of agPairs) {
+      if (Array.isArray(pair) && typeof pair[0] === 'string' && typeof pair[1] === 'string') {
+        agMap[pair[0]] = pair[1]
+      }
     }
+
+    const lines = lyntricsToLines(obj as Lyntrics)
+
+    return { meta: { agMap }, lines }
+  } catch {
+    return { meta: {}, lines: [] }
+  }
+}
+
+const agentPosMap = computed<Record<string, string>>(
+  () => ((lyrics.value?.meta as any)?.agMap ?? {})
+)
+
+const isLineRight = (line: LyricLine) => {
+  const ag = line.ag
+  if (!ag) return false
+  const pos = agentPosMap.value[ag]
+  return pos === 'o'
 }
 
 /** AutoLoad（.lyntrics.json / .lrc） */
@@ -619,19 +626,11 @@ function binarySearch(lines: LyricLine[], t: number): number {
     return ans
 }
 
-const BOTTOM_OFFSET_EM = 12.5
-const offsetAfterPx = ref(0)
-function recalcOffsets() {
-    const base = parseFloat(getComputedStyle(document.querySelector('[data-float-item]') || document.documentElement).fontSize)
-    offsetAfterPx.value = Math.round(BOTTOM_OFFSET_EM * base)
-    lySwiper?.update()
-}
-
 const FOLLOW_MIN_INTERVAL_MS = 200
 let lastFollowTs = 0
 function followToIndex(idx: number, force = false) {
     if (!lySwiper) return
-    if (activeLines.value[idx - 1] && activeLines.value[idx - 1].main != '') lySwiper?.update()
+    if (document.querySelector('.lyrics-slide.prev.empty')) lySwiper?.update()
     const now = performance.now()
     if (!force && (now - lastFollowTs) < FOLLOW_MIN_INTERVAL_MS) return
     lastFollowTs = now
@@ -658,26 +657,65 @@ function jumpLyric(delta: number) {
     emit('seek-to', activeLines.value[next]?.t ?? 0)
 }
 
-function wrapDisplay(s: string, L = 23): string {
-    const w = (c: string) => (c === ' ' ? 1 : /[^\x00-\x7F]/.test(c) ? 2 : 1);
-    const len = (t: string) => { let n = 0; for (const c of t) n += w(c); return n; };
-    const isPunc = (c: string) => /[,.!?;:'"，。！？；：“”、【】（）]/.test(c);
-    let r = '', line = '', cur = 0, space = -1;
-    for (let i = 0; i < s.length;) {
-        const cp = s.codePointAt(i)!; const ch = String.fromCodePoint(cp); const step = cp > 0xFFFF ? 2 : 1;
-        if (ch === '\n') { r += line + '\n'; line = ''; cur = 0; space = -1; i += step; continue; }
-        const ww = w(ch);
-        if (cur + ww <= L) { if (ch === ' ') space = line.length; line += ch; cur += ww; i += step; continue; }
-        if (space >= 0 && len(line.slice(0, space)) >= 3) {
-            if (isPunc(ch) && line.length > 0) { r += line.slice(0, space - 1) + '\n'; line = line.slice(space - 1); }
-            else { r += line.slice(0, space) + '\n'; line = line.slice(space + 1); }
-            cur = len(line); space = line.lastIndexOf(' '); continue;
+function wrapDisplay(s: string, L = 29): string {
+    const isFW = (c: string) => /[^\x00-\x7F]/.test(c);
+    const width = (c: string) => (c === ' ' ? 1 : isFW(c) ? 2 : 1);
+    const isPunc = (c: string) => /[,.!?;:'"、。，？！；：“”‘’【】（）《》〈〉—…・・ー»»»»〉〉〉〉」』】]/.test(c);
+    const leadPuncCount = (arr: string[], i: number) => {
+        let k = 0, n = arr.length;
+        while (i < n && k < 3 && isPunc(arr[i])) k++;
+        return k;
+    };
+    const wsum = (arr: string[]) => arr.reduce((n, c) => n + width(c), 0);
+
+    const chars = Array.from(s);
+    let lines: string[] = [];
+    let line: string[] = [];
+    let curW = 0;
+    let spaceIdx = -1;
+    let i = 0;
+
+    while (i < chars.length) {
+        const ch = chars[i];
+
+        if (ch === '\n') {
+            lines.push(line.join(''));
+            line = []; curW = 0; spaceIdx = -1; i++; continue;
         }
-        if (isPunc(ch) && line.length > 0) { r += line.slice(0, -1) + '\n'; line = line.slice(-1); }
-        else { r += line + '\n'; line = ''; }
-        cur = 0; space = -1;
+
+        const ww = width(ch);
+        if (curW + ww <= L) {
+            if (ch === ' ') spaceIdx = line.length;
+            line.push(ch); curW += ww; i++; continue;
+        }
+
+        const canSoft = spaceIdx >= 0 && wsum(line.slice(0, spaceIdx)) >= 3;
+        const k = leadPuncCount(chars, i);
+
+        if (canSoft) {
+            const move = Math.min(k, spaceIdx);
+            const left = line.slice(0, spaceIdx - move);
+            const right = [...line.slice(spaceIdx + 1)];
+            const carry = line.slice(spaceIdx - move, spaceIdx);
+            lines.push(left.join(''));
+            line = [...carry, ...right];
+            curW = wsum(line);
+            spaceIdx = line.lastIndexOf(' ');
+            continue;
+        } else {
+            const move = Math.min(k, line.length);
+            const left = line.slice(0, line.length - move);
+            const carry = line.slice(line.length - move);
+            lines.push(left.join(''));
+            line = [...carry];
+            curW = wsum(line);
+            spaceIdx = line.lastIndexOf(' ');
+            continue;
+        }
     }
-    return r + line;
+
+    lines.push(line.join(''));
+    return lines.join('\n');
 }
 
 const nowT = computed(() => softNow.value)
@@ -728,15 +766,12 @@ onMounted(() => {
         prefetchLyricsAround(props.currentIndex ?? 0, 1)
     }
 
-    recalcOffsets()
-    window.addEventListener('resize', recalcOffsets, { passive: true })
     slideTo(0)
     syncAnchor(Number(props.currentTime) || 0)
     startTicker()
 })
 
 onUnmounted(() => {
-    window.removeEventListener('resize', recalcOffsets)
     stopTicker(false)
 })
 
@@ -755,7 +790,6 @@ watch(activeLyricsUrl, async (url) => {
     activeLineIndex.value = 0
     autoFollow.value = true
     await nextTick()
-    recalcOffsets()
     lySwiper?.slideTo(0, 0)
     firstwait.value = true
 })
@@ -870,191 +904,174 @@ $content-br: 0.8em;
         height: 100%;
         width: 100%;
         padding: 0 1.25em;
+        position: relative;
         box-sizing: border-box;
         align-items: center;
         justify-content: space-between;
         transition: filter .3s, transform .3s;
 
-        .lyrics-left {
+        .lyrics-swiper {
+            width: 100%;
             height: 100%;
-            width: 5.25em;
-            padding: 1.75em 0.5em;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            box-sizing: border-box;
-
-            button {
-                box-sizing: border-box;
-                border-radius: $content-br;
-                border: none;
-                margin: 0;
-                height: 4.25em;
-                font-size: 1em;
-                width: 100%;
-                padding: 0;
-                position: relative;
-                box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.15);
-                transition: background-color 0.6s, opacity 0.3s, transform 0.3s, filter 0.3s, fill 0.3s;
-                fill: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #000000 50%);
-                background-color: $content-bg;
-
-                svg {
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    padding: .9em;
-                    box-sizing: border-box;
-                    position: absolute;
-                }
-
-                &:active {
-                    transform: scale(.925);
-                }
-
-                &:disabled {
-                    opacity: 0.5;
-                    transform: none;
-                }
-            }
-        }
-
-        .lyrics-right {
-            width: 82.5%;
-            height: 100%;
+            margin-top: 6.75em;
+            overflow: visible;
             position: relative;
 
-            .lyrics-swiper {
+            .lyrics-slide {
                 width: 100%;
-                height: 100%;
-                margin-top: 3.75em;
+                height: auto !important;
+                min-height: 5.5em;
+                display: flex;
                 overflow: visible;
-                position: relative;
+                align-items: center;
+                justify-content: flex-start;
+                transition: height .75s;
 
-                .lyrics-slide {
+                .lyrics-content {
+                    padding: 0.5em 1.2em;
                     width: 100%;
-                    height: auto !important;
-                    min-height: 5.5em;
-                    display: flex;
-                    overflow: visible;
-                    align-items: center;
-                    justify-content: flex-start;
-                    transition: height .75s;
+                    margin: .5em 0;
+                    border-radius: 1em;
+                    box-sizing: border-box;
+                    transition: background-color .3s;
 
-                    .lyrics-content {
-                        padding: 0.5em 1.2em;
-                        width: 100%;
-                        margin: .5em 0;
-                        border-radius: 1em;
-                        box-sizing: border-box;
-                        transition: background-color .3s;
+                    .lyrics-text {
+                        opacity: .6;
+                        font-size: 2.6em;
+                        filter: blur(.1em);
+                        transform: scale(.9);
+                        transform-origin: left;
+                        transition: transform .75s, filter .75s, opacity .75s;
+                        white-space: pre-line;
+                        word-break: normal;
 
-                        .lyrics-text {
-                            opacity: .6;
-                            font-size: 2.6em;
-                            filter: blur(.1em);
-                            transform: scale(.9);
-                            transform-origin: left;
-                            transition: transform .75s, filter .75s, opacity .75s;
-                            white-space: pre-line;
-                            word-break: normal;
+                        &.wordprog {
+                            display: inline-flex;
+                            flex-wrap: wrap;
+                            gap: .02em;
+                            white-space: pre-wrap;
 
-                            &.wordprog {
-                                display: inline-flex;
-                                flex-wrap: wrap;
-                                gap: .02em;
-                                white-space: pre-wrap;
+                            .wg {
+                                --gradient-progress: -20%;
+                                --gradient-direction: to right;
+                                --text-shadow-blur-radius: 0px;
+                                --text-shadow-opacity: 0;
 
-                                .wg {
+                                background-image: linear-gradient(var(--gradient-direction),
+                                        #000000e8 var(--gradient-progress),
+                                        #00000060 calc(var(--gradient-progress) + 20%));
+                                background-clip: text;
+                                -webkit-text-fill-color: transparent;
+                                -webkit-background-clip: text;
+                                will-change: transform;
+                                text-shadow: 0 0 var(--text-shadow-blur-radius) rgba(0, 0, 0, var(--text-shadow-opacity));
+
+                                &.past {
+                                    --gradient-progress: 100%;
+                                    transform: matrix(1, 0, 0, 1, 0, -1);
+                                }
+
+                                &.future {
                                     --gradient-progress: -20%;
-                                    --gradient-direction: to right;
-                                    --text-shadow-blur-radius: 0px;
-                                    --text-shadow-opacity: 0;
-
-                                    background-image: linear-gradient(var(--gradient-direction),
-                                            #000000e8 var(--gradient-progress),
-                                            #00000080 calc(var(--gradient-progress) + 20%));
-                                    background-clip: text;
-                                    -webkit-text-fill-color: transparent;
-                                    -webkit-background-clip: text;
-                                    will-change: transform;
-                                    text-shadow: 0 0 var(--text-shadow-blur-radius) rgba(0, 0, 0, var(--text-shadow-opacity));
-
-                                    &.past {
-                                        --gradient-progress: 100%;
-                                        transform: matrix(1, 0, 0, 1, 0, -1);
-                                    }
-
-                                    &.future {
-                                        --gradient-progress: -20%;
-                                        transform: matrix(1, 0, 0, 1, 0, 0);
-                                    }
+                                    transform: matrix(1, 0, 0, 1, 0, 0);
                                 }
                             }
                         }
                     }
+                }
 
-                    .lyrics-empty {
-                        opacity: 0;
-                        filter: blur(1em);
-                        transform: scale(0.25);
-                        transition: transform .75s, opacity .75s, filter .75s;
+                .lyrics-empty {
+                    opacity: 0;
+                    filter: blur(1em);
+                    transform: scale(0.25);
+                    transition: transform .75s, opacity .75s, filter .75s;
 
 
-                        .dot-group {
-                            gap: .75em;
-                            display: flex;
+                    .dot-group {
+                        gap: .75em;
+                        display: flex;
+                        animation: 5s ease 0s infinite normal none running heartbeat;
+                        animation-play-state: paused;
 
-                            .dot {
-                                height: 1.25em;
-                                width: 1.25em;
-                                opacity: .25;
-                                border-radius: 50%;
-                                transition: opacity .3s linear, background-color .6s;
-                                background-color: color-mix(in srgb, var(--lyntrix-color-high, #000), #000 60%);
+                        .dot {
+                            height: 1.25em;
+                            width: 1.25em;
+                            opacity: .25;
+                            border-radius: 50%;
+                            transition: opacity .3s linear, background-color .6s;
+                            background-color: color-mix(in srgb, var(--lyntrix-color-high, #000), #000 60%);
 
-                                &.current {
-                                    opacity: 1;
-                                }
+                            &.current {
+                                opacity: 1;
                             }
                         }
+                    }
+                }
+
+                &.empty {
+                    min-height: 0;
+                    height: 0 !important;
+                    padding-left: 1.2em;
+                }
+
+                &.right .lyrics-content {
+                    text-align: right;
+                    .lyrics-text {
+                        transform-origin: right;
+                    }
+                }
+
+                &.next {
+                    &.inline .lyrics-content .lyrics-text {
+                        will-change: transform, opacity, filter;
+                        filter: blur(.05em);
                     }
 
                     &.empty {
-                        min-height: 0;
-                        height: 0 !important;
-                        padding-left: 1.2em;
-                    }
-
-                    &.next {
-                        &.inline .lyrics-content .lyrics-text {
+                        .lyrics-empty {
                             will-change: transform, opacity, filter;
-                            filter: blur(.05em);
-                        }
-
-                        &.empty {
-                            .lyrics-empty {
-                                will-change: transform, opacity, filter;
-                            }
                         }
                     }
+                }
 
-                    &.active {
-                        .lyrics-content .lyrics-text {
-                            will-change: transform, opacity, filter;
-                            filter: blur(.05em);
-                        }
-
-                        &.inline .lyrics-content .lyrics-text {
-                            will-change: transform, opacity, filter;
-                            transform: none;
-                            filter: none;
-                            opacity: 1;
-                        }
+                &.active {
+                    .lyrics-content .lyrics-text {
+                        will-change: transform, opacity, filter;
+                        filter: blur(.05em);
                     }
 
-                    &.active.empty {
+                    &.inline .lyrics-content .lyrics-text {
+                        will-change: transform, opacity, filter;
+                        transform: none;
+                        filter: none;
+                        opacity: 1;
+                    }
+                }
+
+                &.active.empty {
+                    height: 5.5em !important;
+
+                    .lyrics-empty {
+                        transition: transform 1.5s, opacity 1.5s, filter 1.5s;
+                        will-change: transform, opacity, filter;
+                        transform: none;
+                        filter: none;
+                        opacity: 1;
+                    }
+                }
+
+                &:hover {
+                    .lyrics-content {
+                        background-color: #ffffff33;
+                    }
+                }
+
+                &.first {
+                    min-height: 0;
+                    height: 0 !important;
+                    padding-left: 1.2em;
+
+                    &.show {
                         height: 5.5em !important;
 
                         .lyrics-empty {
@@ -1066,61 +1083,36 @@ $content-br: 0.8em;
                         }
                     }
 
-                    &:hover {
-                        .lyrics-content {
-                            will-change: transform, opacity, filter;
-                            background-color: #ffffff33;
-                        }
-                    }
-
-                    &.first {
-                        min-height: 0;
-                        height: 0 !important;
-                        padding-left: 1.2em;
-
-                        &.show {
-                            height: 5.5em !important;
-
-                            .lyrics-empty {
-                                transition: transform 1.5s, opacity 1.5s, filter 1.5s;
-                                will-change: transform, opacity, filter;
-                                transform: none;
-                                filter: none;
-                                opacity: 1;
-                            }
-                        }
-
-                        &.playing .lyrics-empty .dot-group {
-                            animation: 5s ease 0s infinite normal none running heartbeat;
-                        }
-                    }
-
-                    &.playing.prev,
-                    &.playing.active {
-                        .lyrics-empty .dot-group {
-                            animation: 5s ease 0s infinite normal none running heartbeat;
-                        }
+                    &.playing .lyrics-empty .dot-group {
+                        animation-play-state: running;
                     }
                 }
 
-                &:hover {
-                    .lyrics-slide .lyrics-content .lyrics-text {
-                        filter: none !important;
+                &.playing.prev,
+                &.playing.active {
+                    .lyrics-empty .dot-group {
+                        animation-play-state: running;
                     }
                 }
+            }
 
-                @keyframes heartbeat {
-                    0% {
-                        transform: scale(.85);
-                    }
+            &:hover {
+                .lyrics-slide .lyrics-content .lyrics-text {
+                    filter: none !important;
+                }
+            }
 
-                    50% {
-                        transform: scale(1.15);
-                    }
+            @keyframes heartbeat {
+                0% {
+                    transform: scale(.85);
+                }
 
-                    100% {
-                        transform: scale(.85);
-                    }
+                50% {
+                    transform: scale(1.15);
+                }
+
+                100% {
+                    transform: scale(.85);
                 }
             }
         }
