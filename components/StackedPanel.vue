@@ -11,7 +11,7 @@
                 :class="{ active: props.tracks[props.currentIndex].lyrics ? pageIndex === index : pageIndex === index + 1 }"
                 class="indicator" @click="slideTo(index)" data-pointer></span>
         </div>
-        
+
         <swiper :slidesPerView="1" :direction="'vertical'" :allowTouchMove="true" :effect="'creative'"
             :modules="[EffectCreative]" :creativeEffect="{
                 prev: { translate: [0, '10%', -1], opacity: 0, scale: 0.95 },
@@ -204,13 +204,13 @@
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { Swiper, SwiperSlide } from 'swiper/vue'
 import { EffectCreative, Mousewheel } from 'swiper/modules'
-import 'swiper/css'
-import 'swiper/css/effect-creative'
 import { useArtworkCache } from '@/composables/audio/useArtworkCache'
+import 'swiper/css/effect-creative'
+import 'swiper/css'
 
-/** ========================
+/* =======================
  * Types
- * ====================== */
+ * ======================= */
 interface EqualizerBand { text: string; feq: number; value: number; }
 interface TrackItem { title: string; author: string; file: string; image?: string; lyrics?: string }
 
@@ -220,8 +220,7 @@ type WordSpan = {
     e: number;              // End Seconds
     tx: string;             // Display Text
     fx?: {
-        blur?: number;        // text-shadow blur px
-        op?: number;          // text-shadow opacity [0..1]
+        highlight?: boolean;          // text-shadow opacity [0..1]
         dir?: 'to right' | 'to left';
     }
 }
@@ -239,9 +238,9 @@ type Lyntrics = {
     sec?: any[]   // section: [type, begin, end, agentId?, lines[]], line: [key, begin, end, text, spans?]
 }
 
-/** ========================
+/* =======================
  * Props / Emits / v-model
- * ====================== */
+ * ======================= */
 interface Props {
     modelValue?: EqualizerBand[];
     tracks?: TrackItem[];
@@ -282,9 +281,9 @@ const emit = defineEmits<{
     'seek-to': [timeSec: number];
 }>()
 
-/** ========================
+/* =======================
  * Swiper
- * ====================== */
+ * ======================= */
 let swiperInstance: any = null
 let swiperListInstance: any = null
 const pageIndex = ref(0)
@@ -299,9 +298,9 @@ const listnext = () => { swiperListInstance?.slideNext() }
 const listprev = () => { swiperListInstance?.slidePrev() }
 const onListSlideChange = (swiper: any) => { listIndex.value = swiper.activeIndex }
 
-/** ========================
+/* =======================
  * Equalizer
- * ====================== */
+ * ======================= */
 const equvolume = computed({
     get: () => props.modelValue,
     set: (value) => emit('update:modelValue', value)
@@ -350,9 +349,9 @@ const switcheqctrl = () => {
     try { localStorage.setItem('equalizerEnable', String(newValue)) } catch { }
 }
 
-/** ========================
+/* =======================
  * Playlist
- * ====================== */
+ * ======================= */
 const listTracks = computed(() =>
     (props.tracks ?? []).map((t, idx) => ({ ...t, __index: idx }))
 )
@@ -371,9 +370,9 @@ async function ensureNeighbors(center: number) {
     }
 }
 
-/** ========================
+/* =======================
  * Lyrics Cache & Parsers
- * ====================== */
+ * ======================= */
 const lyricsCache: Map<string, Promise<ParsedLyrics>> = new Map();
 
 /** LRC 解析（原样） */
@@ -455,7 +454,7 @@ function lyntricsToLines(lyn: Lyntrics): LyricLine[] {
                         const b = Number(s[1]); const e = Number(s[2])
                         const m = s[3] || {}
                         const fx = (m && typeof m === 'object')
-                            ? { blur: m.blur ?? m.blr, op: m.opacity ?? m.op, dir: m.dir }
+                            ? { highlight: m[0], dir: m[1] }
                             : undefined
                         if (Number.isFinite(b) && Number.isFinite(e) && tx !== '') spans.push({ b, e, tx, fx })
                     } else if (s && typeof s === 'object') {
@@ -481,32 +480,32 @@ function lyntricsToLines(lyn: Lyntrics): LyricLine[] {
 }
 
 function parseLyntricsObject(obj: any): ParsedLyrics {
-  try {
-    const agPairs = Array.isArray(obj?.ag) ? (obj.ag as any[]) : []
-    const agMap: Record<string, string> = {}
-    for (const pair of agPairs) {
-      if (Array.isArray(pair) && typeof pair[0] === 'string' && typeof pair[1] === 'string') {
-        agMap[pair[0]] = pair[1]
-      }
+    try {
+        const agPairs = Array.isArray(obj?.ag) ? (obj.ag as any[]) : []
+        const agMap: Record<string, string> = {}
+        for (const pair of agPairs) {
+            if (Array.isArray(pair) && typeof pair[0] === 'string' && typeof pair[1] === 'string') {
+                agMap[pair[0]] = pair[1]
+            }
+        }
+
+        const lines = lyntricsToLines(obj as Lyntrics)
+
+        return { meta: { agMap }, lines }
+    } catch {
+        return { meta: {}, lines: [] }
     }
-
-    const lines = lyntricsToLines(obj as Lyntrics)
-
-    return { meta: { agMap }, lines }
-  } catch {
-    return { meta: {}, lines: [] }
-  }
 }
 
 const agentPosMap = computed<Record<string, string>>(
-  () => ((lyrics.value?.meta as any)?.agMap ?? {})
+    () => ((lyrics.value?.meta as any)?.agMap ?? {})
 )
 
 const isLineRight = (line: LyricLine) => {
-  const ag = line.ag
-  if (!ag) return false
-  const pos = agentPosMap.value[ag]
-  return pos === 'o'
+    const ag = line.ag
+    if (!ag) return false
+    const pos = agentPosMap.value[ag]
+    return pos === 'o'
 }
 
 /** AutoLoad（.lyntrics.json / .lrc） */
@@ -559,9 +558,9 @@ function prefetchLyricsAround(center: number, span = 1) {
     }
 }
 
-/** ========================
+/* =======================
  * Lyrics Status + rAF
- * ====================== */
+ * ======================= */
 const currentTrack = computed(() => props.tracks?.[props.currentIndex ?? 0])
 const activeLyricsUrl = computed(() => currentTrack.value?.lyrics || '')
 const lyrics = ref<ParsedLyrics | null>(null)
@@ -729,19 +728,35 @@ function spanProgress(s: WordSpan, t: number): number {
 }
 function wordClass(s: WordSpan) {
     const t = nowT.value
-    return t < s.b ? 'future' : (t > s.e ? 'past' : 'current')
+    return t < s.b ? `future` : (t > s.e ? `past` : `current`)
 }
 function wordStyle(s: WordSpan) {
-    const p = spanProgress(s, nowT.value)
-    const gp = (p <= 0) ? '-20%' : (p >= 1 ? '100%' : `${(p * 100).toFixed(6)}%`)
-    const ty = (p <= 0 ? 0 : (p >= 1 ? -1 : -1 * p))
-    return {
+    const p = spanProgress(s, nowT.value);
+
+    const before = p <= 0;
+    const after = p >= 1;
+    const active = !before && !after;
+
+    const gp = before ? '-20%' : after ? '100%' : `${(p * 120 - 20).toFixed(6)}%`;
+    const t = before ? 0 : after ? 1 : p;
+    const easeT = 0.5 * (1 - Math.cos(Math.PI * t));
+    const ty = before ? 0 : after ? -1 : -easeT;
+    const hump = active ? 4 * easeT * (1 - easeT) : 0;
+
+    const ts = (before || after) ? '0.25em' : `${(0.25 + 0.25 * hump).toFixed(6)}em`;
+    const op = (before || after) ? '0' : (0.75 * hump).toFixed(6);
+
+    const out: Record<string, string> = {
         '--gradient-progress': gp,
         '--gradient-direction': s.fx?.dir ?? 'to right',
-        ...(s.fx?.blur != null ? { '--text-shadow-blur-radius': `${s.fx.blur}px` } : null),
-        ...(s.fx?.op != null ? { '--text-shadow-opacity': `${s.fx.op}` } : null),
         transform: `matrix(1, 0, 0, 1, 0, ${ty.toFixed(6)})`,
-    } as Record<string, string>
+    };
+
+    if (s.fx?.highlight != null) {
+        out['--text-shadow-blur-radius'] = ts;
+        out['--text-shadow-opacity'] = op;
+    }
+    return out;
 }
 
 onMounted(() => {
@@ -844,9 +859,8 @@ defineExpose({ toggleAutoFollow, jumpLyric })
 </script>
 
 <style lang="scss">
-$content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
 $content-br: 0.8em;
-
+$content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
 
 .stacked-wrapper {
     width: 100%;
@@ -933,7 +947,7 @@ $content-br: 0.8em;
                     margin: .5em 0;
                     border-radius: 1em;
                     box-sizing: border-box;
-                    transition: background-color .3s;
+                    transition: background-color .3s, transform .3s;
 
                     .lyrics-text {
                         opacity: .6;
@@ -1016,6 +1030,7 @@ $content-br: 0.8em;
 
                 &.right .lyrics-content {
                     text-align: right;
+
                     .lyrics-text {
                         transform-origin: right;
                     }
@@ -1025,6 +1040,10 @@ $content-br: 0.8em;
                     &.inline .lyrics-content .lyrics-text {
                         will-change: transform, opacity, filter;
                         filter: blur(.05em);
+                    }
+
+                    .lyrics-content .lyrics-text {
+                        opacity: .85;
                     }
 
                     &.empty {
@@ -1062,7 +1081,14 @@ $content-br: 0.8em;
 
                 &:hover {
                     .lyrics-content {
-                        background-color: #ffffff33;
+                        background-color: #00000011;
+                    }
+                }
+
+                &:active {
+                    .lyrics-content {
+                        transform: scale(.975);
+                        background-color: #00000022;
                     }
                 }
 
