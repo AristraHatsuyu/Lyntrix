@@ -20,10 +20,11 @@
             <swiper-slide class="stacked-slide">
                 <div class="card">
                     <div class="lyrics-card">
-                        <swiper class="lyrics-swiper" :direction="'vertical'" :mousewheel="true" :modules="[Mousewheel]"
-                            :speed="750" :slidesPerView="'auto'" :freeMode="{ enabled: true, sticky: true }"
-                            :observeParents="true" :observeSlideChildren="true" :roundLengths="true"
-                            :watchSlidesProgress="true" @swiper="onLyricsSwiper">
+                        <swiper class="lyrics-swiper" :class="{ change: inswitchlr }" :direction="'vertical'"
+                            :mousewheel="true" :modules="[Mousewheel]" :speed="750" :slidesPerView="'auto'"
+                            :freeMode="{ enabled: true, sticky: true }" :observeParents="true"
+                            :observeSlideChildren="true" :roundLengths="true" :watchSlidesProgress="true"
+                            @swiper="onLyricsSwiper">
                             <template v-if="hasLyrics">
                                 <swiper-slide class="lyrics-slide first"
                                     :class="{ show: firstwait && activeLines[0].t > props.currentTime + 1 && activeLines[0].t > 5, playing: isPlaying }">
@@ -41,12 +42,8 @@
                                         </div>
                                     </div>
                                 </swiper-slide>
-                                <swiper-slide
-                                    v-for="(line, idx) in activeLines"
-                                    :key="idx"
-                                    class="lyrics-slide"
-                                    @click.stop="line.main != '' ? onClickLyric(idx, line.t) : ''"
-                                    :class="{
+                                <swiper-slide v-for="(line, idx) in activeLines" :key="idx" class="lyrics-slide"
+                                    @click.stop="line.main != '' ? onClickLyric(idx, line.t) : ''" :class="{
                                         active: idx === activeLineIndex,
                                         next: idx === activeLineIndex + 1,
                                         prev: idx === activeLineIndex - 1,
@@ -54,9 +51,7 @@
                                         empty: line.main == '',
                                         playing: isPlaying,
                                         right: isLineRight(line)
-                                    }"
-                                    data-pointer
-                                    >
+                                    }" data-pointer>
                                     <div class="lyrics-content" v-if="line.main != ''">
                                         <div v-if="line.spans?.length" class="lyrics-text wordprog">
                                             <span v-for="(wg, wi) in line.spans" :key="wi" class="wg"
@@ -207,6 +202,7 @@ import { EffectCreative, Mousewheel } from 'swiper/modules'
 import { useArtworkCache } from '@/composables/audio/useArtworkCache'
 import 'swiper/css/effect-creative'
 import 'swiper/css'
+import { DateTime } from 'luxon'
 
 /* =======================
  * Types
@@ -289,6 +285,7 @@ let swiperListInstance: any = null
 const pageIndex = ref(0)
 const listIndex = ref(0)
 const firstwait = ref(false)
+const inswitchlr = ref(true)
 const onSwiper = (swiper: any) => { swiperInstance = swiper }
 const onSwiperList = (swiper: any) => { swiperListInstance = swiper }
 const onSlideChange = (swiper: any) => { pageIndex.value = swiper.activeIndex }
@@ -548,13 +545,13 @@ async function ensureLyrics(url: string): Promise<ParsedLyrics> {
     return p
 }
 
-function prefetchLyricsAround(center: number, span = 1) {
+async function prefetchLyricsAround(center: number, span = 1) {
     const n = props.tracks?.length ?? 0
     if (!n) return
     for (let d = -span; d <= span; d++) {
         const j = (center + d + n) % n
         const url = props.tracks?.[j]?.lyrics
-        if (url) void ensureLyrics(url)
+        if (url) void await ensureLyrics(url)
     }
 }
 
@@ -629,7 +626,9 @@ const FOLLOW_MIN_INTERVAL_MS = 200
 let lastFollowTs = 0
 function followToIndex(idx: number, force = false) {
     if (!lySwiper) return
-    if (document.querySelector('.lyrics-slide.prev.empty')) lySwiper?.update()
+    if (!document.querySelector('.lyrics-slide.active.empty') && !document.querySelector('.lyrics-slide.first.show') && activeLineIndex.value !== 0) {
+        lySwiper?.update()
+    }
     const now = performance.now()
     if (!force && (now - lastFollowTs) < FOLLOW_MIN_INTERVAL_MS) return
     lastFollowTs = now
@@ -759,7 +758,7 @@ function wordStyle(s: WordSpan) {
     return out;
 }
 
-onMounted(() => {
+onMounted(async () => {
     try {
         const saved = localStorage.getItem('equalizerSettings')
         if (saved) {
@@ -775,15 +774,16 @@ onMounted(() => {
         }
     } catch { }
 
-    if (props.tracks?.length) {
-        primeAll(props.tracks)
-        ensureNeighbors(props.currentIndex ?? 0)
-        prefetchLyricsAround(props.currentIndex ?? 0, 1)
-    }
-
     slideTo(0)
     syncAnchor(Number(props.currentTime) || 0)
     startTicker()
+
+    if (props.tracks?.length) {
+        primeAll(props.tracks)
+        ensureNeighbors(props.currentIndex ?? 0)
+        await prefetchLyricsAround(props.currentIndex ?? 0, 1)
+        inswitchlr.value = false;
+    }
 })
 
 onUnmounted(() => {
@@ -801,7 +801,9 @@ watch(activeLyricsUrl, async (url) => {
     const parsed = await ensureLyrics(url)
     const patched = { ...parsed, lines: patchWaitDots(parsed.lines) }
     firstwait.value = false
-    lyrics.value = patched
+    setTimeout(() => {
+        lyrics.value = patched
+    }, 500);
     activeLineIndex.value = 0
     autoFollow.value = true
     await nextTick()
@@ -842,10 +844,18 @@ watch(softNow, (t) => {
     }
 })
 
+const cacheidx = ref()
+
 watch(() => props.currentIndex, (idx) => {
     if (typeof idx === 'number') {
-        ensureNeighbors(idx)
-        prefetchLyricsAround(idx, 1)
+        inswitchlr.value = true
+        const Ttime = Date.now()
+        cacheidx.value = Ttime
+        setTimeout(async () => {
+            ensureNeighbors(idx)
+            await prefetchLyricsAround(idx, 1)
+            if (Ttime === cacheidx.value) inswitchlr.value = false
+        }, 500);
         if (pageIndex.value != 2) {
             slideTo(0)
             setTimeout((idxs = idx) => {
@@ -930,6 +940,7 @@ $content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
             margin-top: 6.75em;
             overflow: visible;
             position: relative;
+            transition: filter .5s, opacity .5s;
 
             .lyrics-slide {
                 width: 100%;
@@ -1126,6 +1137,11 @@ $content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
                 .lyrics-slide .lyrics-content .lyrics-text {
                     filter: none !important;
                 }
+            }
+
+            &.change {
+                filter: blur(.5em);
+                opacity: 0;
             }
 
             @keyframes heartbeat {
@@ -1509,7 +1525,12 @@ $content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
 
 html.dark-mode .stacked-wrapper {
     .card {
-        background-color: #a3e9ff22;
+        background-color: #a3e9ff18;
+
+        .lyrics-card .lyrics-swiper .lyrics-slide .lyrics-content .lyrics-text.wordprog .wg {
+            background-image: linear-gradient(var(--gradient-direction), #78c6ff var(--gradient-progress), #78c6ff52 calc(var(--gradient-progress) + 20%));
+            text-shadow: 0 0 var(--text-shadow-blur-radius) rgba(120, 198, 255, var(--text-shadow-opacity));
+        }
 
         .queue-card {
             .queue-left button {
