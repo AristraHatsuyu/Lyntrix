@@ -202,7 +202,6 @@ import { EffectCreative, Mousewheel } from 'swiper/modules'
 import { useArtworkCache } from '@/composables/audio/useArtworkCache'
 import 'swiper/css/effect-creative'
 import 'swiper/css'
-import { DateTime } from 'luxon'
 
 /* =======================
  * Types
@@ -626,9 +625,15 @@ const FOLLOW_MIN_INTERVAL_MS = 200
 let lastFollowTs = 0
 function followToIndex(idx: number, force = false) {
     if (!lySwiper) return
-    if (!document.querySelector('.lyrics-slide.active.empty') && !document.querySelector('.lyrics-slide.first.show') && activeLineIndex.value !== 0) {
-        lySwiper?.update()
+    function checkallowupdate() {
+        const allZero =
+            Array.from(document.querySelectorAll<HTMLElement>('.lyrics-slide.empty'))
+                .every(el => el.offsetHeight === 0);
+        const firstZero = document.querySelector<HTMLElement>('.lyrics-slide.first')?.offsetHeight === 0
+
+        return allZero && firstZero && activeLineIndex.value !== 0
     }
+    if (checkallowupdate()) lySwiper?.update()
     const now = performance.now()
     if (!force && (now - lastFollowTs) < FOLLOW_MIN_INTERVAL_MS) return
     lastFollowTs = now
@@ -807,8 +812,11 @@ watch(activeLyricsUrl, async (url) => {
     activeLineIndex.value = 0
     autoFollow.value = true
     await nextTick()
+    lySwiper?.update()
     lySwiper?.slideTo(0, 0)
-    firstwait.value = true
+    setTimeout(() => {
+        firstwait.value = true    
+    }, 500);
 })
 
 watch(() => props.currentTime, (t) => {
