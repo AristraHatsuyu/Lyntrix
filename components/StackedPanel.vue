@@ -54,8 +54,14 @@
                                     }" data-pointer>
                                     <div class="lyrics-content" v-if="line.main != ''">
                                         <div v-if="line.spans?.length" class="lyrics-text wordprog">
-                                            <span v-for="(wg, wi) in line.spans" :key="wi" class="wg"
-                                                :class="wordClass(wg)" :style="wordStyle(wg)">{{ wg.tx }}</span>
+                                            <div v-for="(wg, wi) in line.spans" :key="wi">
+                                                <span v-if="!wg.fx?.highlight" class="wg" :class="wordClass(wg)"
+                                                    :style="wordStyle(wg)">{{ wg.tx }}</span>
+                                                <span v-else v-for="(item, index) in wg.tx" class="wg fx" :key="index"
+                                                    :class="wordClass(wg)" :style="wordfxStyle(wg, index)">
+                                                    {{ item }}
+                                                </span>
+                                            </div>
                                         </div>
                                         <div v-else class="lyrics-text">{{ wrapDisplay(line.main) }}</div>
                                     </div>
@@ -611,11 +617,11 @@ function stopTicker(update = true) {
     if (update) softNow.value = anchorMediaTime
 }
 
-function binarySearch(lines: LyricLine[], t: number): number {
+function binarySearch(lines: LyricLine[], t: number, delay: number = 0): number {
     let lo = 0, hi = lines.length - 1, ans = 0
     while (lo <= hi) {
         const mid = (lo + hi) >> 1
-        if (lines[mid].t <= t) { ans = mid; lo = mid + 1 }
+        if (lines[mid].t <= t-delay) { ans = mid; lo = mid + 1 }
         else hi = mid - 1
     }
     return ans
@@ -730,6 +736,17 @@ function spanProgress(s: WordSpan, t: number): number {
     const dur = Math.max(1e-4, s.e - s.b)
     return (t - s.b) / dur
 }
+function charProgress(s: WordSpan, i: number, t: number): number {
+    if (!Number.isFinite(s.b) || !Number.isFinite(s.e)) return 0
+    const n = t - s.b
+    const dur = Math.max(1e-4, s.e - s.b)
+    const charDur = dur / (s.tx.length || 1)
+    const charStart = i * charDur
+    const charEnd = charStart + charDur
+    if (t <= s.b + charStart) return 0
+    if (t >= s.b + charEnd) return 1
+    return (n - charStart) / charDur
+}
 function wordClass(s: WordSpan) {
     const t = nowT.value
     return t < s.b ? `future` : (t > s.e ? `past` : `current`)
@@ -739,28 +756,66 @@ function wordStyle(s: WordSpan) {
 
     const before = p <= 0;
     const after = p >= 1;
-    const active = !before && !after;
 
     const gp = before ? '-20%' : after ? '100%' : `${(p * 120 - 20).toFixed(6)}%`;
     const t = before ? 0 : after ? 1 : p;
     const easeT = 0.5 * (1 - Math.cos(Math.PI * t));
-    const ty = before ? 0 : after ? -1 : -easeT;
-    const hump = active ? 4 * easeT * (1 - easeT) : 0;
-
-    const ts = (before || after) ? '0.25em' : `${(0.25 + 0.25 * hump).toFixed(6)}em`;
-    const op = (before || after) ? '0' : (0.75 * hump).toFixed(6);
+    const ty = before ? 0 : after ? -1.5 : -easeT * 1.5;
 
     const out: Record<string, string> = {
         '--gradient-progress': gp,
         '--gradient-direction': s.fx?.dir ?? 'to right',
         transform: `matrix(1, 0, 0, 1, 0, ${ty.toFixed(6)})`,
     };
-
-    if (s.fx?.highlight != null) {
-        out['--text-shadow-blur-radius'] = ts;
-        out['--text-shadow-opacity'] = op;
-    }
     return out;
+}
+function wordfxStyle(s: WordSpan, i: number) {
+    const p = charProgress(s, i, nowT.value);
+    const before = p <= 0;
+    const after = p >= 1;
+    const gp = before ? '-20%' : after ? '100%' : `${(p * 120 - 20).toFixed(6)}%`;
+
+    const P = spanProgress(s, nowT.value);
+    const nChars = Math.max(1, s.tx.length || 1);
+    const phaseDur = 1 / 3;
+    const delta = nChars > 1 ? phaseDur / (nChars - 1) : 0;
+
+    const startF = i * delta;
+    const endF = startF + phaseDur;
+    const startB = endF;
+    const endB = startB + phaseDur;
+
+    const ease = (x: number) => 0.5 * (1 - Math.cos(Math.PI * Math.min(1, Math.max(0, x))));
+    let E = 0;
+    if (P > startF && P < endF) {
+        const u = (P - startF) / phaseDur;
+        E = ease(u);
+    } else if (P >= endF && P < endB) {
+        const u = (P - endF) / phaseDur;
+        E = 1 - ease(u);
+    } else {
+        E = 0;
+    }
+
+    const dur = Math.max(1e-4, s.e - s.b);
+
+    const t = before ? 0 : after ? 1 : p;
+    const easeT = 0.5 * (1 - Math.cos(Math.PI * t));
+    const tyn = before ? 0 : after ? -1.5 : -easeT * 1.5;
+
+    const ty = dur > 2 ? tyn - E : tyn;
+    const ts = (0.25 + 0.25 * E).toFixed(6) + 'em';
+    const op = (0.75 * E).toFixed(6);
+
+    const sxy = dur > 2 ? 1 + 0.125 * E : 1;
+
+    return {
+        '--gradient-progress': gp,
+        '--gradient-direction': s.fx?.dir ?? 'to right',
+        '--text-shadow-blur-radius': ts,
+        '--text-shadow-opacity': op,
+        transform: `matrix(${sxy.toFixed(10)}, 0, 0, ${sxy.toFixed(10)}, 0, ${ty.toFixed(10)})`,
+    } as Record<string, string>;
 }
 
 onMounted(async () => {
@@ -845,7 +900,7 @@ watch(() => props.isPlaying, (p) => {
 
 watch(softNow, (t) => {
     if (!hasLyrics.value) return
-    const idx = binarySearch(activeLines.value, t)
+    const idx = binarySearch(activeLines.value, t, -0.3)
     if (idx !== activeLineIndex.value) {
         activeLineIndex.value = idx
         if (autoFollow.value) followToIndex(idx)
@@ -987,8 +1042,6 @@ $content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
                             .wg {
                                 --gradient-progress: -20%;
                                 --gradient-direction: to right;
-                                --text-shadow-blur-radius: 0px;
-                                --text-shadow-opacity: 0;
 
                                 background-image: linear-gradient(var(--gradient-direction),
                                         #000000e8 var(--gradient-progress),
@@ -996,8 +1049,16 @@ $content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
                                 background-clip: text;
                                 -webkit-text-fill-color: transparent;
                                 -webkit-background-clip: text;
+                                display: inline-block;
                                 will-change: transform;
-                                text-shadow: 0 0 var(--text-shadow-blur-radius) rgba(0, 0, 0, var(--text-shadow-opacity));
+                                transition: .1s;
+
+                                &.fx {
+                                    --text-shadow-blur-radius: 0px;
+                                    --text-shadow-opacity: 0;
+
+                                    text-shadow: 0 0 var(--text-shadow-blur-radius) rgba(0, 0, 0, var(--text-shadow-opacity));
+                                }
 
                                 &.past {
                                     --gradient-progress: 100%;
@@ -1582,7 +1643,8 @@ html.dark-mode .stacked-wrapper {
     }
 
     .indicators {
-        .indicator {  background-color: #a3e9ff55;
+        .indicator {
+            background-color: #a3e9ff55;
 
             &.active {
                 background-color: #78c6ff;

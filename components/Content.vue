@@ -773,11 +773,13 @@ const handleProjectClick = (event: MouseEvent) => {
                     font-size: calc(var(--square-size) * 0.26);
                     line-height: calc(var(--square-size) * 0.26);
                     margin-bottom: calc(var(--square-size) * 0.1);
+                    transition: font-size .6s, line-height .6s, margin .6s;
                 }
 
                 .description {
                     flex: 1 1 0%;
                     opacity: 0.8;
+                    transition: font-size .6s;
                     font-size: calc(var(--square-size) * 0.2);
                 }
 
