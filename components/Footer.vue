@@ -172,6 +172,10 @@ html.forcewidget .footer {
     pointer-events: none;
 }
 
+html.music-fullscr .footer {
+    opacity: 0;
+}
+
 .about {
     position: fixed;
     top: 0;
@@ -259,6 +263,6 @@ html.forcewidget .footer {
 .fadec-enter-to,
 .fadec-leave-from {
     opacity: 1;
-    filter: blur(0px);
+    filter: none;
 }
 </style>

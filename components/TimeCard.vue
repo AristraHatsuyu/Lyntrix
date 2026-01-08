@@ -277,13 +277,13 @@ onUnmounted(() => {
             .digit-enter-to {
                 transform: translateY(-100%);
                 opacity: 1;
-                filter: blur(0px)
+                filter: none
             }
 
             .digit-leave-from {
                 transform: translateY(0);
                 opacity: 1;
-                filter: blur(0px)
+                filter: none
             }
 
             .digit-leave-to {

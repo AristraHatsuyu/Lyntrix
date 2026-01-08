@@ -94,7 +94,7 @@ onMounted(() => {
     100% {
         opacity: 1;
         transform: translateY(0);
-        filter: blur(0);
+        filter: none;
     }
 }
 
@@ -108,7 +108,7 @@ onMounted(() => {
     100% {
         opacity: 1;
         transform: translateY(0);
-        filter: blur(0);
+        filter: none;
     }
 }
 </style>

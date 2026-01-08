@@ -1,6 +1,6 @@
 <template>
-    <div class="music-widget">
-        <div class="picture">
+    <div class="music-widget" :class="{ 'lytrics': currentTrack?.lyrics }">
+        <div class="picture" :class="{ isPlaying }">
             <AlbumCover :image-url="currentTrack?.image" :direction="albumCoverDirection" />
         </div>
         <div class="info" :class="{ 'involume': entervolume }">
@@ -76,6 +76,9 @@
                 :current-time="player.currentTime.value" :is-playing="player.isPlaying.value"
                 @change="onEqualizerChanged" @play-item="handlePlayItem" @cycle-mode="handleCycleMode"
                 @seek-to="handleSeekFromLyrics" />
+        </div>
+        <div class="exitfullscr" @click="exitfullscr">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M393.4 41.4c12.5-12.5 32.8-12.5 45.3 0s12.5 32.8 0 45.3L269.3 256 438.6 425.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 301.3 54.6 470.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L178.7 256 9.4 86.6C-3.1 74.1-3.1 53.9 9.4 41.4s32.8-12.5 45.3 0L224 210.7 393.4 41.4z"/></svg>
         </div>
     </div>
 </template>
@@ -169,6 +172,11 @@ const handleSeekFromLyrics = (sec: number) => {
     if (dur <= 0) return;
     const pct = Math.max(0, Math.min(100, (sec / dur) * 100));
     player.setProgressValue(pct);
+};
+
+const exitfullscr = () => {
+    const htmlEl = document.documentElement;
+    htmlEl.classList.remove('music-fullscr');
 };
 
 player.setNavigator({
@@ -469,6 +477,32 @@ watch(() => props.data, (val) => { player.setPlaylist(val); });
         display: flex;
 
     }
+
+    .exitfullscr {
+        position: absolute;
+        top: 2.4rem;
+        left: 2.4rem;
+        width: 5rem;
+        height: 5rem;
+        border-radius: 1rem;
+        background-color: #ffffff33;
+        opacity: 0;
+        pointer-events: none;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: background-color .3s;
+
+        &:hover {
+            background-color: #FFFFFF55;
+        }
+
+        svg {
+            width: 2.5rem;
+            height: 2.5rem;
+            fill: #fff;
+        }
+    }
 }
 
 .content.infocus {
@@ -548,6 +582,113 @@ watch(() => props.data, (val) => { player.setPlaylist(val); });
     }
 }
 
+html.music-fullscr .content .matrix .widget {
+    &[data-float-item=music] {
+        .music-widget {
+            padding: 0 calc(50vw - 65rem);
+            color: #FFFFFF;
+            font-size: 1.35rem;
+            transition: .3s;
+
+            .picture {
+                transition: margin .3s, height .3s, width .3s;
+                margin-left: 40rem;
+                margin-top: 12.5rem;
+                height: 50rem;
+                width: 50rem;
+            }
+
+            .info {
+                transition: .3s;
+                transform: translate(40rem, -10rem);
+                width: 50rem;
+
+                &.involume {
+                    width: 34rem;
+                    transition: transform 0.6s, width 0.3s;
+                }
+
+                .volume {
+                    transform: translate(34rem, -10rem);
+                    fill: #ffffffcc;
+
+                    .progresscon:hover {
+                        background-color: #ffffff55;
+
+                        .progress {
+                            background-color: #ffffff80;
+                        }
+                    }
+                }
+            }
+
+            .controls {
+                transition: .3s;
+                transform: translate(40rem, -20rem);
+                width: 50rem;
+
+                .ctrlbtns {
+                    color: #FFFFFF;
+
+                    .ctrlitem {
+                        opacity: .8;
+                    }
+                }
+
+                .rangeinput .ctrlprogress {
+                    background-color: #ffffff30;
+
+                    .progress {
+                        background-color: #ffffff80;
+
+                        &.load {
+                            background-color: #ffffff3a;
+                        }
+                    }
+                }
+            }
+
+            .panel {
+                transition: .3s;
+                margin-left: 27.5rem;
+                top: 0;
+                width: 70rem;
+                height: 100vh;
+                opacity: 0;
+                font-size: 1.8rem;
+                pointer-events: none;
+            }
+
+            .exitfullscr {
+                opacity: 1;
+                pointer-events: auto;
+            }
+
+            &.lytrics {
+                padding: 0 max(calc(50vw - 65rem), 10rem);
+
+                .picture {
+                    margin-left: 0;
+                }
+
+                .info {
+                    transform: translate(0, -10rem);
+                }
+
+                .controls {
+                    transform: translate(0, -20rem);
+                }
+
+                .panel {
+                    pointer-events: auto;
+                    margin-left: 60rem;
+                    opacity: 1;
+                }
+            }
+        }
+    }
+}
+
 html.dark-mode {
     .music-widget {
         .info {
@@ -614,7 +755,7 @@ html.dark-mode {
 .faded-leave-from {
     opacity: 1;
     transform: none;
-    filter: blur(0);
+    filter: none;
 }
 
 .fadee-enter-active,
@@ -633,6 +774,6 @@ html.dark-mode {
 .fadee-leave-from {
     opacity: 1;
     transform: none;
-    filter: blur(0);
+    filter: none;
 }
 </style>

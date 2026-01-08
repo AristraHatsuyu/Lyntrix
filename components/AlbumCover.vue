@@ -69,7 +69,7 @@ onBeforeUnmount(() => {
     position: relative;
     width: 100%;
     height: 100%;
-    transition: perspective .6s;
+    transition: perspective .6s, transform .5s;
     perspective: calc(var(--square-size) * 1.25);
 }
 
@@ -100,6 +100,23 @@ onBeforeUnmount(() => {
     }
 }
 
+html.music-fullscr .content .matrix .widget {
+    &[data-float-item=music] {
+        .music-widget .picture {
+            .album-cover-container {
+                perspective: 150rem;
+                transform: scale(.85);
+            }
+
+            &.isPlaying{
+                .album-cover-container {
+                    transform: none;
+                }
+            }
+        }
+    }
+}
+
 html.dark-mode .music-widget .picture .album-cover {
     background-color: #78c6ff80;
 }
@@ -121,7 +138,7 @@ $ease-outs: cubic-bezier(0.4, 0, 0.2, 1);
 .flip-prev-leave-to {
     transform: rotateY(-90deg) scale(0.85);
     opacity: 0;
-    filter: blur(5px);
+    filter: blur(1rem);
 }
 
 .flip-prev-enter-active {
@@ -135,13 +152,13 @@ $ease-outs: cubic-bezier(0.4, 0, 0.2, 1);
 .flip-prev-enter-from {
     transform: rotateY(90deg) scale(0.85);
     opacity: 0.35;
-    filter: blur(5px);
+    filter: blur(1rem);
 }
 
 .flip-prev-enter-to {
     transform: rotateY(0deg) scale(1);
     opacity: 1;
-    filter: blur(0);
+    filter: none;
 }
 
 .flip-next-leave-active {
@@ -155,7 +172,7 @@ $ease-outs: cubic-bezier(0.4, 0, 0.2, 1);
 .flip-next-leave-to {
     transform: rotateY(90deg) scale(0.85);
     opacity: 0;
-    filter: blur(5px);
+    filter: blur(1rem);
 }
 
 .flip-next-enter-active {
@@ -169,12 +186,12 @@ $ease-outs: cubic-bezier(0.4, 0, 0.2, 1);
 .flip-next-enter-from {
     transform: rotateY(-90deg) scale(0.85);
     opacity: 0.35;
-    filter: blur(5px);
+    filter: blur(1rem);
 }
 
 .flip-next-enter-to {
     transform: rotateY(0deg) scale(1);
     opacity: 1;
-    filter: blur(0);
+    filter: none;
 }
 </style>

@@ -2,7 +2,8 @@
     <div class="content" :class="{ 'infocus': infocus, 'inanim': floatingEl }" ref="htmlEl">
         <div class="matrix">
             <CardContainer v-for="(data, index) in widgetdata" :key="index" class="widget" :columns="data.columns"
-                :rows="data.row" :mcolumns="data.mcolumns" :mrows="data.mrow" :infocus="infocus" @dblclick="handleDoubleClick">
+                :rows="data.row" :mcolumns="data.mcolumns" :mrows="data.mrow" :infocus="infocus"
+                @dblclick="handleDoubleClick">
                 <a v-if="data.type === 1" :class="{ 'single': data.row < 2 && windowWidth > 880 }" draggable="false"
                     :href="data.link ? data.link : 'javascript:;'" :target="data.link ? '_blank' : '_self'"
                     data-pointer>
@@ -18,7 +19,8 @@
                     <div v-if="data.image" class="imgcontent" :style="{ 'background-image': `url('${data.image}')` }"
                         style="border-radius: calc(var(--square-size) * 0.18); width: 110%;" />
                 </a>
-                <div v-else-if="data.type === 2" class="imgcontent" style="width: 100%; height: 100%; transition: background-size .5s;"
+                <div v-else-if="data.type === 2" class="imgcontent"
+                    style="width: 100%; height: 100%; transition: background-size .5s;"
                     :style="{ 'background-image': `url('${data.image}')`, 'background-position': `${data.left}% ${data.top}%`, 'background-size': data.scale }" />
                 <TimeCard v-else-if="data.type === 3" />
                 <AnalyticsCard v-else-if="data.type === 4" :url="data.url" />
@@ -26,7 +28,8 @@
             </CardContainer>
         </div>
         <div class="projlist">
-            <CardContainer v-for="(data, index) in projectdata" :key="index" :infocus="infocus" class="project" @click="handleProjectClick">
+            <CardContainer v-for="(data, index) in projectdata" :key="index" :infocus="infocus" class="project"
+                @click="handleProjectClick">
                 <a draggable="false" data-pointer>
                     <div class="title" href="" target="_blank">{{ data.title }}</div>
                     <div class="description">{{ data.description }}</div>
@@ -46,10 +49,10 @@ import config from "@/assets/profile.json"
 import { ref, onMounted, onUnmounted } from 'vue'
 
 declare global {
-  interface Window {
-    _preventScroll?: (e: Event) => void;
-    _preventKeys?: (e: KeyboardEvent) => void;
-  }
+    interface Window {
+        _preventScroll?: (e: Event) => void;
+        _preventKeys?: (e: KeyboardEvent) => void;
+    }
 }
 
 const widgetdata = config.widget
@@ -256,7 +259,7 @@ const floatElementWithRatio = (element: HTMLElement, aspectRatio: number, opacit
 
     const oleft = touchHoldTimer && forceTriggered.value ? rect.left - 11 : rect.left;
 
-    element.classList.add(type+'cover')
+    element.classList.add(type + 'cover')
 
     tempopacity.value = window.getComputedStyle(element).opacity
 
@@ -289,7 +292,7 @@ const floatElementWithRatio = (element: HTMLElement, aspectRatio: number, opacit
     element.style.width = `${newWidth}px`;
     element.style.height = `${newHeight}px`;
 
-    element.style.setProperty('--size', `${newWidth/50}px`);
+    element.style.setProperty('--size', `${newWidth / 50}px`);
 
     if (!opacity) {
         requestAnimationFrame(() => {
@@ -330,7 +333,7 @@ const restoreElement = () => {
             top: '',
             left: ''
         })
-        
+
 
         delete element.dataset.floatItem
 
@@ -387,11 +390,12 @@ const restoreElementWithRatio = () => {
 
 const handleDoubleClick = (event: MouseEvent) => {
     const target = event.currentTarget as HTMLElement
+    if (document.querySelector('.music-fullscr')) return;
 
     if (floatingEl.value === target) {
         infocus.value = false
         currentdisplay.value = ''
-        if (target.children[0].classList.contains('imgcontent') && widgetdata[Array.from(target.parentElement!.children).indexOf(target)-1].zoom) {
+        if (target.children[0].classList.contains('imgcontent') && widgetdata[Array.from(target.parentElement!.children).indexOf(target) - 1].zoom) {
             restoreElementWithRatio()
         } else if (target.children[0].classList.contains('music-widget')) {
             restoreElementWithRatio()
@@ -428,11 +432,11 @@ const handleDoubleClick = (event: MouseEvent) => {
 }
 
 const handledbgclose = () => {
-    if(!allowtouchout) return;
+    if (!allowtouchout) return;
 
     if (currentdisplay.value === 'widget') {
         infocus.value = false;
-        if (floatingEl.value?.children[0].classList.contains('imgcontent') && widgetdata[Array.from(floatingEl.value.parentElement!.children).indexOf(floatingEl.value)-1].zoom) {
+        if (floatingEl.value?.children[0].classList.contains('imgcontent') && widgetdata[Array.from(floatingEl.value.parentElement!.children).indexOf(floatingEl.value) - 1].zoom) {
             restoreElementWithRatio()
         } else if (floatingEl.value?.children[0].classList.contains('music-widget')) {
             restoreElementWithRatio()
@@ -514,7 +518,7 @@ const floatProjectRatio = (element: HTMLElement) => {
 
     element.style.width = `${newWidth}px`;
     element.style.height = `${newHeight}px`;
-    element.style.setProperty('--size', `${newWidth/50}px`);
+    element.style.setProperty('--size', `${newWidth / 50}px`);
     requestAnimationFrame(() => {
         element.style.opacity = '1';
     });
@@ -723,7 +727,7 @@ const handleProjectClick = (event: MouseEvent) => {
         }
 
         .widget.imagecover {
-            > .imgcontent {
+            >.imgcontent {
                 background-size: 100% !important;
             }
         }
@@ -808,6 +812,20 @@ const handleProjectClick = (event: MouseEvent) => {
     }
 }
 
+html.music-fullscr .content .matrix .widget {
+    &[data-float-item=music] {
+        top: 0 !important;
+        left: 0 !important;
+        opacity: 1 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        border-radius: 0 !important;
+        box-sizing: border-box !important;
+        background: #000000 !important;
+        transform: none !important;
+    }
+}
+
 html.dark-mode {
     .content {
         .matrix {
@@ -822,7 +840,8 @@ html.dark-mode {
                     box-shadow: 0 0 24px #78c1f664, 0 0 10px #73bef351;
                 }
 
-                &[data-float-item=music], &[data-float-item=image] {
+                &[data-float-item=music],
+                &[data-float-item=image] {
                     border-width: .3em;
                 }
             }
@@ -898,7 +917,8 @@ html.dark-mode {
             filter: none;
         }
 
-        .widget[data-float-item=image], .widget[data-float-item=music] {
+        .widget[data-float-item=image],
+        .widget[data-float-item=music] {
             font-size: var(--size);
             animation: none;
         }
@@ -916,6 +936,7 @@ html.dark-mode {
         }
     }
 }
+
 @supports not (font: -apple-system-body) {
     @supports (animation-timeline: scroll(root y)) {
         .content {

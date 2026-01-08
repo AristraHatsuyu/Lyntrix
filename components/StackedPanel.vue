@@ -47,6 +47,7 @@
                                         active: idx === activeLineIndex,
                                         next: idx === activeLineIndex + 1,
                                         prev: idx === activeLineIndex - 1,
+                                        past: idx < activeLineIndex - 1,
                                         inline: activeLines[0].t > 5 ? activeLines[0].t < props.currentTime + 1 : true,
                                         empty: line.main == '',
                                         playing: isPlaying,
@@ -79,7 +80,7 @@
                                         </div>
                                     </div>
                                 </swiper-slide>
-                                <swiper-slide style="height: 12.5em;">
+                                <swiper-slide class="lyrics-finalmargin" style="height: 12.5em;">
                                 </swiper-slide>
                             </template>
                             <template v-else>
@@ -87,6 +88,9 @@
                                 </swiper-slide>
                             </template>
                         </swiper>
+                        <div class="fullscr" @click="fullscreen" data-pointer>
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M352 0c-17.7 0-32 14.3-32 32s14.3 32 32 32h50.7L297.4 169.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L448 109.3V160c0 17.7 14.3 32 32 32s32-14.3 32-32V32c0-17.7-14.3-32-32-32H352zM214.6 297.4c-12.5-12.5-32.8-12.5-45.3 0L64 402.7V352c0-17.7-14.3-32-32-32s-32 14.3-32 32V480c0 17.7 14.3 32 32 32H160c17.7 0 32-14.3 32-32s-14.3-32-32-32H109.3L214.6 342.6c12.5-12.5 12.5-32.8 0-45.3z"/></svg>
+                        </div>
                     </div>
                 </div>
             </swiper-slide>
@@ -621,7 +625,7 @@ function binarySearch(lines: LyricLine[], t: number, delay: number = 0): number 
     let lo = 0, hi = lines.length - 1, ans = 0
     while (lo <= hi) {
         const mid = (lo + hi) >> 1
-        if (lines[mid].t <= t-delay) { ans = mid; lo = mid + 1 }
+        if (lines[mid].t <= t - delay) { ans = mid; lo = mid + 1 }
         else hi = mid - 1
     }
     return ans
@@ -760,7 +764,7 @@ function wordStyle(s: WordSpan) {
     const gp = before ? '-20%' : after ? '100%' : `${(p * 120 - 20).toFixed(6)}%`;
     const t = before ? 0 : after ? 1 : p;
     const easeT = 0.5 * (1 - Math.cos(Math.PI * t));
-    const ty = before ? 0 : after ? -1.5 : -easeT * 1.5;
+    const ty = before ? 0 : after ? -1 : -easeT * 1;
 
     const out: Record<string, string> = {
         '--gradient-progress': gp,
@@ -801,7 +805,7 @@ function wordfxStyle(s: WordSpan, i: number) {
 
     const t = before ? 0 : after ? 1 : p;
     const easeT = 0.5 * (1 - Math.cos(Math.PI * t));
-    const tyn = before ? 0 : after ? -1.5 : -easeT * 1.5;
+    const tyn = before ? 0 : after ? -1 : -easeT * 1;
 
     const ty = dur > 2 ? tyn - E : tyn;
     const ts = (0.25 + 0.25 * E).toFixed(6) + 'em';
@@ -816,6 +820,10 @@ function wordfxStyle(s: WordSpan, i: number) {
         '--text-shadow-opacity': op,
         transform: `matrix(${sxy.toFixed(10)}, 0, 0, ${sxy.toFixed(10)}, 0, ${ty.toFixed(10)})`,
     } as Record<string, string>;
+}
+
+function fullscreen() {
+    document.documentElement.classList.add('music-fullscr');
 }
 
 onMounted(async () => {
@@ -983,6 +991,7 @@ $content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
     align-items: center;
     justify-content: center;
     box-sizing: border-box;
+    transition: background-color .3s, padding-right .3s;
     position: relative;
     overflow: hidden;
 
@@ -995,7 +1004,7 @@ $content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
         box-sizing: border-box;
         align-items: center;
         justify-content: space-between;
-        transition: filter .3s, transform .3s;
+        transition: filter .3s, transform .3s, padding .3s;
 
         .lyrics-swiper {
             width: 100%;
@@ -1117,7 +1126,7 @@ $content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
                     }
                 }
 
-                &.next {
+                &.next, &.empty.next + .lyrics-slide {
                     &.inline .lyrics-content .lyrics-text {
                         will-change: transform, opacity, filter;
                         filter: blur(.05em);
@@ -1201,6 +1210,14 @@ $content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
                         animation-play-state: running;
                     }
                 }
+
+                &.prev .lyrics-content .lyrics-text {
+                    opacity: .4;
+                }
+
+                &.past .lyrics-content .lyrics-text {
+                    opacity: .2;
+                }
             }
 
             &:hover {
@@ -1226,6 +1243,24 @@ $content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
                 100% {
                     transform: scale(.85);
                 }
+            }
+        }
+
+        .fullscr {
+            position: absolute;
+            top: 1em;
+            right: -2em;
+            height: 3em;
+            width: 3em;
+            border-radius: 1em;
+            background-color: #00000022;
+
+            svg {
+                width: 100%;
+                height: 100%;
+                padding: 0.85rem;
+                box-sizing: border-box;
+                fill: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #000000 50%);
             }
         }
     }
@@ -1589,6 +1624,70 @@ $content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
             opacity: 1;
             bottom: 1.75em;
             filter: none;
+        }
+    }
+}
+
+html.music-fullscr .content .matrix .widget {
+    &[data-float-item=music] {
+        .music-widget .panel .stacked-wrapper {
+            .indicators {
+                opacity: 0;
+                pointer-events: none;
+                transition: .3s;
+            }
+
+            .card {
+                background: none;
+                padding-right: 0;
+
+                .lyrics-card {
+                    padding: 0;
+                
+                    .lyrics-swiper {
+                        margin-top: 60rem;
+                        transition: .3s;
+
+                        .lyrics-slide {
+                            .lyrics-content .lyrics-text.wordprog .wg {
+                                background-image: linear-gradient(var(--gradient-direction),
+                                        #ffffffe8 var(--gradient-progress),
+                                        #ffffff60 calc(var(--gradient-progress) + 20%));
+
+                                &.fx {
+                                    text-shadow: 0 0 var(--text-shadow-blur-radius) rgba(255, 255, 255, var(--text-shadow-opacity));
+                                }
+                            }
+                            
+                            .lyrics-empty {
+                                .dot-group .dot {
+                                    background-color: #FFF;
+                                }
+                            }
+
+                            &:hover {
+                                .lyrics-content {
+                                    background-color: #FFFFFF11;
+                                }
+                            }
+                        }
+
+                        .lyrics-finalmargin {
+                            height: 90rem !important;
+                        }
+                    }
+                }
+
+                .fullscr {
+                    opacity: 0;
+                    pointer-events: none;
+                }
+
+                .queue-card, .equalizer {
+                    opacity: 0;
+                    pointer-events: none;
+                }
+            }
         }
     }
 }

@@ -75,6 +75,11 @@ html.dark-mode .switch {
     fill: #64beffd5;
 }
 
+html.music-fullscr .switch {
+    opacity: 0;
+    pointer-events: none;
+}
+
 .switch>svg {
     height: 100%;
     width: 100%;

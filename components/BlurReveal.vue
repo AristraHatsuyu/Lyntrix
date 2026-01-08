@@ -3,8 +3,7 @@
         <Motion v-for="(child, index) in children" :key="index" ref="childElements" as="div" :initial="getInitial()"
             :in-view="getAnimate()" :transition="{
                 duration: props.duration,
-                easing: 'easeInOut',
-                delay: props.delay * index,
+                delay: props.delay * (index as number),
             }">
             <component :is="child" />
         </Motion>
@@ -55,7 +54,7 @@ function getInitial() {
 function getAnimate() {
     return {
         opacity: 1,
-        filter: `blur(0px)`,
+        filter: `none`,
         y: 0,
     };
 }
