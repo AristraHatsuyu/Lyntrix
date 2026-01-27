@@ -70,13 +70,15 @@
                     @change="setProgress" />
             </div>
         </div>
-        <div class="panel">
+        <Transition name="fades">
+        <div class="panel" v-if="props.showcard">
             <StackedPanel v-model="equalizerSettings" v-model:eqcontrol="equalizerEnabled"
                 :tracks="playlist.queue.value" :current-index="playlist.currentIndex.value" :mode="playlist.mode.value"
                 :current-time="player.currentTime.value" :is-playing="player.isPlaying.value"
                 @change="onEqualizerChanged" @play-item="handlePlayItem" @cycle-mode="handleCycleMode"
                 @seek-to="handleSeekFromLyrics" />
         </div>
+        </Transition>
         <div class="exitfullscr" @click="exitfullscr">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M393.4 41.4c12.5-12.5 32.8-12.5 45.3 0s12.5 32.8 0 45.3L269.3 256 438.6 425.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L224 301.3 54.6 470.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L178.7 256 9.4 86.6C-3.1 74.1-3.1 53.9 9.4 41.4s32.8-12.5 45.3 0L224 210.7 393.4 41.4z"/></svg>
         </div>
@@ -89,8 +91,8 @@ import type { TrackItem, EqualizerBand } from '@/composables/audio/audioTypes';
 import { useAudioPlayer } from '@/composables/audio/useAudioPlayer';
 import { usePlaylistController } from '@/composables/audio/usePlaylistController';
 
-interface Props { data: TrackItem[] }
-const props = withDefaults(defineProps<Props>(), { data: () => [] });
+interface Props { data: TrackItem[], showcard?: boolean; }
+const props = withDefaults(defineProps<Props>(), { data: () => [], showcard: true });
 
 const player = useAudioPlayer(props.data);
 const playlist = usePlaylistController(player);
@@ -466,16 +468,14 @@ watch(() => props.data, (val) => { player.setPlaylist(val); });
     }
 
     .panel {
-        opacity: 0;
         position: absolute;
-        transition: opacity .6s, margin .6s, height .6s;
+        transition: margin .6s, height .6s;
         margin-top: var(--square-size);
         top: 16.5em;
         width: 46em;
         height: var(--square-size);
         justify-content: space-between;
         display: flex;
-
     }
 
     .exitfullscr {
@@ -575,8 +575,6 @@ watch(() => props.data, (val) => { player.setPlaylist(val); });
 
         .panel {
             margin-top: 0;
-            opacity: 1;
-            filter: none;
             height: 19em;
         }
     }
@@ -756,6 +754,23 @@ html.dark-mode {
     opacity: 1;
     transform: none;
     filter: none;
+}
+
+.fades-enter-active,
+.fades-leave-active {
+    transition: margin .6s, height .6s, filter .6s, opacity .6s !important;
+}
+
+.fades-enter-from,
+.fades-leave-to {
+    opacity: 0;
+    filter: blur(20px) !important;
+}
+
+.fades-enter-to,
+.fades-leave-from {
+    opacity: 1;
+    filter: none !important;
 }
 
 .fadee-enter-active,

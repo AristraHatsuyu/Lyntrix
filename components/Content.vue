@@ -24,7 +24,7 @@
                     :style="{ 'background-image': `url('${data.image}')`, 'background-position': `${data.left}% ${data.top}%`, 'background-size': data.scale }" />
                 <TimeCard v-else-if="data.type === 3" />
                 <AnalyticsCard v-else-if="data.type === 4" :url="data.url" />
-                <MusicCard :data="data.data" v-else-if="data.type === 5 && data.data" />
+                <MusicCard :data="data.data" :showcard="infocus" v-else-if="data.type === 5 && data.data" />
             </CardContainer>
         </div>
         <div class="projlist">

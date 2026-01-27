@@ -19,9 +19,9 @@
             }" @swiper="onSwiper" @slideChange="onSlideChange" class="stacked-swiper">
             <swiper-slide class="stacked-slide">
                 <div class="card">
-                    <div class="lyrics-card">
+                    <div class="lyrics-card" :style="{ '--t-height': `translateY(${curheight})` }">
                         <swiper class="lyrics-swiper" :class="{ change: inswitchlr }" :direction="'vertical'"
-                            :mousewheel="true" :modules="[Mousewheel]" :speed="750" :slidesPerView="'auto'"
+                            :mousewheel="true" :modules="[Mousewheel]" :speed="500" :slidesPerView="'auto'"
                             :freeMode="{ enabled: true, sticky: true }" :observeParents="true"
                             :observeSlideChildren="true" :roundLengths="true" :watchSlidesProgress="true"
                             @swiper="onLyricsSwiper">
@@ -51,7 +51,8 @@
                                         inline: activeLines[0].t > 5 ? activeLines[0].t < props.currentTime + 1 : true,
                                         empty: line.main == '',
                                         playing: isPlaying,
-                                        right: isLineRight(line)
+                                        right: isLineRight(line),
+                                        start: activeLineIndex > 0 && ((idx >= activeLineIndex - 3 && activeLines[activeLineIndex-1].main != '' && ((idx <= activeLineIndex + 4 && activeLines[activeLineIndex].main != '') || (activeLines[activeLineIndex].main == '' && idx < activeLineIndex))) || (activeLines[activeLineIndex-1].main == '' && idx <= activeLineIndex + 4 && idx > activeLineIndex)) ? nowT >= activeLines[activeLineIndex].t + 0.05* (idx - activeLineIndex + 1) : true
                                     }" data-pointer>
                                     <div class="lyrics-content" v-if="line.main != ''">
                                         <div v-if="line.spans?.length" class="lyrics-text wordprog">
@@ -381,6 +382,8 @@ async function ensureNeighbors(center: number) {
  * ======================= */
 const lyricsCache: Map<string, Promise<ParsedLyrics>> = new Map();
 
+const curheight = ref('100%')
+
 /** LRC 解析（原样） */
 function parseLRC(raw: string): ParsedLyrics {
     const text = raw.replace(/\ufeff/g, '').replace(/\r\n/g, '\n').trim()
@@ -648,7 +651,7 @@ function followToIndex(idx: number, force = false) {
     if (!force && (now - lastFollowTs) < FOLLOW_MIN_INTERVAL_MS) return
     lastFollowTs = now
     const clamped = Math.max(0, Math.min(idx + 1, activeLines.value.length))
-    lySwiper.slideTo(clamped, 750)
+    lySwiper.slideTo(clamped, 500)
 }
 
 function onClickLyric(idx: number, t: number) {
@@ -910,6 +913,8 @@ watch(softNow, (t) => {
     if (!hasLyrics.value) return
     const idx = binarySearch(activeLines.value, t, -0.3)
     if (idx !== activeLineIndex.value) {
+        const element = document.querySelectorAll('.lyrics-slide')[activeLineIndex.value + 1] as HTMLElement
+        curheight.value = element.offsetHeight + 'px'
         activeLineIndex.value = idx
         if (autoFollow.value) followToIndex(idx)
     }
@@ -1022,7 +1027,8 @@ $content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
                 overflow: visible;
                 align-items: center;
                 justify-content: flex-start;
-                transition: height .75s;
+                transform: var(--t-height);
+                transition: height .5s, transform .5s;
 
                 .lyrics-content {
                     padding: 0.5em 1.2em;
@@ -1034,11 +1040,11 @@ $content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
 
                     .lyrics-text {
                         opacity: .6;
-                        font-size: 2.6em;
-                        filter: blur(.1em);
-                        transform: scale(.9);
+                        font-size: 3.1em;
+                        transform: scale(.95);
                         transform-origin: left;
                         transition: transform .75s, filter .75s, opacity .75s;
+                        transition-delay: 0.3s;
                         white-space: pre-line;
                         word-break: normal;
 
@@ -1083,11 +1089,31 @@ $content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
                     }
                 }
 
+                &:has(+ .lyrics-slide + .lyrics-slide + .lyrics-slide.swiper-slide-prev),
+                &:has(+ .lyrics-slide + .lyrics-slide.swiper-slide-prev),
+                &:has(+ .lyrics-slide.swiper-slide-prev),
+                &.swiper-slide-prev,
+                &.swiper-slide-active,
+                &.swiper-slide-next,
+                &.swiper-slide-next + .lyrics-slide,
+                &.swiper-slide-next + .lyrics-slide + .lyrics-slide,
+                &.swiper-slide-next + .lyrics-slide + .lyrics-slide + .lyrics-slide {
+                    .lyrics-content .lyrics-text {
+                        filter: blur(.1em);
+                    }
+                }
+
+                &.prev {
+                    .lyrics-content .lyrics-text {
+                        filter: blur(.05em);
+                    }
+                }
+
                 .lyrics-empty {
                     opacity: 0;
                     filter: blur(1em);
                     transform: scale(0.25);
-                    transition: transform .75s, opacity .75s, filter .75s;
+                    transition: transform .5s, opacity .5s, filter .5s;
 
 
                     .dot-group {
@@ -1127,12 +1153,12 @@ $content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
                 }
 
                 &.next, &.empty.next + .lyrics-slide {
-                    &.inline .lyrics-content .lyrics-text {
+                    .lyrics-content .lyrics-text {
                         will-change: transform, opacity, filter;
                         filter: blur(.05em);
                     }
 
-                    .lyrics-content .lyrics-text {
+                    &.inline .lyrics-content .lyrics-text {
                         opacity: .85;
                     }
 
@@ -1140,6 +1166,13 @@ $content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
                         .lyrics-empty {
                             will-change: transform, opacity, filter;
                         }
+                    }
+                }
+
+                &.next + .lyrics-slide {
+                    .lyrics-content .lyrics-text {
+                        will-change: transform, opacity, filter;
+                        filter: blur(.075em);
                     }
                 }
 
@@ -1155,6 +1188,12 @@ $content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
                         filter: none;
                         opacity: 1;
                     }
+
+                }
+
+
+                &.start {
+                    transform: none !important;
                 }
 
                 &.active.empty {
@@ -1186,6 +1225,7 @@ $content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
                     min-height: 0;
                     height: 0 !important;
                     padding-left: 1.2em;
+                    transform: none !important;
 
                     &.show {
                         height: 5.5em !important;
@@ -1643,9 +1683,18 @@ html.music-fullscr .content .matrix .widget {
 
                 .lyrics-card {
                     padding: 0;
+                    mask-image: linear-gradient(
+                        to bottom,
+                        transparent 0%,
+                        transparent 10%,
+                        black 20%,
+                        black 80%,
+                        transparent 90%,
+                        transparent 100%
+                    );
                 
                     .lyrics-swiper {
-                        margin-top: 60rem;
+                        margin-top: 75rem;
                         transition: .3s;
 
                         .lyrics-slide {
