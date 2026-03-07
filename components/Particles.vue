@@ -258,4 +258,8 @@ function animate() {
 html.dark-mode .particles-bg {
     display: block;
 }
+
+html.perfotp .particles-bg {
+    content-visibility: hidden;
+}
 </style>

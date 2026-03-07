@@ -71,10 +71,11 @@
             </div>
         </div>
         <Transition name="fades">
-        <div class="panel" v-if="props.showcard">
+        <div class="panel" v-show="props.showcard">
             <StackedPanel v-model="equalizerSettings" v-model:eqcontrol="equalizerEnabled"
                 :tracks="playlist.queue.value" :current-index="playlist.currentIndex.value" :mode="playlist.mode.value"
                 :current-time="player.currentTime.value" :is-playing="player.isPlaying.value"
+                :visible="props.showcard"
                 @change="onEqualizerChanged" @play-item="handlePlayItem" @cycle-mode="handleCycleMode"
                 @seek-to="handleSeekFromLyrics" />
         </div>
@@ -178,6 +179,7 @@ const handleSeekFromLyrics = (sec: number) => {
 
 const exitfullscr = () => {
     const htmlEl = document.documentElement;
+    htmlEl.classList.remove('perfotp');
     htmlEl.classList.remove('music-fullscr');
 };
 
@@ -512,6 +514,7 @@ watch(() => props.data, (val) => { player.setPlaylist(val); });
         .picture {
             height: 12.5em;
             width: 12.5em;
+            transition: margin 0.6s, height 0.6s, width 0.6s;
         }
 
         .info {
@@ -589,7 +592,6 @@ html.music-fullscr .content .matrix .widget {
             transition: .3s;
 
             .picture {
-                transition: margin .3s, height .3s, width .3s;
                 margin-left: 40rem;
                 margin-top: 12.5rem;
                 height: 50rem;

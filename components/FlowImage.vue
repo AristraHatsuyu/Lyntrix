@@ -142,6 +142,10 @@ html.dark-mode .bg-container {
     display: none;
 }
 
+html.perfotp .bg-container {
+    content-visibility: hidden;
+}
+
 .bg-image {
     width: 100vw;
     height: 100vh;

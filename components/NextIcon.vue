@@ -35,6 +35,10 @@ const scrollToVh = (vh: number, duration = 800) => {
     -webkit-tap-highlight-color: transparent;
 }
 
+html.perfotp .next-icon {
+    content-visibility: hidden;
+}
+
 .next-icon .next-icon-inner {
     font-size: min(60px, 12vw);
     width: 1em;

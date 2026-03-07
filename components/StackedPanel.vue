@@ -255,6 +255,7 @@ interface Props {
     currentTime?: number;
     isPlaying?: boolean;
     playbackRate?: number;
+    visible?: boolean;
 }
 const eqcontrol = defineModel<boolean>('eqcontrol')
 
@@ -298,6 +299,7 @@ const firstwait = ref(false)
 const inswitchlr = ref(true)
 const onSwiper = (swiper: any) => { swiperInstance = swiper }
 const onSwiperList = (swiper: any) => { swiperListInstance = swiper }
+watch(() => props.visible, (val) => { if (val) setTimeout(() => {swiperInstance?.update(); lySwiper?.update()}, 0) })
 const onSlideChange = (swiper: any) => { pageIndex.value = swiper.activeIndex }
 const slideTo = (index: number) => { props.tracks[props.currentIndex].lyrics ? swiperInstance?.slideTo(index) : swiperInstance?.slideTo(index + 1) }
 const listSlideTo = (index: number) => { swiperListInstance?.slideTo(index) }
@@ -827,6 +829,9 @@ function wordfxStyle(s: WordSpan, i: number) {
 
 function fullscreen() {
     document.documentElement.classList.add('music-fullscr');
+    setTimeout(() => {
+        document.documentElement.classList.add('perfotp');
+    }, 600);
 }
 
 onMounted(async () => {

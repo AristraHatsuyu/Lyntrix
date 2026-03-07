@@ -176,6 +176,10 @@ html.music-fullscr .footer {
     opacity: 0;
 }
 
+html.perfotp .footer {
+    content-visibility: hidden;
+}
+
 .about {
     position: fixed;
     top: 0;

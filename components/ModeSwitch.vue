@@ -75,6 +75,10 @@ html.dark-mode .switch {
     fill: #64beffd5;
 }
 
+html.perfotp .switch {
+    content-visibility: hidden;
+}
+
 html.music-fullscr .switch {
     opacity: 0;
     pointer-events: none;

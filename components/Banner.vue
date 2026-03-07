@@ -115,6 +115,10 @@ html.forcewidget .banner {
     filter: blur(15px);
 }
 
+html.perfotp .banner {
+    content-visibility: hidden;
+}
+
 .wrapper.lightbg {
     .name-svg {
         backdrop-filter: saturate(2.5) brightness(0.5) blur(12px) !important;

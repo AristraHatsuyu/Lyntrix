@@ -937,6 +937,16 @@ html.dark-mode {
     }
 }
 
+html.perfotp .content {
+    .projlist, .widget {
+        content-visibility: hidden;
+    }
+
+    .widget.musiccover {
+        content-visibility: auto;
+    }
+}
+
 @supports not (font: -apple-system-body) {
     @supports (animation-timeline: scroll(root y)) {
         .content {
