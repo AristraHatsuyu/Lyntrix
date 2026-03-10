@@ -44,7 +44,7 @@
                                 </swiper-slide>
                                 <swiper-slide v-for="(line, idx) in activeLines" :key="idx" class="lyrics-slide"
                                     @click.stop="line.main != '' ? onClickLyric(idx, line.t) : ''" :class="{
-                                        active: idx === activeLineIndex && (line.spans ? props.currentTime <= line.spans[line.spans.length - 1].e : true),
+                                        active: idx === activeLineIndex && ((line.spans && idx === activeLines.length - 1) ? props.currentTime <= line.spans[line.spans.length - 1].e : true),
                                         next: idx === activeLineIndex + 1,
                                         prev: idx === activeLineIndex - 1 || ((line.spans && idx === activeLines.length - 1) ? props.currentTime > line.spans[line.spans.length - 1].e : false),
                                         past: idx < activeLineIndex - 1,
