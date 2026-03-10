@@ -44,15 +44,15 @@
                                 </swiper-slide>
                                 <swiper-slide v-for="(line, idx) in activeLines" :key="idx" class="lyrics-slide"
                                     @click.stop="line.main != '' ? onClickLyric(idx, line.t) : ''" :class="{
-                                        active: idx === activeLineIndex,
+                                        active: idx === activeLineIndex && (line.spans ? props.currentTime <= line.spans[line.spans.length - 1].e : true),
                                         next: idx === activeLineIndex + 1,
-                                        prev: idx === activeLineIndex - 1,
+                                        prev: idx === activeLineIndex - 1 || ((line.spans && idx === activeLines.length - 1) ? props.currentTime > line.spans[line.spans.length - 1].e : false),
                                         past: idx < activeLineIndex - 1,
                                         inline: activeLines[0].t > 5 ? activeLines[0].t < props.currentTime + 1 : true,
                                         empty: line.main == '',
                                         playing: isPlaying,
                                         right: isLineRight(line),
-                                        start: activeLineIndex > 0 && ((idx >= activeLineIndex - 3 && activeLines[activeLineIndex-1].main != '' && ((idx <= activeLineIndex + 4 && activeLines[activeLineIndex].main != '') || (activeLines[activeLineIndex].main == '' && idx < activeLineIndex))) || (activeLines[activeLineIndex-1].main == '' && idx <= activeLineIndex + 4 && idx > activeLineIndex)) ? nowT >= activeLines[activeLineIndex].t + 0.05* (idx - activeLineIndex + 1) : true
+                                        start: isLineStart(idx)
                                     }" data-pointer>
                                     <div class="lyrics-content" v-if="line.main != ''">
                                         <div v-if="line.spans?.length" class="lyrics-text wordprog">
@@ -517,6 +517,57 @@ const isLineRight = (line: LyricLine) => {
     if (!ag) return false
     const pos = agentPosMap.value[ag]
     return pos === 'o'
+}
+
+/**
+ * 判断歌词行是否应当播放进入动画（.start class）。
+ *
+ * 每当活跃行切换时，周围若干行会依次做入场动画——
+ * 效果要求它们不能同时弹出，而是按与当前行的距离错开 50ms 依次触发。
+ * 本函数返回 true 表示"该行已到解锁时刻，可以出现"。
+ *
+ * 判断分两步：
+ *   1. 确定"动画窗口"：哪些行需要受到延迟控制（inRange）。
+ *      窗口范围取决于前一行与当前行是否为空行（纯间隔行）：
+ *        - 前一行有文字、当前行有文字：覆盖 [ali-3, ali+4]
+ *        - 前一行有文字、当前行是空行：覆盖 [ali-3, ali-1]（空行之前）
+ *        - 前一行是空行：            空行高度自动变为0，下方元素根据无需动画
+ *   2. 窗口外的行不需要延迟，直接返回 true（始终可见）。
+ *      窗口内的行，按 idx 距 ali 的偏移量计算解锁时间：
+ *        unlockTime = lines[ali].t + 0.05 * (idx - ali + 1 - emptyCount)
+ *      其中 emptyCount 是前向窗口（[ali-3, idx) 与 [ali-3, ali-1] 的交集）内的空行数。
+ *      空行不激活状态下高度为 0，不应占用视觉上的错开间距，故从偏移量中扣除。
+ */
+function isLineStart(idx: number): boolean {
+    const ali = activeLineIndex.value
+    const lines = activeLines.value
+
+    // 歌曲刚开始，activeLineIndex 为 0，无须做错开动画
+    if (ali <= 0) return true
+
+    const prevEmpty = lines[ali - 1]?.main === ''  // 前一行是否为间隔空行
+    const currEmpty = lines[ali]?.main === ''      // 当前活跃行是否为间隔空行
+
+    // 计算本行是否落在需要错开动画的窗口内
+    const inRange =
+        !prevEmpty && idx >= ali - 3 && ((idx <= ali + 5 && !currEmpty) || (currEmpty && idx < ali))
+
+    // 窗口外：无需延迟，直接可见
+    if (!inRange) return true
+
+    // 统计前向窗口 [ali-3, ali-1] 内、位于 idx 之前的空行数。
+    // 空行（main === ''）不激活时高度为 0，不应占用视觉错开间距，需从偏移量中扣除。
+    // 后向范围 [ali+1, ali+4] 内的空行不影响视觉顺序，不计入。
+    const windowStart = Math.max(0, ali - 3)
+    const lookEnd = Math.min(idx - 1, ali - 1) // 只看前向部分，且不含 idx 本身
+    let emptyCount = 0
+    for (let j = windowStart; j <= lookEnd; j++) {
+        if (lines[j]?.main === '') emptyCount++
+    }
+
+    // 窗口内：当前时间超过该行的解锁时刻才显示，制造逐行错开的入场感
+    const unlockTime = lines[ali].t + 0.05 * (idx - ali - emptyCount + 1)
+    return nowT.value >= unlockTime
 }
 
 /** AutoLoad（.lyntrics.json / .lrc） */
@@ -1027,7 +1078,7 @@ $content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
             .lyrics-slide {
                 width: 100%;
                 height: auto !important;
-                min-height: 5.5em;
+                min-height: 6.75em;
                 display: flex;
                 overflow: visible;
                 align-items: center;
@@ -1202,7 +1253,7 @@ $content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
                 }
 
                 &.active.empty {
-                    height: 5.5em !important;
+                    height: 6.75em !important;
 
                     .lyrics-empty {
                         transition: transform 1.5s, opacity 1.5s, filter 1.5s;
@@ -1233,7 +1284,7 @@ $content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
                     transform: none !important;
 
                     &.show {
-                        height: 5.5em !important;
+                        height: 6.75em !important;
 
                         .lyrics-empty {
                             transition: transform 1.5s, opacity 1.5s, filter 1.5s;
