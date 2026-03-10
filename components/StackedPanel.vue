@@ -297,6 +297,7 @@ const pageIndex = ref(0)
 const listIndex = ref(0)
 const firstwait = ref(false)
 const inswitchlr = ref(true)
+const tapedItem = ref(false)
 const onSwiper = (swiper: any) => { swiperInstance = swiper }
 const onSwiperList = (swiper: any) => { swiperListInstance = swiper }
 watch(() => props.visible, (val) => { if (val) setTimeout(() => {swiperInstance?.update(); lySwiper?.update()}, 0) })
@@ -541,6 +542,10 @@ const isLineRight = (line: LyricLine) => {
 function isLineStart(idx: number): boolean {
     const ali = activeLineIndex.value
     const lines = activeLines.value
+    const isplaying = props.isPlaying
+    const isTap = tapedItem.value
+
+    if (!isplaying || isTap) return true
 
     // 歌曲刚开始，activeLineIndex 为 0，无须做错开动画
     if (ali <= 0) return true
@@ -705,12 +710,14 @@ function followToIndex(idx: number, force = false) {
     lastFollowTs = now
     const clamped = Math.max(0, Math.min(idx + 1, activeLines.value.length))
     lySwiper.slideTo(clamped, 500)
+    tapedItem.value = false
 }
 
 function onClickLyric(idx: number, t: number) {
     activeLineIndex.value = idx
     followToIndex(idx, true)
     emit('seek-to', t)
+    tapedItem.value = true
 }
 
 function toggleAutoFollow() {
