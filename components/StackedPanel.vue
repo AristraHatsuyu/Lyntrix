@@ -24,21 +24,22 @@
                             :mousewheel="true" :modules="[Mousewheel]" :speed="500" :slidesPerView="'auto'"
                             :freeMode="{ enabled: true, sticky: true }" :observeParents="true"
                             :observeSlideChildren="true" :roundLengths="true" :watchSlidesProgress="true"
-                            @swiper="onLyricsSwiper">
+                            @swiper="onLyricsSwiper" @touchStart="onLyricsTouchStart" @sliderMove="onLyricsSliderMove"
+                            @wheel.passive="onLyricsWheel">
                             <template v-if="hasLyrics">
                                 <swiper-slide class="lyrics-slide first"
-                                    :class="{ show: firstwait && activeLines[0].t > props.currentTime + 1 && activeLines[0].t > 5, playing: isPlaying }">
+                                    :class="{ show: firstwait && firstLine.t > props.currentTime + 1 && firstLine.t > 5, playing: isPlaying }">
                                     <div class="lyrics-empty">
                                         <div class="dot-group">
                                             <span class="dot"
-                                                :class="{ current: activeLines[0].t / 4 < props.currentTime }"
-                                                :style="{ transitionDuration: `${Math.round(activeLines[0].t * 1000 / 4)}ms` }"></span>
+                                                :class="{ current: firstLine.t / 4 < props.currentTime }"
+                                                :style="{ transitionDuration: `${Math.round(firstLine.t * 1000 / 4)}ms` }"></span>
                                             <span class="dot"
-                                                :class="{ current: activeLines[0].t * 2 / 4 < props.currentTime }"
-                                                :style="{ transitionDuration: `${Math.round(activeLines[0].t * 1000 / 4)}ms` }"></span>
+                                                :class="{ current: firstLine.t * 2 / 4 < props.currentTime }"
+                                                :style="{ transitionDuration: `${Math.round(firstLine.t * 1000 / 4)}ms` }"></span>
                                             <span class="dot"
-                                                :class="{ current: activeLines[0].t * 3 / 4 < props.currentTime }"
-                                                :style="{ transitionDuration: `${Math.round(activeLines[0].t * 1000 / 4)}ms` }"></span>
+                                                :class="{ current: firstLine.t * 3 / 4 < props.currentTime }"
+                                                :style="{ transitionDuration: `${Math.round(firstLine.t * 1000 / 4)}ms` }"></span>
                                         </div>
                                     </div>
                                 </swiper-slide>
@@ -48,36 +49,37 @@
                                         next: idx === activeLineIndex + 1,
                                         prev: idx === activeLineIndex - 1 || ((line.spans && idx === activeLines.length - 1) ? props.currentTime > line.spans[line.spans.length - 1].e : false),
                                         past: idx < activeLineIndex - 1,
-                                        inline: activeLines[0].t > 5 ? activeLines[0].t < props.currentTime + 1 : true,
+                                        inline: firstLine.t > 5 ? firstLine.t < props.currentTime + 1 : true,
                                         empty: line.main == '',
                                         playing: isPlaying,
                                         right: isLineRight(line),
                                         start: isLineStart(idx)
                                     }" data-pointer>
                                     <div class="lyrics-content" v-if="line.main != ''">
-                                        <div v-if="line.spans?.length" class="lyrics-text wordprog">
+                                        <div class="lyrics-text layout">{{ line.main }}</div>
+                                        <div v-if="line.spans?.length && shouldRenderLyricContent(idx)" class="lyrics-text wordprog overlay">
                                             <div v-for="(wg, wi) in line.spans" :key="wi">
-                                                <span v-if="!wg.fx?.highlight" class="wg" :class="wordClass(wg)"
+                                                <span v-if="!wg.fx?.highlight" class="wg"
                                                     :style="wordStyle(wg)">{{ wg.tx }}</span>
                                                 <span v-else v-for="(item, index) in wg.tx" class="wg fx" :key="index"
-                                                    :class="wordClass(wg)" :style="wordfxStyle(wg, index)">
+                                                    :style="wordfxStyle(wg, index)">
                                                     {{ item }}
                                                 </span>
                                             </div>
                                         </div>
-                                        <div v-else class="lyrics-text">{{ wrapDisplay(line.main) }}</div>
+                                        <div v-else-if="shouldRenderLyricContent(idx)" class="lyrics-text overlay">{{ line.main }}</div>
                                     </div>
                                     <div class="lyrics-empty" v-else>
                                         <div class="dot-group">
                                             <span class="dot"
-                                                :class="{ current: line.t + (activeLines[idx + 1].t - line.t) / 4 < props.currentTime }"
-                                                :style="{ transitionDuration: `${Math.round(line.t + (activeLines[idx + 1].t - line.t) * 1000 / 4)}ms` }"></span>
+                                                :class="{ current: line.t + (nextLine(idx).t - line.t) / 4 < props.currentTime }"
+                                                :style="{ transitionDuration: `${Math.round(line.t + (nextLine(idx).t - line.t) * 1000 / 4)}ms` }"></span>
                                             <span class="dot"
-                                                :class="{ current: line.t + (activeLines[idx + 1].t - line.t) * 2 / 4 < props.currentTime }"
-                                                :style="{ transitionDuration: `${Math.round(line.t + (activeLines[idx + 1].t - line.t) * 1000 / 4)}ms` }"></span>
+                                                :class="{ current: line.t + (nextLine(idx).t - line.t) * 2 / 4 < props.currentTime }"
+                                                :style="{ transitionDuration: `${Math.round(line.t + (nextLine(idx).t - line.t) * 1000 / 4)}ms` }"></span>
                                             <span class="dot"
-                                                :class="{ current: line.t + (activeLines[idx + 1].t - line.t) * 3 / 4 < props.currentTime }"
-                                                :style="{ transitionDuration: `${Math.round(line.t + (activeLines[idx + 1].t - line.t) * 1000 / 4)}ms` }"></span>
+                                                :class="{ current: line.t + (nextLine(idx).t - line.t) * 3 / 4 < props.currentTime }"
+                                                :style="{ transitionDuration: `${Math.round(line.t + (nextLine(idx).t - line.t) * 1000 / 4)}ms` }"></span>
                                         </div>
                                     </div>
                                 </swiper-slide>
@@ -520,6 +522,47 @@ const isLineRight = (line: LyricLine) => {
     return pos === 'o'
 }
 
+const startWindow = ref<{ enabled: boolean; start: number; end: number }>({ enabled: false, start: 0, end: -1 })
+const startUnlockAt = ref<number[]>([])
+
+function rebuildStartWindow() {
+    const ali = activeLineIndex.value
+    const lines = activeLines.value
+    const isplaying = props.isPlaying
+    const isTap = tapedItem.value
+
+    if (!isplaying || isTap || ali <= 0 || !lines.length) {
+        startWindow.value = { enabled: false, start: 0, end: -1 }
+        startUnlockAt.value = []
+        return
+    }
+
+    const prevEmpty = lines[ali - 1]?.main === ''
+    const currEmpty = lines[ali]?.main === ''
+    if (prevEmpty) {
+        startWindow.value = { enabled: false, start: 0, end: -1 }
+        startUnlockAt.value = []
+        return
+    }
+
+    const start = Math.max(0, ali - 3)
+    const end = currEmpty ? ali - 1 : Math.min(lines.length - 1, ali + 5)
+    const unlock = new Array<number>(lines.length).fill(0)
+
+    for (let idx = start; idx <= end; idx++) {
+        const windowStart = Math.max(0, ali - 3)
+        const lookEnd = Math.min(idx - 1, ali - 1)
+        let emptyCount = 0
+        for (let j = windowStart; j <= lookEnd; j++) {
+            if (lines[j]?.main === '') emptyCount++
+        }
+        unlock[idx] = lines[ali].t + 0.05 * (idx - ali - emptyCount + 1)
+    }
+
+    startWindow.value = { enabled: true, start, end }
+    startUnlockAt.value = unlock
+}
+
 /**
  * 判断歌词行是否应当播放进入动画（.start class）。
  *
@@ -540,39 +583,10 @@ const isLineRight = (line: LyricLine) => {
  *      空行不激活状态下高度为 0，不应占用视觉上的错开间距，故从偏移量中扣除。
  */
 function isLineStart(idx: number): boolean {
-    const ali = activeLineIndex.value
-    const lines = activeLines.value
-    const isplaying = props.isPlaying
-    const isTap = tapedItem.value
-
-    if (!isplaying || isTap) return true
-
-    // 歌曲刚开始，activeLineIndex 为 0，无须做错开动画
-    if (ali <= 0) return true
-
-    const prevEmpty = lines[ali - 1]?.main === ''  // 前一行是否为间隔空行
-    const currEmpty = lines[ali]?.main === ''      // 当前活跃行是否为间隔空行
-
-    // 计算本行是否落在需要错开动画的窗口内
-    const inRange =
-        !prevEmpty && idx >= ali - 3 && ((idx <= ali + 5 && !currEmpty) || (currEmpty && idx < ali))
-
-    // 窗口外：无需延迟，直接可见
-    if (!inRange) return true
-
-    // 统计前向窗口 [ali-3, ali-1] 内、位于 idx 之前的空行数。
-    // 空行（main === ''）不激活时高度为 0，不应占用视觉错开间距，需从偏移量中扣除。
-    // 后向范围 [ali+1, ali+4] 内的空行不影响视觉顺序，不计入。
-    const windowStart = Math.max(0, ali - 3)
-    const lookEnd = Math.min(idx - 1, ali - 1) // 只看前向部分，且不含 idx 本身
-    let emptyCount = 0
-    for (let j = windowStart; j <= lookEnd; j++) {
-        if (lines[j]?.main === '') emptyCount++
-    }
-
-    // 窗口内：当前时间超过该行的解锁时刻才显示，制造逐行错开的入场感
-    const unlockTime = lines[ali].t + 0.05 * (idx - ali - emptyCount + 1)
-    return nowT.value >= unlockTime
+    const win = startWindow.value
+    if (!win.enabled) return true
+    if (idx < win.start || idx > win.end) return true
+    return nowT.value >= (startUnlockAt.value[idx] ?? 0)
 }
 
 /** AutoLoad（.lyntrics.json / .lrc） */
@@ -633,11 +647,66 @@ const activeLyricsUrl = computed(() => currentTrack.value?.lyrics || '')
 const lyrics = ref<ParsedLyrics | null>(null)
 const activeLines = computed<LyricLine[]>(() => lyrics.value?.lines ?? [])
 const hasLyrics = computed(() => activeLines.value.length > 0)
+const firstLine = computed<LyricLine>(() => activeLines.value[0] ?? { t: 0, raw: '', main: '' })
+const LYRIC_RENDER_RADIUS = 8
+const LYRIC_PREVIEW_RADIUS = 999
+const isLyricsPreviewing = ref(false)
+
+const lyricRenderWindow = computed(() => {
+    const lines = activeLines.value
+    const center = activeLineIndex.value
+    const radius = isLyricsPreviewing.value ? LYRIC_PREVIEW_RADIUS : LYRIC_RENDER_RADIUS
+    const start = Math.max(0, center - radius)
+    const end = Math.min(lines.length - 1, center + radius)
+    return { start, end }
+})
+
+function shouldRenderLyricContent(idx: number) {
+    if (isLyricsPreviewing.value) return true
+    const window = lyricRenderWindow.value
+    return idx >= window.start && idx <= window.end
+}
+
+function nextLine(idx: number): LyricLine {
+    return activeLines.value[idx + 1] ?? activeLines.value[idx] ?? { t: 0, raw: '', main: '' }
+}
 
 let lySwiper: any = null
-const onLyricsSwiper = (sw: any) => { lySwiper = sw }
+let suppressLyricsPreviewEvents = false
+let suppressLyricsPreviewTimer: number | null = null
+let lyricsPreviewExitTimer: number | null = null
+
+function enterLyricsPreviewMode() {
+    if (lyricsPreviewExitTimer != null) {
+        window.clearTimeout(lyricsPreviewExitTimer)
+        lyricsPreviewExitTimer = null
+    }
+    if (!isLyricsPreviewing.value) {
+        isLyricsPreviewing.value = true
+    }
+}
+
+function onLyricsSwiper(sw: any) {
+    lySwiper = sw
+    if ((sw as any).__lyPreviewBound) return
+
+    const markPreviewing = () => {
+        if (suppressLyricsPreviewEvents) return
+        enterLyricsPreviewMode()
+    }
+
+    sw.on('sliderMove', markPreviewing)
+    sw.on('touchStart', markPreviewing)
+    sw.on('touchMove', markPreviewing)
+    ;(sw as any).__lyPreviewBound = true
+}
+const onLyricsTouchStart = () => { enterLyricsPreviewMode() }
+const onLyricsSliderMove = () => { enterLyricsPreviewMode() }
+const onLyricsWheel = () => { enterLyricsPreviewMode() }
 const autoFollow = ref(true)
 const activeLineIndex = ref(0)
+
+watch([activeLineIndex, activeLines, () => props.isPlaying, tapedItem], rebuildStartWindow, { immediate: true })
 
 const softNow = ref(0)
 let rafId: number | null = null
@@ -694,21 +763,60 @@ function binarySearch(lines: LyricLine[], t: number, delay: number = 0): number 
 
 const FOLLOW_MIN_INTERVAL_MS = 200
 let lastFollowTs = 0
+let compactedLyricsSlides = false
+
+function shouldUpdateLySwiperLayout() {
+    if (!lySwiper || compactedLyricsSlides || activeLineIndex.value === 0) return false
+    const slides = (lySwiper.slides ?? []) as ArrayLike<HTMLElement>
+    if (!slides.length) return false
+
+    let allEmptyZero = true
+    let firstZero = false
+
+    for (let i = 0; i < slides.length; i++) {
+        const el = slides[i]
+        if (!el?.classList) continue
+        if (el.classList.contains('first')) {
+            firstZero = el.offsetHeight === 0
+        }
+        if (el.classList.contains('empty') && el.offsetHeight !== 0) {
+            allEmptyZero = false
+            break
+        }
+    }
+
+    if (allEmptyZero && firstZero) {
+        compactedLyricsSlides = true
+        return true
+    }
+    return false
+}
+
 function followToIndex(idx: number, force = false) {
     if (!lySwiper) return
-    function checkallowupdate() {
-        const allZero =
-            Array.from(document.querySelectorAll<HTMLElement>('.lyrics-slide.empty'))
-                .every(el => el.offsetHeight === 0);
-        const firstZero = document.querySelector<HTMLElement>('.lyrics-slide.first')?.offsetHeight === 0
-
-        return allZero && firstZero && activeLineIndex.value !== 0
-    }
-    if (checkallowupdate()) lySwiper?.update()
+    if (shouldUpdateLySwiperLayout()) lySwiper?.update()
     const now = performance.now()
     if (!force && (now - lastFollowTs) < FOLLOW_MIN_INTERVAL_MS) return
     lastFollowTs = now
     const clamped = Math.max(0, Math.min(idx + 1, activeLines.value.length))
+    if (!force) {
+        const wasPreviewing = isLyricsPreviewing.value
+        suppressLyricsPreviewEvents = true
+        if (suppressLyricsPreviewTimer != null) window.clearTimeout(suppressLyricsPreviewTimer)
+        suppressLyricsPreviewTimer = window.setTimeout(() => {
+            suppressLyricsPreviewEvents = false
+            suppressLyricsPreviewTimer = null
+        }, 650)
+        if (lyricsPreviewExitTimer != null) window.clearTimeout(lyricsPreviewExitTimer)
+        if (wasPreviewing) {
+            lyricsPreviewExitTimer = window.setTimeout(() => {
+                isLyricsPreviewing.value = false
+                lyricsPreviewExitTimer = null
+            }, 300)
+        } else {
+            isLyricsPreviewing.value = false
+        }
+    }
     lySwiper.slideTo(clamped, 500)
     tapedItem.value = false
 }
@@ -733,93 +841,61 @@ function jumpLyric(delta: number) {
     emit('seek-to', activeLines.value[next]?.t ?? 0)
 }
 
-function wrapDisplay(s: string, L = 29): string {
-    const isFW = (c: string) => /[^\x00-\x7F]/.test(c);
-    const width = (c: string) => (c === ' ' ? 1 : isFW(c) ? 2 : 1);
-    const isPunc = (c: string) => /[,.!?;:'"、。，？！；：“”‘’【】（）《》〈〉—…・・ー»»»»〉〉〉〉」』】]/.test(c);
-    const leadPuncCount = (arr: string[], i: number) => {
-        let k = 0, n = arr.length;
-        while (i < n && k < 3 && isPunc(arr[i])) k++;
-        return k;
-    };
-    const wsum = (arr: string[]) => arr.reduce((n, c) => n + width(c), 0);
-
-    const chars = Array.from(s);
-    let lines: string[] = [];
-    let line: string[] = [];
-    let curW = 0;
-    let spaceIdx = -1;
-    let i = 0;
-
-    while (i < chars.length) {
-        const ch = chars[i];
-
-        if (ch === '\n') {
-            lines.push(line.join(''));
-            line = []; curW = 0; spaceIdx = -1; i++; continue;
-        }
-
-        const ww = width(ch);
-        if (curW + ww <= L) {
-            if (ch === ' ') spaceIdx = line.length;
-            line.push(ch); curW += ww; i++; continue;
-        }
-
-        const canSoft = spaceIdx >= 0 && wsum(line.slice(0, spaceIdx)) >= 3;
-        const k = leadPuncCount(chars, i);
-
-        if (canSoft) {
-            const move = Math.min(k, spaceIdx);
-            const left = line.slice(0, spaceIdx - move);
-            const right = [...line.slice(spaceIdx + 1)];
-            const carry = line.slice(spaceIdx - move, spaceIdx);
-            lines.push(left.join(''));
-            line = [...carry, ...right];
-            curW = wsum(line);
-            spaceIdx = line.lastIndexOf(' ');
-            continue;
-        } else {
-            const move = Math.min(k, line.length);
-            const left = line.slice(0, line.length - move);
-            const carry = line.slice(line.length - move);
-            lines.push(left.join(''));
-            line = [...carry];
-            curW = wsum(line);
-            spaceIdx = line.lastIndexOf(' ');
-            continue;
-        }
-    }
-
-    lines.push(line.join(''));
-    return lines.join('\n');
-}
-
 const nowT = computed(() => softNow.value)
 
-function spanProgress(s: WordSpan, t: number): number {
-    if (!Number.isFinite(s.b) || !Number.isFinite(s.e)) return 0
-    if (t <= s.b) return 0
-    if (t >= s.e) return 1
+type SpanMotionMeta = {
+    dur: number;
+    invDur: number;
+    gradientDir: 'to right' | 'to left';
+}
+
+type SpanFxMeta = {
+    nChars: number;
+    delta: number;
+    longDur: boolean;
+}
+
+const spanMetaCache = new WeakMap<WordSpan, SpanMotionMeta>()
+const spanFxMetaCache = new WeakMap<WordSpan, SpanFxMeta>()
+
+const PHASE_DUR = 1 / 3
+
+function easeInOutCos01(x: number) {
+    const v = Math.min(1, Math.max(0, x))
+    return 0.5 * (1 - Math.cos(Math.PI * v))
+}
+
+function getSpanMeta(s: WordSpan): SpanMotionMeta {
+    const cached = spanMetaCache.get(s)
+    if (cached) return cached
     const dur = Math.max(1e-4, s.e - s.b)
-    return (t - s.b) / dur
+    const meta: SpanMotionMeta = {
+        dur,
+        invDur: 1 / dur,
+        gradientDir: s.fx?.dir ?? 'to right'
+    }
+    spanMetaCache.set(s, meta)
+    return meta
 }
-function charProgress(s: WordSpan, i: number, t: number): number {
-    if (!Number.isFinite(s.b) || !Number.isFinite(s.e)) return 0
-    const n = t - s.b
-    const dur = Math.max(1e-4, s.e - s.b)
-    const charDur = dur / (s.tx.length || 1)
-    const charStart = i * charDur
-    const charEnd = charStart + charDur
-    if (t <= s.b + charStart) return 0
-    if (t >= s.b + charEnd) return 1
-    return (n - charStart) / charDur
+
+function getSpanFxMeta(s: WordSpan, dur: number): SpanFxMeta {
+    const cached = spanFxMetaCache.get(s)
+    if (cached) return cached
+    const nChars = Math.max(1, s.tx.length || 1)
+    const delta = nChars > 1 ? PHASE_DUR / (nChars - 1) : 0
+    const meta: SpanFxMeta = {
+        nChars,
+        delta,
+        longDur: dur > 2
+    }
+    spanFxMetaCache.set(s, meta)
+    return meta
 }
-function wordClass(s: WordSpan) {
-    const t = nowT.value
-    return t < s.b ? `future` : (t > s.e ? `past` : `current`)
-}
+
 function wordStyle(s: WordSpan) {
-    const p = spanProgress(s, nowT.value);
+    const tNow = nowT.value
+    const meta = getSpanMeta(s)
+    const p = tNow <= s.b ? 0 : (tNow >= s.e ? 1 : (tNow - s.b) * meta.invDur)
 
     const before = p <= 0;
     const after = p >= 1;
@@ -827,58 +903,63 @@ function wordStyle(s: WordSpan) {
     const gp = before ? '-20%' : after ? '100%' : `${(p * 120 - 20).toFixed(6)}%`;
     const t = before ? 0 : after ? 1 : p;
     const easeT = 0.5 * (1 - Math.cos(Math.PI * t));
-    const ty = before ? 0 : after ? -1 : -easeT * 1;
+    const ty = before ? 0 : after ? -1.75 : -easeT * 1.75;
 
     const out: Record<string, string> = {
         '--gradient-progress': gp,
-        '--gradient-direction': s.fx?.dir ?? 'to right',
+        '--gradient-direction': meta.gradientDir,
         transform: `matrix(1, 0, 0, 1, 0, ${ty.toFixed(6)})`,
     };
     return out;
 }
 function wordfxStyle(s: WordSpan, i: number) {
-    const p = charProgress(s, i, nowT.value);
+    const tNow = nowT.value
+    const meta = getSpanMeta(s)
+    const pSpan = tNow <= s.b ? 0 : (tNow >= s.e ? 1 : (tNow - s.b) * meta.invDur)
+
+    const n = tNow - s.b
+    const charDur = meta.dur / (s.tx.length || 1)
+    const charStart = i * charDur
+    const charEnd = charStart + charDur
+    const p = tNow <= s.b + charStart ? 0 : (tNow >= s.b + charEnd ? 1 : (n - charStart) / charDur)
+
     const before = p <= 0;
     const after = p >= 1;
     const gp = before ? '-20%' : after ? '100%' : `${(p * 120 - 20).toFixed(6)}%`;
 
-    const P = spanProgress(s, nowT.value);
-    const nChars = Math.max(1, s.tx.length || 1);
-    const phaseDur = 1 / 3;
-    const delta = nChars > 1 ? phaseDur / (nChars - 1) : 0;
+    const fxMeta = getSpanFxMeta(s, meta.dur)
+    const P = pSpan
+    const delta = fxMeta.delta
 
     const startF = i * delta;
-    const endF = startF + phaseDur;
+    const endF = startF + PHASE_DUR;
     const startB = endF;
-    const endB = startB + phaseDur;
+    const endB = startB + PHASE_DUR;
 
-    const ease = (x: number) => 0.5 * (1 - Math.cos(Math.PI * Math.min(1, Math.max(0, x))));
     let E = 0;
     if (P > startF && P < endF) {
-        const u = (P - startF) / phaseDur;
-        E = ease(u);
+        const u = (P - startF) / PHASE_DUR;
+        E = easeInOutCos01(u);
     } else if (P >= endF && P < endB) {
-        const u = (P - endF) / phaseDur;
-        E = 1 - ease(u);
+        const u = (P - endF) / PHASE_DUR;
+        E = 1 - easeInOutCos01(u);
     } else {
         E = 0;
     }
 
-    const dur = Math.max(1e-4, s.e - s.b);
-
     const t = before ? 0 : after ? 1 : p;
     const easeT = 0.5 * (1 - Math.cos(Math.PI * t));
-    const tyn = before ? 0 : after ? -1 : -easeT * 1;
+    const tyn = before ? 0 : after ? -1.75 : -easeT * 1.75;
 
-    const ty = dur > 2 ? tyn - E : tyn;
+    const ty = fxMeta.longDur ? tyn - E : tyn;
     const ts = (0.25 + 0.25 * E).toFixed(6) + 'em';
     const op = (0.75 * E).toFixed(6);
 
-    const sxy = dur > 2 ? 1 + 0.125 * E : 1;
+    const sxy = fxMeta.longDur ? 1 + 0.125 * E : 1;
 
     return {
         '--gradient-progress': gp,
-        '--gradient-direction': s.fx?.dir ?? 'to right',
+        '--gradient-direction': meta.gradientDir,
         '--text-shadow-blur-radius': ts,
         '--text-shadow-opacity': op,
         transform: `matrix(${sxy.toFixed(10)}, 0, 0, ${sxy.toFixed(10)}, 0, ${ty.toFixed(10)})`,
@@ -921,10 +1002,14 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
+    if (suppressLyricsPreviewTimer != null) window.clearTimeout(suppressLyricsPreviewTimer)
+    if (lyricsPreviewExitTimer != null) window.clearTimeout(lyricsPreviewExitTimer)
     stopTicker(false)
 })
 
 watch(activeLyricsUrl, async (url) => {
+    compactedLyricsSlides = false
+    isLyricsPreviewing.value = false
     if (!url) {
         lyrics.value = null
         activeLineIndex.value = 0
@@ -976,8 +1061,8 @@ watch(softNow, (t) => {
     if (!hasLyrics.value) return
     const idx = binarySearch(activeLines.value, t, -0.3)
     if (idx !== activeLineIndex.value) {
-        const element = document.querySelectorAll('.lyrics-slide')[activeLineIndex.value + 1] as HTMLElement
-        curheight.value = element.offsetHeight + 'px'
+        const prevSlideEl = lySwiper?.slides?.[activeLineIndex.value + 1] as HTMLElement | undefined
+        if (prevSlideEl) curheight.value = prevSlideEl.offsetHeight + 'px'
         activeLineIndex.value = idx
         if (autoFollow.value) followToIndex(idx)
     }
@@ -1094,6 +1179,7 @@ $content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
                 transition: height .5s, transform .5s;
 
                 .lyrics-content {
+                    position: relative;
                     padding: 0.5em 1.2em;
                     width: 100%;
                     margin: .5em 0;
@@ -1110,6 +1196,18 @@ $content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
                         transition-delay: 0.3s;
                         white-space: pre-line;
                         word-break: normal;
+
+                        &.layout {
+                            visibility: hidden;
+                            pointer-events: none;
+                            word-spacing: 0.02em;
+                        }
+
+                        &.overlay {
+                            position: absolute;
+                            inset: 0.16em .39em;
+                            pointer-events: none;
+                        }
 
                         &.wordprog {
                             display: inline-flex;

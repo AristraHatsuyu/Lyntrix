@@ -1,5 +1,21 @@
 <template>
     <div class="music-widget" :class="{ 'lytrics': currentTrack?.lyrics }">
+        <div class="fullscrbg">
+            <img 
+                v-if="prevBgImageUrl"
+                :key="`prev-${prevBgImageUrl}`"
+                :src="prevBgImageUrl" 
+                class="bg-image bg-prev"
+                alt="background"
+            />
+            <img 
+                v-if="bgImageUrl"
+                :key="`curr-${bgImageUrl}`"
+                :src="bgImageUrl" 
+                class="bg-image bg-curr"
+                alt="background"
+            />
+        </div>
         <div class="picture" :class="{ isPlaying }">
             <AlbumCover :image-url="currentTrack?.image" :direction="albumCoverDirection" />
         </div>
@@ -87,10 +103,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
 import type { TrackItem, EqualizerBand } from '@/composables/audio/audioTypes';
 import { useAudioPlayer } from '@/composables/audio/useAudioPlayer';
 import { usePlaylistController } from '@/composables/audio/usePlaylistController';
+import { useArtworkCache } from '@/composables/audio/useArtworkCache';
 
 interface Props { data: TrackItem[], showcard?: boolean; }
 const props = withDefaults(defineProps<Props>(), { data: () => [], showcard: true });
@@ -117,6 +134,58 @@ const equalizerSettings = ref<EqualizerBand[]>([
 const equalizerEnabled = ref(false);
 watch(equalizerEnabled, (v) => player.setEQEnabled(v), { immediate: true });
 defineExpose({ equalizerEnabled });
+
+// ===== 全屏背景图片缓存 =====
+const { ensure: ensureArtwork, retain: retainArtwork, release: releaseArtwork } = useArtworkCache();
+const bgImageUrl = ref<string>('');
+const prevBgImageUrl = ref<string>('');
+let retainedBgUrl: string | undefined;
+let bgTransitionTimer: ReturnType<typeof setTimeout> | undefined;
+
+const updateBgImage = async (url?: string) => {
+    if (bgTransitionTimer) {
+        clearTimeout(bgTransitionTimer);
+        bgTransitionTimer = undefined;
+    }
+
+    if (!url) {
+        prevBgImageUrl.value = bgImageUrl.value;
+        bgImageUrl.value = '';
+        prevBgImageUrl.value = '';
+        if (retainedBgUrl) releaseArtwork(retainedBgUrl);
+        retainedBgUrl = undefined;
+        return;
+    }
+
+    // 同一张图不重复切换，避免无意义闪动
+    if (url === retainedBgUrl) return;
+    
+    // 将当前图片移到前一张
+    prevBgImageUrl.value = bgImageUrl.value;
+    
+    // 从缓存获得稳定 URL，并保留引用
+    const { displayUrl } = await ensureArtwork(url);
+    
+    // 等待 prevBgImageUrl 的 DOM 更新完成，才设置新图片
+    // 这样旧图片才能正确应用 bgFadeOut 动画
+    await nextTick();
+    
+    bgImageUrl.value = displayUrl;
+    retainArtwork(url);
+    
+    const prevRetainedUrl = retainedBgUrl;
+
+    // 延迟释放上一张，给动画足够时间完成
+    bgTransitionTimer = setTimeout(() => {
+        prevBgImageUrl.value = '';
+        if (prevRetainedUrl && prevRetainedUrl !== url) {
+            releaseArtwork(prevRetainedUrl);
+        }
+        bgTransitionTimer = undefined;
+    }, 600);
+    
+    retainedBgUrl = url;
+};
 
 // ===== 状态桥接 =====
 const currentTrack = computed(() => player.currentTrack.value);
@@ -194,6 +263,15 @@ onMounted(() => {
 });
 
 watch(() => props.data, (val) => { player.setPlaylist(val); });
+
+// 监听currentTrack的图片变化
+watch(() => currentTrack.value?.image, (nu) => { void updateBgImage(nu); }, { immediate: true });
+
+// 清理资源
+onBeforeUnmount(() => {
+    if (bgTransitionTimer) clearTimeout(bgTransitionTimer);
+    if (retainedBgUrl) releaseArtwork(retainedBgUrl);
+});
 </script>
 
 <style lang="scss">
@@ -505,6 +583,42 @@ watch(() => props.data, (val) => { player.setPlaylist(val); });
             fill: #fff;
         }
     }
+
+    .fullscrbg {
+        position: fixed;
+        top: calc(-0.22 * max(100vh, 100vw));
+        left: calc(-0.22 * max(100vh, 100vw));
+        height: calc(max(100vh, 100vw) + (0.42 * max(100vh, 100vw)));
+        width: calc(max(100vh, 100vw) + (0.42 * max(100vh, 100vw)));
+        opacity: 0;
+        transition: opacity .6s;
+        animation: runCircle 20s linear infinite;
+        filter: blur(10rem) contrast(0.75) saturate(1.25) brightness(0.75);
+
+        .bg-image {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            display: block;
+            backface-visibility: hidden;
+            inset: 0;
+        }
+
+        .bg-prev {
+            animation: bgFadeOut 0.6s ease forwards;
+        }
+
+        .bg-curr {
+            animation: bgFadeIn 0.6s ease forwards;
+        }
+    }
+}
+
+@keyframes runCircle {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 .content.infocus {
@@ -664,6 +778,10 @@ html.music-fullscr .content .matrix .widget {
                 pointer-events: auto;
             }
 
+            .fullscrbg {
+                opacity: 1;
+            }
+
             &.lytrics {
                 padding: 0 max(calc(50vw - 65rem), 10rem);
 
@@ -758,6 +876,21 @@ html.dark-mode {
     filter: none;
 }
 
+.bgfade-enter-active,
+.bgfade-leave-active {
+    transition: opacity 0.6s ease;
+}
+
+.bgfade-enter-from,
+.bgfade-leave-to {
+    opacity: 0;
+}
+
+.bgfade-enter-to,
+.bgfade-leave-from {
+    opacity: 1;
+}
+
 .fades-enter-active,
 .fades-leave-active {
     transition: margin .6s, height .6s, filter .6s, opacity .6s !important;
@@ -773,6 +906,24 @@ html.dark-mode {
 .fades-leave-from {
     opacity: 1;
     filter: none !important;
+}
+
+@keyframes bgFadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
+@keyframes bgFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 .fadee-enter-active,
