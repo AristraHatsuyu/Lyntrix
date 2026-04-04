@@ -1,6 +1,6 @@
 <template>
     <div class="music-widget" :class="{ 'lytrics': currentTrack?.lyrics }">
-        <div class="fullscrbg">
+        <div class="fullscrbg" :class="{ paused: !isPlaying }">
             <img 
                 v-if="prevBgImageUrl"
                 :key="`prev-${prevBgImageUrl}`"
@@ -594,6 +594,10 @@ onBeforeUnmount(() => {
         transition: opacity .6s;
         animation: runCircle 20s linear infinite;
         filter: blur(10rem) contrast(0.75) saturate(1.25) brightness(0.75);
+
+        &.paused {
+            animation-play-state: paused;
+        }
 
         .bg-image {
             position: absolute;

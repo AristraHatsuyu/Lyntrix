@@ -59,9 +59,9 @@
                                         <div class="lyrics-text layout">{{ line.main }}</div>
                                         <div v-if="line.spans?.length && shouldRenderLyricContent(idx)" class="lyrics-text wordprog overlay">
                                             <div v-for="(wg, wi) in line.spans" :key="wi">
-                                                <span v-if="!wg.fx?.highlight" class="wg"
+                                                <span v-if="!wg.fx?.highlight" class="wg" :class="wordAnimClass(wg)"
                                                     :style="wordStyle(wg)">{{ wg.tx }}</span>
-                                                <span v-else v-for="(item, index) in wg.tx" class="wg fx" :key="index"
+                                                <span v-else v-for="(item, index) in wg.tx" class="wg fx" :class="wordAnimClass(wg)" :key="index"
                                                     :style="wordfxStyle(wg, index)">
                                                     {{ item }}
                                                 </span>
@@ -545,13 +545,13 @@ function rebuildStartWindow() {
         return
     }
 
-    const start = Math.max(0, ali - 3)
-    const end = currEmpty ? ali - 1 : Math.min(lines.length - 1, ali + 5)
+    const start = Math.max(0, ali - 2)
+    const end = currEmpty ? ali : Math.min(lines.length - 1, ali + 6)
     const unlock = new Array<number>(lines.length).fill(0)
 
     for (let idx = start; idx <= end; idx++) {
-        const windowStart = Math.max(0, ali - 3)
-        const lookEnd = Math.min(idx - 1, ali - 1)
+        const windowStart = Math.max(0, ali - 2)
+        const lookEnd = Math.min(idx - 1, ali)
         let emptyCount = 0
         for (let j = windowStart; j <= lookEnd; j++) {
             if (lines[j]?.main === '') emptyCount++
@@ -650,14 +650,15 @@ const hasLyrics = computed(() => activeLines.value.length > 0)
 const firstLine = computed<LyricLine>(() => activeLines.value[0] ?? { t: 0, raw: '', main: '' })
 const LYRIC_RENDER_RADIUS = 8
 const LYRIC_PREVIEW_RADIUS = 999
+const LYRIC_RENDER_OFFSET = 1
 const isLyricsPreviewing = ref(false)
 
 const lyricRenderWindow = computed(() => {
     const lines = activeLines.value
     const center = activeLineIndex.value
     const radius = isLyricsPreviewing.value ? LYRIC_PREVIEW_RADIUS : LYRIC_RENDER_RADIUS
-    const start = Math.max(0, center - radius)
-    const end = Math.min(lines.length - 1, center + radius)
+    const start = Math.max(0, center - radius + LYRIC_RENDER_OFFSET)
+    const end = Math.min(lines.length - 1, center + radius + LYRIC_RENDER_OFFSET)
     return { start, end }
 })
 
@@ -850,7 +851,6 @@ type SpanMotionMeta = {
 }
 
 type SpanFxMeta = {
-    nChars: number;
     delta: number;
     longDur: boolean;
 }
@@ -884,12 +884,15 @@ function getSpanFxMeta(s: WordSpan, dur: number): SpanFxMeta {
     const nChars = Math.max(1, s.tx.length || 1)
     const delta = nChars > 1 ? PHASE_DUR / (nChars - 1) : 0
     const meta: SpanFxMeta = {
-        nChars,
         delta,
         longDur: dur > 2
     }
     spanFxMetaCache.set(s, meta)
     return meta
+}
+
+function wordAnimClass(s: WordSpan) {
+    return nowT.value >= s.b ? 'reached' : ''
 }
 
 function wordStyle(s: WordSpan) {
@@ -901,14 +904,10 @@ function wordStyle(s: WordSpan) {
     const after = p >= 1;
 
     const gp = before ? '-20%' : after ? '100%' : `${(p * 120 - 20).toFixed(6)}%`;
-    const t = before ? 0 : after ? 1 : p;
-    const easeT = 0.5 * (1 - Math.cos(Math.PI * t));
-    const ty = before ? 0 : after ? -1.75 : -easeT * 1.75;
 
     const out: Record<string, string> = {
         '--gradient-progress': gp,
-        '--gradient-direction': meta.gradientDir,
-        transform: `matrix(1, 0, 0, 1, 0, ${ty.toFixed(6)})`,
+        '--gradient-direction': meta.gradientDir
     };
     return out;
 }
@@ -947,14 +946,8 @@ function wordfxStyle(s: WordSpan, i: number) {
         E = 0;
     }
 
-    const t = before ? 0 : after ? 1 : p;
-    const easeT = 0.5 * (1 - Math.cos(Math.PI * t));
-    const tyn = before ? 0 : after ? -1.75 : -easeT * 1.75;
-
-    const ty = fxMeta.longDur ? tyn - E : tyn;
     const ts = (0.25 + 0.25 * E).toFixed(6) + 'em';
     const op = (0.75 * E).toFixed(6);
-
     const sxy = fxMeta.longDur ? 1 + 0.125 * E : 1;
 
     return {
@@ -962,7 +955,7 @@ function wordfxStyle(s: WordSpan, i: number) {
         '--gradient-direction': meta.gradientDir,
         '--text-shadow-blur-radius': ts,
         '--text-shadow-opacity': op,
-        transform: `matrix(${sxy.toFixed(10)}, 0, 0, ${sxy.toFixed(10)}, 0, ${ty.toFixed(10)})`,
+        scale: sxy.toFixed(6)
     } as Record<string, string>;
 }
 
@@ -1050,6 +1043,13 @@ watch(() => props.isPlaying, (p) => {
         coastUntilTs = 0
         syncAnchor(Number(props.currentTime) || softNow.value)
         startTicker()
+        if (hasLyrics.value && lySwiper) {
+            const target = Math.max(0, Math.min(activeLineIndex.value + 1, activeLines.value.length))
+            if (Math.abs((lySwiper.activeIndex ?? 0) - target) > 0) {
+                isLyricsPreviewing.value = false
+                followToIndex(activeLineIndex.value, true)
+            }
+        }
     } else {
         coastUntilTs = performance.now() + FADE_COAST_MS
         syncAnchor(Number(props.currentTime) || softNow.value)
@@ -1200,7 +1200,6 @@ $content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
                         &.layout {
                             visibility: hidden;
                             pointer-events: none;
-                            word-spacing: 0.02em;
                         }
 
                         &.overlay {
@@ -1212,7 +1211,6 @@ $content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
                         &.wordprog {
                             display: inline-flex;
                             flex-wrap: wrap;
-                            gap: .02em;
                             white-space: pre-wrap;
 
                             .wg {
@@ -1227,30 +1225,25 @@ $content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
                                 -webkit-background-clip: text;
                                 display: inline-block;
                                 will-change: transform;
-                                transition: .1s;
+                                transform: matrix(1, 0, 0, 1, 0, 0);
+                                transition: transform .5s;
+
+                                &.reached {
+                                    transform: matrix(1, 0, 0, 1, 0, -1.75);
+                                }
 
                                 &.fx {
                                     --text-shadow-blur-radius: 0px;
                                     --text-shadow-opacity: 0;
 
                                     text-shadow: 0 0 var(--text-shadow-blur-radius) rgba(0, 0, 0, var(--text-shadow-opacity));
-                                }
-
-                                &.past {
-                                    --gradient-progress: 100%;
-                                    transform: matrix(1, 0, 0, 1, 0, -1);
-                                }
-
-                                &.future {
-                                    --gradient-progress: -20%;
-                                    transform: matrix(1, 0, 0, 1, 0, 0);
+                                    transition: transform .5s, scale .12s linear;
                                 }
                             }
                         }
                     }
                 }
 
-                &:has(+ .lyrics-slide + .lyrics-slide + .lyrics-slide.swiper-slide-prev),
                 &:has(+ .lyrics-slide + .lyrics-slide.swiper-slide-prev),
                 &:has(+ .lyrics-slide.swiper-slide-prev),
                 &.swiper-slide-prev,
@@ -1258,7 +1251,8 @@ $content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
                 &.swiper-slide-next,
                 &.swiper-slide-next + .lyrics-slide,
                 &.swiper-slide-next + .lyrics-slide + .lyrics-slide,
-                &.swiper-slide-next + .lyrics-slide + .lyrics-slide + .lyrics-slide {
+                &.swiper-slide-next + .lyrics-slide + .lyrics-slide + .lyrics-slide,
+                &.swiper-slide-next + .lyrics-slide + .lyrics-slide + .lyrics-slide + .lyrics-slide {
                     .lyrics-content .lyrics-text {
                         filter: blur(.1em);
                     }
@@ -1855,7 +1849,7 @@ html.music-fullscr .content .matrix .widget {
                     );
                 
                     .lyrics-swiper {
-                        margin-top: 75rem;
+                        margin-top: 47.5rem;
                         transition: .3s;
 
                         .lyrics-slide {
