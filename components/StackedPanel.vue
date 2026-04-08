@@ -1204,7 +1204,7 @@ $content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
 
                         &.overlay {
                             position: absolute;
-                            inset: 0.16em .39em;
+                            inset: calc(0.5em / 3.1) calc(1.2em / 3.1);
                             pointer-events: none;
                         }
 
@@ -1343,7 +1343,6 @@ $content-bg: color-mix(in srgb, var(--lyntrix-color-high, #FFF), #FFFFFF 75%);
                         filter: none;
                         opacity: 1;
                     }
-
                 }
 
 
