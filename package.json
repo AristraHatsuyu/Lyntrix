@@ -19,7 +19,7 @@
     "luxon": "^3.6.1",
     "motion-v": "^1.0.0-beta.2",
     "nuxt": "^3.19.0",
-    "swiper": "^11.2.6",
+    "swiper": "^12.1.2",
     "vue": "latest",
     "vue-router": "latest"
   },
