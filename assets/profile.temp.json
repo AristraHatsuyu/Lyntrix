@@ -119,7 +119,8 @@
     "project": [
         {
             "title": "FLYour",
-            "description": "Build A World of Dream"
+            "description": "Build A World of Dream",
+            "link": "https://www.flyour.cn/"
         },
         {
             "title": "FLYour BBS",
@@ -146,8 +147,8 @@
             "description": "Sculpting Sonic Dreams"
         },
         {
-            "title": "GenSync",
-            "description": "Connect To The World"
+            "title": "FLYour Edu",
+            "description": "FLYour Educational Platform"
         }
     ],
     "background": [

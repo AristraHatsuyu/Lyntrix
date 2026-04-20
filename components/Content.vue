@@ -29,11 +29,12 @@
         </div>
         <div class="projlist">
             <CardContainer v-for="(data, index) in projectdata" :key="index" :infocus="infocus" class="project"
-                @click="handleProjectClick">
+                @click="(event: MouseEvent) => {data.link ? handleProjectClick(event) : null}">
                 <a draggable="false" data-pointer>
                     <div class="title" href="" target="_blank">{{ data.title }}</div>
                     <div class="description">{{ data.description }}</div>
                     <div class="detail">
+                        <iframe v-if="data.link" :data-src="data.link" frameborder="0" style="width: 100%; height: 100%;"></iframe>
                     </div>
                 </a>
             </CardContainer>
@@ -46,7 +47,7 @@
 
 <script setup lang="ts">
 import config from "@/assets/profile.json"
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, type IframeHTMLAttributes } from 'vue'
 
 declare global {
     interface Window {
@@ -535,12 +536,17 @@ const floatProjectRatio = (element: HTMLElement) => {
 
 const handleProjectClick = (event: MouseEvent) => {
     const target = event.currentTarget as HTMLElement
+    const iframeNode = target.childNodes[1].childNodes[2].childNodes[0] as HTMLIFrameElement
 
     if (floatingEl.value === target && infocus.value) {
         infocus.value = false
         currentdisplay.value = ''
         restoreElementWithRatio()
+        iframeNode.src = '';
     } else if (!floatingEl.value) {
+        if (iframeNode.dataset.src) {
+            iframeNode.src = iframeNode.dataset.src;
+        }
         floatProjectRatio(target)
     }
 }
@@ -793,9 +799,15 @@ const handleProjectClick = (event: MouseEvent) => {
                     width: 100%;
                     background: rgba(0, 0, 0, 0.2);
                     border-radius: 0.8em;
+                    position: relative;
                     overflow: hidden;
                     filter: blur(15px);
                     transition: margin 0.6s, opacity 0.6s, filter 0.6s;
+
+                    iframe {
+                        inset: 0;
+                        position: absolute;
+                    }
                 }
             }
 
