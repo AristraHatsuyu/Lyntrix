@@ -36,8 +36,8 @@ importers:
         specifier: ^3.19.0
         version: 3.20.2(@parcel/watcher@2.5.4)(@vue/compiler-sfc@3.5.32)(cac@6.7.14)(db0@0.3.4)(ioredis@5.9.1)(magicast@0.5.1)(rollup@4.55.1)(sass-embedded@1.97.2)(sass@1.97.2)(terser@5.44.1)(vite@7.3.1(jiti@2.6.1)(sass-embedded@1.97.2)(sass@1.97.2)(terser@5.44.1)(yaml@2.8.3))(yaml@2.8.3)
       swiper:
-        specifier: ^11.2.6
-        version: 11.2.10
+        specifier: ^12.1.2
+        version: 12.1.2
       vue:
         specifier: latest
         version: 3.5.32
@@ -3319,8 +3319,8 @@ packages:
     engines: {node: '>=16'}
     hasBin: true
 
-  swiper@11.2.10:
-    resolution: {integrity: sha512-RMeVUUjTQH+6N3ckimK93oxz6Sn5la4aDlgPzB+rBrG/smPdCTicXyhxa+woIpopz+jewEloiEE3lKo1h9w2YQ==}
+  swiper@12.1.2:
+    resolution: {integrity: sha512-4gILrI3vXZqoZh71I1PALqukCFgk+gpOwe1tOvz5uE9kHtl2gTDzmYflYCwWvR4LOvCrJi6UEEU+gnuW5BtkgQ==}
     engines: {node: '>= 4.7.0'}
 
   sync-child-process@1.0.2:
@@ -7314,7 +7314,7 @@ snapshots:
       picocolors: 1.1.1
       sax: 1.4.4
 
-  swiper@11.2.10: {}
+  swiper@12.1.2: {}
 
   sync-child-process@1.0.2:
     dependencies:
