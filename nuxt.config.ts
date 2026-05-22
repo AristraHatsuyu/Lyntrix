@@ -6,6 +6,7 @@ export default defineNuxtConfig({
 
     app: {
         baseURL: '/',
+        buildAssetsDir: '/lyntrix/',
         pageTransition: { name: 'page', mode: 'out-in' }
     },
     compatibilityDate: '2025-05-22',
