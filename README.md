@@ -1,3 +1,5 @@
+
+
 # Lyntrix
 
 > _Redefining digital presence. One interface at a time._
@@ -34,9 +36,9 @@ Visit http://localhost:3000 to see your resume come alive.
 
 🛠️ Configuration
 
-You can customize in /pages/index.vue and /assets/profile.temp.json
+You can customize the layout in `/pages/index.vue` and your profile data in `/assets/profile.temp.json`.
 
-Rename profile.temp.json to profile.json
+Rename `profile.temp.json` to `profile.json` to activate your configuration.
 
 ⸻
 
