@@ -81,17 +81,9 @@ function extractThemeColor(img: HTMLImageElement): void {
         const highColor = `rgb(${rH}, ${gH}, ${bH})`
 
         setTimeout(() => {
-            const styleSheet = document.styleSheets[0]
-            const ruleIndex = Array.from(styleSheet.cssRules).findIndex(rule =>
-                rule instanceof CSSStyleRule && rule.selectorText === '*'
-            )
-            if (ruleIndex !== -1) {
-                const rule = styleSheet.cssRules[ruleIndex] as CSSStyleRule
-                rule.style.setProperty('--lyntrix-color', baseColor)
-                rule.style.setProperty('--lyntrix-color-high', highColor)
-            } else {
-                styleSheet.insertRule(`* { --lyntrix-color: ${baseColor}; --lyntrix-color-high: ${highColor}; }`, styleSheet.cssRules.length)
-            }
+            const root = document.documentElement
+            root.style.setProperty('--lyntrix-color', baseColor)
+            root.style.setProperty('--lyntrix-color-high', highColor)
         }, 500)
     } catch (e) {
         console.error('提取主题色失败:', e)

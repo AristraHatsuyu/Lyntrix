@@ -23,8 +23,6 @@
 </template>
 
 <script setup lang="ts">
-import axios from 'axios';
-
 interface Props {
     url?: string;
 }
@@ -35,10 +33,18 @@ const props = withDefaults(defineProps<Props>(), {
 
 const countnum = reactive(['-', '-', '-', '-', '-', '-']);
 
-if (props.url) {
-    axios.get(props.url)
-        .then(res => {
-            const count = Number(res.data?.count);
+onMounted(() => {
+    if (!props.url) {
+        return
+    }
+
+    const controller = new AbortController()
+    const timeout = window.setTimeout(() => controller.abort(), 5000)
+
+    fetch(props.url, { signal: controller.signal })
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+            const count = Number(data?.count);
             if (!isNaN(count)) {
                 const padded = count.toString().padStart(6, '0');
                 for (let i = 0; i < 6; i++) {
@@ -46,8 +52,9 @@ if (props.url) {
                 }
             }
         })
-        .catch(() => { });
-}
+        .catch(() => { })
+        .finally(() => window.clearTimeout(timeout))
+})
 </script>
 
 <style lang="scss">

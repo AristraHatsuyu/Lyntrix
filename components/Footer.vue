@@ -69,16 +69,7 @@ function updateWidth() {
     } else {
         Size = Math.min(((2 * window.innerWidth / 3 - 369.333) / 8), 69.166)
     }
-    const styleSheet = document.styleSheets[0] // 获取第一个样式表
-    const ruleIndex = Array.from(styleSheet.cssRules).findIndex(rule =>
-        rule instanceof CSSStyleRule && rule.selectorText === '*'
-    )
-    if (ruleIndex !== -1) {
-        const rule = styleSheet.cssRules[ruleIndex] as CSSStyleRule
-        rule.style.setProperty('--square-size', Size.toString() + 'px')
-    } else {
-        styleSheet.insertRule(`* { --square-size: ${Size}px; }`, styleSheet.cssRules.length)
-    }
+    document.documentElement.style.setProperty('--square-size', Size.toString() + 'px')
 }
 
 function closeAbout() {
