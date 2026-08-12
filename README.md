@@ -30,13 +30,19 @@ npm run dev
 
 Visit http://localhost:3000 to see your resume come alive.
 
+The first run creates `assets/profile.json` from `assets/profile.temp.json` automatically if it is missing. You can also create it manually:
+
+```bash
+cp assets/profile.temp.json assets/profile.json
+```
+
 ⸻
 
 🛠️ Configuration
 
-You can customize in /pages/index.vue and /assets/profile.temp.json
+You can customize the layout in `/pages/index.vue` and profile data in `/assets/profile.json`.
 
-Rename profile.temp.json to profile.json
+Use `/assets/profile.temp.json` as the starter template.
 
 ⸻
 

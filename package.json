@@ -6,16 +6,17 @@
     "build": "nuxt build",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
+    "prebuild": "node scripts/ensure-profile.mjs",
+    "predev": "node scripts/ensure-profile.mjs",
+    "pregenerate": "node scripts/ensure-profile.mjs",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "node scripts/ensure-profile.mjs && nuxt prepare"
   },
   "dependencies": {
     "@studio-freight/lenis": "^1.0.42",
     "@vesp/nuxt-fontawesome": "^1.2.1",
     "@vueuse/core": "^14.2.1",
-    "axios": "^1.15.0",
     "colorthief": "^2.6.0",
-    "gsap": "^3.13.0",
     "luxon": "^3.6.1",
     "motion-v": "^1.0.0-beta.2",
     "nuxt": "^3.19.0",
@@ -29,8 +30,6 @@
     "@fortawesome/free-solid-svg-icons": "^6.7.2",
     "@types/luxon": "^3.6.2",
     "autoprefixer": "^10.4.21",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
     "sass-embedded": "^1.86.3"
   }
 }
